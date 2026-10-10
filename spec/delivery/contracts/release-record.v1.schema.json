@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dgaspard/ai-sdlc-specc-bdd-design/release-record/v1",
+  "title": "Release record (DC-010, A-23)",
+  "description": "Written by the pipeline for every prod promotion: who changed what, under which spec, with which tests and evidence, and when. Published as an attested GitHub Release; later also retained in S3 Object Lock.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pullRequest", "humanGate", "sourceTree", "specTreeHash", "tests", "nonprod", "images", "deployedAt", "teardownBy"],
+  "properties": {
+    "pullRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "url", "author", "mergedBy", "mergeCommit"],
+      "properties": {
+        "number": { "type": "integer" },
+        "url": { "type": "string" },
+        "author": { "type": "string", "description": "GitHub login; the agent identity for agent-built changes" },
+        "mergedBy": { "type": "string", "description": "Must be a human; an agent identity never merges (CTL-028)" },
+        "mergeCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "humanGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "by"],
+      "description": "A-22: the human decision that let this change through.",
+      "properties": {
+        "kind": { "enum": ["approval", "admin-bypass-self-merge"] },
+        "by": { "type": "string" },
+        "at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "description": "Present when an agent authored the change; mirrors the AI provenance predicate (DC-007).",
+      "additionalProperties": false,
+      "required": ["name", "model"],
+      "properties": {
+        "name": { "type": "string" },
+        "model": { "type": "string" },
+        "sessionRef": { "type": "string" }
+      }
+    },
+    "sourceTree": { "type": "string", "pattern": "^[0-9a-f]{40}$", "description": "git tree hash of main at promotion; equals the attested tree" },
+    "specTreeHash": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runRecord", "gate"],
+      "properties": {
+        "runRecord": { "type": "string" },
+        "gate": { "enum": ["COMPLETE"] },
+        "controls": { "type": "array", "items": { "type": "string", "pattern": "^CTL-\\d{3}$" }, "description": "Required controls that passed" }
+      }
+    },
+    "nonprod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workflowRun", "liveTier"],
+      "properties": {
+        "workflowRun": { "type": "string" },
+        "liveTier": { "enum": ["passed"] }
+      }
+    },
+    "images": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["project", "image", "sbom", "attestations"],
+        "properties": {
+          "project": { "type": "string" },
+          "image": { "type": "string", "pattern": "@sha256:[0-9a-f]{64}$" },
+          "sbom": { "type": "string" },
+          "attestations": { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+        }
+      }
+    },
+    "deployedAt": { "type": "string", "format": "date-time" },
+    "teardownBy": { "type": "string", "format": "date-time", "description": "deployedAt plus the prod TTL (catalog ttl_minutes.prod)" }
+  }
+}

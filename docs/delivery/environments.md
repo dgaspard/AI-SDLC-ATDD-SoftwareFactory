@@ -45,9 +45,12 @@ The agent's fast loop and the developer's laptop. Same images as the cloud, star
 - **Short-lived AWS credentials (OIDC)**: Local never touches AWS.
 - **Software bill of materials**: Generated where images are published.
 - **Protected main branch**: Enforced by GitHub, not locally.
+- **Thin workflows, thick scripts**: Workflows run only in CI.
+- **Every pull request tested in non-prod**: Local is the agent's loop before a pull request exists.
+- **Release record per promotion**: Nothing is released from local.
 - **Signed build provenance (SLSA)**: Local images are never promoted.
 - **AI provenance attestation**: Local images are never promoted.
-- **Human approval to release**: Nothing is released from local.
+- **Human gate at pull request approval**: Nothing is released from local.
 - **Organization guardrails (SCPs)**: No AWS locally.
 - **Audit trail and configuration history**: No AWS locally.
 - **Hardened ECS Fargate tasks**: Docker Compose runs the images locally.
@@ -71,13 +74,17 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 | Hardened container images | Docker | required | Non-prod tests the exact image prod will run. | CTL-001, CTL-002, CTL-003, CTL-004 | enforced |
 | Browser tests in a pinned reference container | Docker, Playwright container image | required | CI runs the same container, so a visual difference means a real change, not a different operating system. | `spec/tests/browser/run-in-container.sh`, `spec/frontend/visual-baselines/reference-environment.json` | enforced |
 | Least-privilege, pinned workflows | GitHub Actions | required | The pipeline that deploys non-prod is itself supply-chain surface. | CTL-010, CTL-011 | enforced |
-| Short-lived AWS credentials (OIDC) | GitHub OIDC, AWS IAM | required | Only CI deploys, and only with short-lived credentials. | CTL-012 | specified, awaiting CI-02 |
+| Short-lived AWS credentials (OIDC) | GitHub OIDC, AWS IAM | required | Only CI deploys, and only with short-lived credentials. | CTL-012, CTL-035 | specified, awaiting CI-02, ENV-02 |
 | Code, secret and dependency scans | Semgrep, detect-secrets, npm audit | required | SECURITY_GATE=fail; a finding blocks the image from being built. | CTL-013 | specified, awaiting CI-02 |
 | Software bill of materials | Syft | required | Generated when the image is built. | CTL-014 | specified, awaiting CI-02 |
 | Protected main branch | GitHub rulesets | required | Nothing reaches non-prod except through a reviewed merge. | CTL-024 | enforced |
+| Thin workflows, thick scripts | GitHub Actions, scripts/ci | required | A human edits YAML only when a job's privileges change. | CTL-027 | specified, awaiting CI-02 |
+| Every pull request tested in non-prod | GitHub Actions, GitHub Environments | required | A human reviews a change already proven in a real environment. | CTL-015 | specified, awaiting ENV-03 |
+| Release record per promotion | GitHub Releases, GitHub artifact attestations, S3 Object Lock (planned) | informational | Non-prod runs feed the record (live results), but don't publish one. | CTL-060 | specified, awaiting EVID-01 |
 | Human-owned root of trust | guard.yml, CODEOWNERS, spec/guard | required | CI's own run of the spec is authoritative. | CTL-022 | enforced |
 | Signed build provenance (SLSA) | GitHub artifact attestations | required | Created when the image is built. | CTL-020 | specified, awaiting CI-02 |
 | AI provenance attestation | GitHub artifact attestations, in-toto | required | Created when the image is built. | CTL-021 | specified, awaiting CI-02 |
+| Human gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity | required | Agent-authored pull requests reach non-prod, but only a human can approve or merge them. | CTL-023, CTL-025, CTL-026, CTL-028 | partly enforced, awaiting ENV-03 |
 | Organization guardrails (SCPs) | AWS Organizations | required | Guardrails apply to every member account. | CTL-050, CTL-051, CTL-052 | specified, awaiting ENV-02 |
 | Audit trail and configuration history | AWS CloudTrail, AWS Config | required | Every cloud change is recorded. | — | planned |
 | Hardened ECS Fargate tasks | Amazon ECS on AWS Fargate | required | The same task shape as prod, with test endpoints on. | CTL-032, CTL-033 | specified, awaiting ENV-02 |
@@ -97,13 +104,16 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 - [x] Hardened container images
 - [x] Browser tests in a pinned reference container
 - [x] Least-privilege, pinned workflows
-- [ ] Short-lived AWS credentials (OIDC) (specified, awaiting CI-02)
+- [ ] Short-lived AWS credentials (OIDC) (specified, awaiting CI-02, ENV-02)
 - [ ] Code, secret and dependency scans (specified, awaiting CI-02)
 - [ ] Software bill of materials (specified, awaiting CI-02)
 - [x] Protected main branch
+- [ ] Thin workflows, thick scripts (specified, awaiting CI-02)
+- [ ] Every pull request tested in non-prod (specified, awaiting ENV-03)
 - [x] Human-owned root of trust
 - [ ] Signed build provenance (SLSA) (specified, awaiting CI-02)
 - [ ] AI provenance attestation (specified, awaiting CI-02)
+- [ ] Human gate at pull request approval (partly enforced, awaiting ENV-03)
 - [ ] Organization guardrails (SCPs) (specified, awaiting ENV-02)
 - [ ] Audit trail and configuration history (planned)
 - [ ] Hardened ECS Fargate tasks (specified, awaiting ENV-02)
@@ -121,7 +131,6 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 
 - **Local system in one command**: ECS runs the images in the cloud.
 - **Pre-push full-suite verification**: CI reruns everything independently.
-- **Human approval to release**: Non-prod deploys automatically on merge so it gives fast feedback.
 - **Network hardening**: Deferred 2026-10-10: test application, no data to protect. See PROJECT-PLAN deferred items.
 - **OTLP test collector**: Replaced by the AWS collector.
 - **Local performance thresholds**: Replaced by the deployed load smoke test.
@@ -134,14 +143,17 @@ A production-shaped AWS member account environment. It runs only images already 
 | --- | --- | --- | --- | --- | --- |
 | Hardened container images | Docker | required | Prod runs only images built and tested earlier. | CTL-001, CTL-002, CTL-003, CTL-004 | enforced |
 | Least-privilege, pinned workflows | GitHub Actions | required | The pipeline that deploys prod is itself supply-chain surface. | CTL-010, CTL-011 | enforced |
-| Short-lived AWS credentials (OIDC) | GitHub OIDC, AWS IAM | required | Only CI deploys, and only with short-lived credentials. | CTL-012 | specified, awaiting CI-02 |
+| Short-lived AWS credentials (OIDC) | GitHub OIDC, AWS IAM | required | Only CI deploys, and only with short-lived credentials. | CTL-012, CTL-035 | specified, awaiting CI-02, ENV-02 |
 | Code, secret and dependency scans | Semgrep, detect-secrets, npm audit | required | Prod promotes only images that passed the non-prod gate. | CTL-013 | specified, awaiting CI-02 |
 | Software bill of materials | Syft | required | The same SBOM travels with the promoted image. | CTL-014 | specified, awaiting CI-02 |
 | Protected main branch | GitHub rulesets | required | Nothing reaches prod except through a reviewed merge. | CTL-024 | enforced |
+| Thin workflows, thick scripts | GitHub Actions, scripts/ci | required | A human edits YAML only when a job's privileges change. | CTL-027 | specified, awaiting CI-02 |
+| Every pull request tested in non-prod | GitHub Actions, GitHub Environments | required | Only main reaches prod. | CTL-015 | specified, awaiting ENV-03 |
+| Release record per promotion | GitHub Releases, GitHub artifact attestations, S3 Object Lock (planned) | required | Reporting and governance documentation as a by-product of delivery. | CTL-060 | specified, awaiting EVID-01 |
 | Human-owned root of trust | guard.yml, CODEOWNERS, spec/guard | required | CI's own run of the spec is authoritative. | CTL-022 | enforced |
 | Signed build provenance (SLSA) | GitHub artifact attestations | required | Verified before deploying. | CTL-020 | specified, awaiting CI-02 |
 | AI provenance attestation | GitHub artifact attestations, in-toto | required | Verified before deploying. | CTL-021 | specified, awaiting CI-02 |
-| Human approval to release | GitHub Environments | required | An agent can build and test, but only a human can release. | CTL-023, CTL-025, CTL-026 | partly enforced, awaiting ENV-03 |
+| Human gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity | required | Promotion is automatic only after a human decision, and only for the exact tree that was tested. | CTL-023, CTL-025, CTL-026, CTL-028 | partly enforced, awaiting ENV-03 |
 | Organization guardrails (SCPs) | AWS Organizations | required | Guardrails apply to every member account. | CTL-050, CTL-051, CTL-052 | specified, awaiting ENV-02 |
 | Audit trail and configuration history | AWS CloudTrail, AWS Config | required | Every cloud change is recorded. | — | planned |
 | Hardened ECS Fargate tasks | Amazon ECS on AWS Fargate | required | Test endpoints off. | CTL-032, CTL-033 | specified, awaiting ENV-02 |
@@ -159,14 +171,17 @@ A production-shaped AWS member account environment. It runs only images already 
 
 - [x] Hardened container images
 - [x] Least-privilege, pinned workflows
-- [ ] Short-lived AWS credentials (OIDC) (specified, awaiting CI-02)
+- [ ] Short-lived AWS credentials (OIDC) (specified, awaiting CI-02, ENV-02)
 - [ ] Code, secret and dependency scans (specified, awaiting CI-02)
 - [ ] Software bill of materials (specified, awaiting CI-02)
 - [x] Protected main branch
+- [ ] Thin workflows, thick scripts (specified, awaiting CI-02)
+- [ ] Every pull request tested in non-prod (specified, awaiting ENV-03)
+- [ ] Release record per promotion (specified, awaiting EVID-01)
 - [x] Human-owned root of trust
 - [ ] Signed build provenance (SLSA) (specified, awaiting CI-02)
 - [ ] AI provenance attestation (specified, awaiting CI-02)
-- [ ] Human approval to release (partly enforced, awaiting ENV-03)
+- [ ] Human gate at pull request approval (partly enforced, awaiting ENV-03)
 - [ ] Organization guardrails (SCPs) (specified, awaiting ENV-02)
 - [ ] Audit trail and configuration history (planned)
 - [ ] Hardened ECS Fargate tasks (specified, awaiting ENV-02)
@@ -203,10 +218,13 @@ A production-shaped AWS member account environment. It runs only images already 
 | Software bill of materials | Free. |
 | Pre-push full-suite verification | Free. |
 | Protected main branch | Free. |
+| Thin workflows, thick scripts | Free. |
+| Every pull request tested in non-prod | About $0.04 per 15-minute run. |
+| Release record per promotion | Free on GitHub; S3 Object Lock storage costs cents per month. |
 | Human-owned root of trust | Free. |
 | Signed build provenance (SLSA) | Free. |
 | AI provenance attestation | Free. |
-| Human approval to release | Free. |
+| Human gate at pull request approval | Free. |
 | Organization guardrails (SCPs) | Free. |
 | Audit trail and configuration history | One CloudTrail trail is free; AWS Config costs about $0.003 per recorded item. Limit recording to the resource types we use. |
 | Hardened ECS Fargate tasks | About $9 per task per month at the smallest size if always on; ephemeral environments are why the system fits the budget. |

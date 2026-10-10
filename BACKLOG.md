@@ -235,8 +235,23 @@ still pass unchanged (the runtime contract is unaffected). Closes ARCH-05 (A-17)
 
 ### SPEC-09 — Continuous delivery controls (A-21..A-23)
 
-Status: planned; spec work only, no AWS. Rewrites and adds delivery controls for the
-decisions of 2026-10-10. Drafted as a patch and frozen by Dustin, like SPEC-08.
+Status: **drafted 2026-10-10; awaiting review and freeze.** Patch:
+`docs/spec-drafts/spec-09-continuous-delivery.patch`. Spec work only, no AWS.
+- New controls: CTL-015 (pull requests deploy to non-prod; only `main` deploys to prod),
+  CTL-027 (thin workflows), CTL-028 (no agent merges), CTL-035 (OIDC trust pinned),
+  CTL-060 (release record). Rewritten: CTL-023 and CTL-025.
+- New contract rules: DC-009 (thin workflows) and DC-010 (release record), with
+  `contracts/release-record.v1.schema.json`.
+- Static checks now follow each run step into the script it calls, so the existing
+  controls keep working with thin workflows.
+- Calibrated with 19 plants, all caught.
+- Against this repository: the required tier passes, the new controls await their
+  backlog items, and CTL-028 passes live.
+- CTL-025 fails live until the `main` ruleset requires up-to-date branches and approval
+  of the most recent push. That's a settings change for Dustin before the freeze.
+- Preventive half of "agents never merge": `tools/github/agent.mjs` now refuses to merge,
+  approve, approve deployments, change rules or push to `main`.
+Original plan:
 - **Rewrite CTL-023:** the prod deploy runs only on push to `main`, in the `prod`
   environment (protected branches, no required reviewer). It verifies both attestations,
   and that the attested tree hash equals `main`'s tree.

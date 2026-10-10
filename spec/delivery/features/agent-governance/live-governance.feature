@@ -13,16 +13,24 @@ Feature: GitHub and the deployed prod environment enforce human control
     And the rules for branch "main" require every check named in the root of trust
 
   @CTL-025 @nist:AC-5 @ssdf:PO.2.1 @env:prod
-  Scenario: Agents act under their own GitHub identity, which can never approve prod
-    Decided 2026-10-10: one maintainer, so self-review is allowed. Separation of duties is
-    between the human and the agents: agents never use the maintainer's credentials.
+  Scenario: Agents can never approve, merge or bypass
+    Revised 2026-10-10 (A-22): the human gate is PR approval or a human merge. The sole
+    maintainer's admin bypass is a human decision; agents never approve, merge or bypass.
+    Merges must start from an up-to-date branch so the merged tree is the tested tree.
     Given the GitHub repository under test
-    Then the GitHub environment "prod" requires at least one reviewer
-    And at least one agent identity is listed in the root of trust
+    Then at least one agent identity is listed in the root of trust
     And no agent identity is a reviewer for the GitHub environment "prod"
     And no agent identity has admin permission on the repository
     And no ruleset for branch "main" lets an agent identity bypass it
+    And no agent identity is a code owner
     And the GitHub environment "prod" accepts deployments only from protected branches
+    And the rules for branch "main" require an up-to-date branch and approval of the last push
+
+  @CTL-028 @nist:AC-5 @ssdf:PO.2.1 @env:nonprod @env:prod
+  Scenario: No agent has merged a pull request
+    The wrapper refuses merges (tools/github/agent.mjs); this is the independent check.
+    Given the GitHub repository under test
+    Then none of the last 100 merged pull requests was merged by an agent identity
 
   @CTL-026 @awaiting:ENV-03 @nist:SR-4 @ssdf:PS.2.1 @env:prod
   Scenario: Every image running in prod has verified build and AI provenance

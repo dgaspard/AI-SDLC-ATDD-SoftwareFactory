@@ -96,7 +96,7 @@ entries:
     tools: [GitHub OIDC, AWS IAM]
     purpose: CI assumes an IAM role per run; no stored access keys anywhere.
     status: enforced
-    controls: [CTL-012]
+    controls: [CTL-012, CTL-035]
     environments:
       local: { use: not-used, why: Local never touches AWS. }
       nonprod: { use: required, why: "Only CI deploys, and only with short-lived credentials." }
@@ -154,6 +154,45 @@ entries:
       prod: { use: required, why: Nothing reaches prod except through a reviewed merge. }
     cost: Free.
 
+  - id: thin-workflows
+    name: Thin workflows, thick scripts
+    kind: practice
+    tools: [GitHub Actions, scripts/ci]
+    purpose: "A-21: workflow YAML is human-owned and holds only privilege (triggers, permissions, OIDC, environment, role); every step calls one agent-built script with plain arguments (DC-009)."
+    status: enforced
+    controls: [CTL-027]
+    environments:
+      local: { use: not-used, why: Workflows run only in CI. }
+      nonprod: { use: required, why: "A human edits YAML only when a job's privileges change." }
+      prod: { use: required, why: "A human edits YAML only when a job's privileges change." }
+    cost: Free.
+
+  - id: pr-environments
+    name: Every pull request tested in non-prod
+    kind: practice
+    tools: [GitHub Actions, GitHub Environments]
+    purpose: "A-22: a pull request deploys an ephemeral non-prod environment and runs the live tier; only push to main deploys to prod. pull_request_target is never used."
+    status: enforced
+    controls: [CTL-015]
+    environments:
+      local: { use: not-used, why: Local is the agent's loop before a pull request exists. }
+      nonprod: { use: required, why: "A human reviews a change already proven in a real environment." }
+      prod: { use: required, why: Only main reaches prod. }
+    cost: "About $0.04 per 15-minute run."
+
+  - id: release-record
+    name: Release record per promotion
+    kind: check
+    tools: [GitHub Releases, GitHub artifact attestations, S3 Object Lock (planned)]
+    purpose: "A-23: each prod promotion publishes who changed what, under which spec, with which tests and evidence, and when (DC-010), as an attested GitHub Release. Copying it to S3 Object Lock in a log-archive account is planned with ENV-02/03."
+    status: enforced
+    controls: [CTL-060]
+    environments:
+      local: { use: not-used, why: Nothing is released from local. }
+      nonprod: { use: informational, why: "Non-prod runs feed the record (live results), but don't publish one." }
+      prod: { use: required, why: "Reporting and governance documentation as a by-product of delivery." }
+    cost: Free on GitHub; S3 Object Lock storage costs cents per month.
+
   # --- Governance and provenance ------------------------------------------------
   - id: root-of-trust
     name: Human-owned root of trust
@@ -195,16 +234,16 @@ entries:
     cost: Free.
 
   - id: prod-approval
-    name: Human approval to release
+    name: Human gate at pull request approval
     kind: practice
-    tools: [GitHub Environments]
-    purpose: "Prod deploys wait for a human reviewer and verify both attestations. Agents work under their own GitHub identity, which is never a reviewer and never an admin (separation of duties between human and agent)."
+    tools: [GitHub rulesets, GitHub Environments, GitHub App identity]
+    purpose: "Revised 2026-10-10 (A-22): a human approves or merges the pull request, then the tested images promote to prod automatically. Agents work under their own GitHub identity and never approve, merge or bypass. Prod verifies both attestations and the tree hash before deploying."
     status: enforced
-    controls: [CTL-023, CTL-025, CTL-026]
+    controls: [CTL-023, CTL-025, CTL-026, CTL-028]
     environments:
       local: { use: not-used, why: Nothing is released from local. }
-      nonprod: { use: not-used, why: Non-prod deploys automatically on merge so it gives fast feedback. }
-      prod: { use: required, why: "An agent can build and test, but only a human can release." }
+      nonprod: { use: required, why: "Agent-authored pull requests reach non-prod, but only a human can approve or merge them." }
+      prod: { use: required, why: "Promotion is automatic only after a human decision, and only for the exact tree that was tested." }
     cost: Free.
 
   - id: scp-guardrails

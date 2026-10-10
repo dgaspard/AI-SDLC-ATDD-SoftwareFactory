@@ -21,6 +21,7 @@ Given("the CloudFormation templates synthesized for {string}", function (env) {
 });
 
 const all = (world) => Object.values(world.templates).flat();
+const list = (v) => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
 
 Then("every template passes the {string} policy", function (policy) {
   const { ok, output } = tpl.cfnGuard(path.join(repo.PKG, "policy", `${policy}.guard`), all(this).map((t) => t.file));
@@ -134,6 +135,43 @@ Then("every {string} tag is a whole number of minutes within the catalog limit f
 });
 
 // ---------------------------------------------------------------------------
+// OIDC trust (CTL-035)
+// ---------------------------------------------------------------------------
+const GITHUB_OIDC = "token.actions.githubusercontent.com";
+function githubRoles(templates) {
+  return tpl.resources(templates, "AWS::IAM::Role").flatMap((role) => {
+    const statements = list(role.Properties?.AssumeRolePolicyDocument?.Statement);
+    const trusting = statements.filter(
+      (st) => st.Effect === "Allow" && list(st.Action).includes("sts:AssumeRoleWithWebIdentity") && JSON.stringify(st.Principal ?? "").includes(GITHUB_OIDC),
+    );
+    return trusting.length ? [{ role, statements: trusting }] : [];
+  });
+}
+
+Then("at least one IAM role trusts GitHub's OIDC provider", function () {
+  assert.ok(githubRoles(all(this)).length > 0, "CTL-035: no IAM role trusts token.actions.githubusercontent.com");
+});
+
+Then("every role that trusts GitHub's OIDC provider requires the audience {string}", function (aud) {
+  const bad = githubRoles(all(this)).filter(({ statements }) =>
+    statements.some((st) => st.Condition?.StringEquals?.[`${GITHUB_OIDC}:aud`] !== aud),
+  );
+  none(`CTL-035 role without audience ${aud}`, bad.map(({ role }) => `${role.template.env}:${role.id}`));
+});
+
+Then("every role that trusts GitHub's OIDC provider accepts only this repository's environment for its template", function () {
+  const slug = repo.rootOfTrust.repository;
+  const bad = githubRoles(all(this)).filter(({ role, statements }) =>
+    statements.some((st) => {
+      const want = `repo:${slug}:environment:${role.template.env}`;
+      const loose = Object.entries(st.Condition ?? {}).some(([op, keys]) => op !== "StringEquals" && `${GITHUB_OIDC}:sub` in (keys ?? {}));
+      return loose || st.Condition?.StringEquals?.[`${GITHUB_OIDC}:sub`] !== want;
+    }),
+  );
+  none(`CTL-035 role not pinned to repo:${slug}:environment:<env>`, bad.map(({ role }) => `${role.template.env}:${role.id}`));
+});
+
+// ---------------------------------------------------------------------------
 // Organization (SCPs)
 // ---------------------------------------------------------------------------
 function attachedScpStatements(templates) {
@@ -146,7 +184,6 @@ function attachedScpStatements(templates) {
     });
 }
 
-const list = (v) => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
 const matchesAction = (pattern, action) =>
   new RegExp(`^${pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`, "i").test(action);
 

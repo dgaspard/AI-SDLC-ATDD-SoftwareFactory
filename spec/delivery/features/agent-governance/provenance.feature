@@ -27,8 +27,12 @@ Feature: Agent-built delivery stays accountable to humans
     And no delivery workflow is part of the root of trust
 
   @CTL-023 @awaiting:ENV-03 @nist:AC-5 @ssdf:PO.2.1 @env:prod
-  Scenario: Only a human can release to prod
+  Scenario: Prod receives exactly what was tested and a human let through
+    Revised 2026-10-10 (A-22): promotion is automatic after a human approves or merges,
+    so the job itself proves the images are the tested ones and that no agent merged them.
     Given the delivery workflows
     Then at least one job deploys to "prod"
     And every job that deploys to "prod" runs in the GitHub environment "prod"
     And every job that deploys to "prod" verifies both attestations before it deploys
+    And every job that deploys to "prod" compares the attested tree with main's tree before it deploys
+    And every job that deploys to "prod" checks who merged the change before it deploys
