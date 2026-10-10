@@ -233,14 +233,42 @@ by about 1% of pixels. Original scope: an agent builds the Dockerfiles and `comp
 until the `local` and `pipeline` static scenarios pass. The existing harness must
 still pass unchanged (the runtime contract is unaffected). Closes ARCH-05 (A-17).
 
+### SPEC-09 — Continuous delivery controls (A-21..A-23)
+
+Status: planned; spec work only, no AWS. Rewrites and adds delivery controls for the
+decisions of 2026-10-10. Drafted as a patch and frozen by Dustin, like SPEC-08.
+- **Rewrite CTL-023:** the prod deploy runs only on push to `main`, in the `prod`
+  environment (protected branches, no required reviewer). It verifies both attestations,
+  and that the attested tree hash equals `main`'s tree.
+- **Rewrite CTL-025:** the agent identity can't approve, merge or bypass: it isn't a
+  code owner, a ruleset bypass actor or a reviewer. The `main` ruleset requires
+  code-owner approval or a human admin bypass, approval of the last push (so nobody can
+  push after approval), and branches up to date before merging (a merge queue later).
+  The prod reviewer clause is dropped.
+- **New, static, CI-02 (A-21):** every `run:` step in `delivery-*.yml` calls one script
+  under `scripts/ci/` or `infra/`. Privileges live only in workflow YAML.
+- **New, template, ENV-02:** every IAM role that trusts GitHub's OIDC provider pins
+  `aud` to `sts.amazonaws.com` and `sub` to this repo plus one environment (`nonprod` or
+  `prod`), with no wildcards. The non-prod role lives only in the non-prod account.
+- **New, static, ENV-03:** non-prod deploys run on same-repo `pull_request`, never
+  `pull_request_target`. Prod deploys run on push to `main` and need non-prod evidence
+  for the same tree.
+- **New, live, ENV-03:** a change promotes only if a human approved it or merged it.
+  A merge through the human admin bypass counts and is recorded as a self-merge. Anything
+  merged by the agent identity does not promote.
+- **New, EVID-01 (A-23):** every prod promotion publishes a release record with the
+  required fields as a GitHub Release, plus an attestation. Later (ENV-02/03): the record
+  is copied to an S3 Object Lock bucket in the log-archive account.
+
 ### CI-02 — Delivery pipeline as a by-product
 
 Status: planned. Done when every `@awaiting:CI-02` tag is removed at a freeze. That
 includes CTL-025, which needs the agent's own GitHub identity: a separate account or app
 with write access, not an admin, not a `prod` reviewer, and listed in
 `root-of-trust.json` → `agentIdentities`. Agent sessions use its credentials, never
-the maintainer's. An agent builds `.github/workflows/delivery-*.yml` until the
-`pipeline/` and `agent-governance/` scenarios pass:
+the maintainer's. Thin workflows (A-21): Dustin owns the small `.github/workflows/delivery-*.yml` files,
+which grant privileges; an agent builds the `scripts/ci/` and `infra/` scripts they call,
+until the `pipeline/` and `agent-governance/` scenarios pass:
 - scans gate with `SECURITY_GATE=fail`
 - SBOM via Syft
 - SLSA and AI provenance attestations
@@ -261,8 +289,10 @@ and the management account by hand; that bootstrap can't be a by-product.
 
 ### ENV-03 — Prod promotion
 
-Status: planned. Done when every `@awaiting:ENV-03` tag is removed at a freeze. Promote the same image digest after a human approves in the `prod`
-GitHub Environment, verifying both attestations; prod runs with test endpoints off,
+Status: planned. Done when every `@awaiting:ENV-03` tag is removed at a freeze. Revised
+2026-10-10 (A-22): merging to `main` promotes the PR's tested images to prod
+automatically, with no second click. Before deploying it verifies both attestations and
+that non-prod evidence exists for the same tree. Prod runs with test endpoints off,
 inside a short promotion window, with a rollback runbook. The `promotion/` and
 `operations/` features are drafted with this item. Also fix OBS-008 (an exporter
 crash can take a service down) before prod.
@@ -278,7 +308,9 @@ test. All are planned catalog entries today.
 Status: planned. Generate the control coverage matrix and a per-run evidence bundle
 from the Cucumber JSON output (CTL, NIST and SSDF tags), the run record, the image
 digest, the SBOM, both attestations and the approver. Fail when a binding control has
-no evidence.
+no evidence. Per prod promotion (A-23), publish a release record: a readable summary
+plus JSON for reporting. It goes to a GitHub Release with an attestation now, and to
+S3 Object Lock in the log-archive account once ENV-02 exists.
 
 ### EXP-02 — Rebuild the delivery code from the spec
 
