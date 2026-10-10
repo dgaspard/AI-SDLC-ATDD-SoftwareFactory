@@ -87,7 +87,39 @@ instead of becoming a new one.
 | **OSCAL-01** Machine-readable compliance | Export the control catalog and per-release evidence as OSCAL | Toward continuous authorization to operate | EVID-01, after SUPPLY-01 |
 | **DEPS-01** Dependency-update policy | Renovate or Dependabot PRs are bot-authored. Under "agents never merge", every bump waits for a human. Accept that, or define a narrow, tested exception | An explicit decision instead of a surprise | CI-02 |
 | **MQ-01** Merge queue | Replace "require branches to be up to date" with a GitHub merge queue once several agents open PRs in parallel | Prevents the rebase race while keeping tested tree = merged tree (A-22) | Later |
+| **START-02** Software factory: template repo plus dev container | Productize the method so a new project starts with the tools, checks and governance from day one. Three layers: (1) a dev container with pinned tools; (2) a template repo holding the guard, test policy, portable `spec/delivery` controls and catalog, `AGENTS.md`, hooks, and a hello-world service; (3) organization setup (rulesets, agent App, AWS accounts with SCPs, OIDC roles, central reusable workflows). A new repo starts with controls `@awaiting`, and failing live checks act as the onboarding checklist. | **Sequenced after persistence** (DATA-01), decided 2026-10-10: understand every layer of an application, including durable state, before productizing. Implements START-01. | START-01 |
 | **REVIEW-01** Make freezes reviewable | Keep protected patches small (one control per patch) and add a review checklist for freezes | The human freeze is the bottleneck and the main risk | Process / AGENTS.md |
+
+### START-02 outline (for when it's picked up)
+
+- **Prerequisite: one project config.** Move what's hardcoded today into a single file:
+  the repo slug in predicate-type URIs and `root-of-trust.json`, the App ID and slug in
+  `tools/github/agent.mjs`, the region and budget in the catalog, and the container
+  names in DC-004.
+- **Split portable from project-specific (A-15).** Petclinic-only controls and data
+  (`PETCLINIC_TEST_ENDPOINTS`, seed data, petclinic catalog entries) leave the template.
+- **Ship controls as a versioned package**, not a copy. The template provides the
+  skeleton. `spec/delivery` arrives as a pinned package or git ref, and the reusable
+  workflows as SHA-pinned references to a central repo. Projects adopt new control
+  versions through a freeze, instead of each copy drifting.
+- **The dev container as the agent sandbox.** Agents run inside it with only the App's
+  credentials (closes AGENT-01). Compose and the browser container need Docker-in-Docker
+  or the host's Docker socket; Codespaces is an option.
+- **The first 15 minutes, made executable.** Clone the template, and the red checks list
+  what's missing (no ruleset, no agent identity, no OIDC role).
+  `npm --prefix spec/delivery run test:awaiting` shows progress.
+- **The graduation test (ENG-02):** the hello-world repo is the second project that
+  proves the portable kit.
+- **What to call it.** "Software factory" is the US Department of Defense term (Kessel
+  Run, Platform One) for an organization that provides a secured, compliant pipeline
+  and environment so teams ship to production with a continuous authorization to
+  operate. Close relatives:
+  - **golden path / paved road:** the template-plus-dev-container layer;
+  - **internal developer platform:** the organization layer;
+  - **platform engineering:** the discipline.
+
+  For a government audience, "software factory" fits. What's specific here is that
+  agents are first-class workers inside it, with their own identity and limits.
 
 ## Part 2 — Talking points
 

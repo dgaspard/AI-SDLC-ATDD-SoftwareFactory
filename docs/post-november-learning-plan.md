@@ -114,6 +114,11 @@ Still open (answer before scoping CI/CD-to-cloud as a real backlog item):
 - **The first 15 minutes** ([START-01](../BACKLOG.md#start-01--the-first-15-minutes)):
   make it easy for a remote, multi-role group in a regulated organization to start a
   project with this workflow. Comes after CI/CD and data persistence.
+- **Software factory** (2026-10-10; candidate START-02 in
+  [the 2026-10-10 recap](recaps/2026-10-10-delivery-governance.md)): productize the
+  method as a dev container, a template repo and an organization layer. **Decided:
+  after data persistence.** Understand every layer of an application, including durable
+  state, before productizing it.
 
 ## Decided (2026-10-10): CI/CD-to-cloud scoped as SPEC-08
 
