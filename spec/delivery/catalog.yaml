@@ -63,6 +63,19 @@ entries:
       prod: { use: not-used, why: ECS runs the images in the cloud. }
     cost: Free.
 
+  - id: browser-reference-container
+    name: Browser tests in a pinned reference container
+    kind: tool
+    tools: [Docker, Playwright container image]
+    purpose: "The browser suite and its screenshot baselines run in one pinned Linux container on every host, so a Mac and a CI runner render identical pixels (A-17)."
+    status: enforced
+    existing_checks: [spec/tests/browser/run-in-container.sh, spec/frontend/visual-baselines/reference-environment.json]
+    environments:
+      local: { use: required, why: "Agents and developers compare screenshots in the same environment CI uses; Docker must be running." }
+      nonprod: { use: required, why: "CI runs the same container, so a visual difference means a real change, not a different operating system." }
+      prod: { use: not-used, why: "Screenshots are compared before deployment, never in prod." }
+    cost: Free; the image is about 2 GB, pulled once.
+
   # --- Pipeline -----------------------------------------------------------------
   - id: workflow-hardening
     name: Least-privilege, pinned workflows

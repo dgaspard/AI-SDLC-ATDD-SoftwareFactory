@@ -81,8 +81,9 @@ export function triggers(doc) {
   return on ?? {};
 }
 
-// DC-005
-export const composeFile = () => (exists("compose.yaml") ? YAML.parse(read("compose.yaml")) ?? {} : null);
+// DC-005. Compose honors YAML merge keys (`<<: *anchor`), so the spec must read them the
+// same way; without `merge: true` a shared environment block looks like a literal "<<" key.
+export const composeFile = () => (exists("compose.yaml") ? YAML.parse(read("compose.yaml"), { merge: true }) ?? {} : null);
 
 export function envValue(environment, key) {
   if (!environment) return undefined;

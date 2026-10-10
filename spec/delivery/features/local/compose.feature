@@ -1,4 +1,4 @@
-@tier:static @pillar:governance @awaiting:ENV-01
+@tier:static @pillar:governance
 Feature: One command starts the whole system locally
   Local is the agent's fast loop. It runs the same images the cloud runs, plus the
   payment fake and the OTLP test collector, with test endpoints switched on.

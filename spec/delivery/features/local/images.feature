@@ -1,4 +1,4 @@
-@tier:static @pillar:security @awaiting:ENV-01
+@tier:static @pillar:security
 Feature: Hardened container images for every runnable project
   Each project that runs as a process is packaged as one container image, built the
   same way for every environment (A-17). The image is what gets promoted from non-prod

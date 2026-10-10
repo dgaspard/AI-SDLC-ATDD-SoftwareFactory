@@ -66,7 +66,8 @@ AGENTS.md                          Guardrails for coding agents
 
 ## Prerequisites and commands
 
-Node.js 22, 24, or 26+ (matching the package engine declarations).
+Node.js 22, 24, or 26+ (matching the package engine declarations), and Docker (the
+browser suite and the local system run in containers, A-17).
 
 ```bash
 npm ci
@@ -79,8 +80,16 @@ npm run trace:payment               # capture a real-service checkout trace
 npm --prefix spec run guard:check    # verifies frozen protected files and skip/focus rules
 npm --prefix spec run test:bdd       # service scenarios only
 npm --prefix spec run test:workflows # real-service journeys using Playwright HTTP
-npm --prefix spec run test:browser   # five frontend checks in headless Chromium
+npm run test:suite -- browser        # frontend checks in the pinned Playwright container
 npm --prefix spec run test:performance # local HTTP load, latency and financial checks
+```
+
+Run the whole system locally in the same images the cloud will use (ENV-01):
+
+```bash
+docker compose up --build -d        # open http://localhost:3000 (jordan.rivera / petclinic-demo)
+node tools/compose-smoke.mjs        # health, login, CORS and traces through the stack
+docker compose down                 # stop it before npm test: they share ports
 ```
 
 Full validation requires permission to bind local test ports. The service-BDD
@@ -90,6 +99,6 @@ The [engineering review](docs/engineering-reviews/impl-02-javascript.md) records
 the fixes, evidence, and in-memory limitations. The [frontend engineering review](docs/engineering-reviews/fe-01-javascript.md)
 records FE-01 evidence. PERF-01's local performance checks are human-frozen and
 pass; see its [handoff](docs/handoffs/perf-01.md).
-The browser suite requires the pinned
-Playwright Chromium installation (`cd spec` then `npx playwright install chromium`).
+The browser suite runs in the pinned Playwright container
+(`spec/tests/browser/run-in-container.sh`) so screenshots match on every host.
 Only a human reviews and freezes protected changes.

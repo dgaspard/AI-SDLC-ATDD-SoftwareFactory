@@ -72,6 +72,8 @@ Backlog tasks state which phase they run in.
 - Follow the test loop below. Work is complete only when `npm run test:verify` passes.
 
 ## Test loop
+pm run test:verify
+The browser suite runs in the pinned Playwright container (spec/tests/browser/run-in-container.sh), so Docker must be running for test:gate; if Docker is missing it fails with tooling:, never as a product failure.
 
 `spec/test-policy.json` (protected) defines the suites, the tiers, and which changed paths
 select which suites. `spec/run-all.js` runs them and writes a run record to
@@ -95,4 +97,5 @@ suite ran, its command, counts, duration, and log.
 Any edit changes the tree hash, so earlier passes no longer count. Fix, then gate once.
 CI runs `npm test` (full tier, no cache) on every pull request; local records never
 replace CI.
+
 - Explain any requirement ambiguity before implementing a guess that changes behavior.

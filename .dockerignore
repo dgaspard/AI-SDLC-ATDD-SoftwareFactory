@@ -1,0 +1,14 @@
+# Keep build contexts small and free of secrets.
+**/node_modules
+.git
+.env
+.env.*
+*.pem
+test-results
+playwright-report
+docs
+infra/out
+tools/security/.spike-output
+.venv
+**/__pycache__
+.DS_Store

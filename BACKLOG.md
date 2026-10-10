@@ -220,7 +220,16 @@ Since the freeze:
 
 ### ENV-01 — Local environment as a by-product
 
-Status: planned, after SPEC-08. Done when every `@awaiting:ENV-01` tag is removed at a freeze. An agent builds the Dockerfiles and `compose.yaml`
+Status: **built 2026-10-10; awaiting freeze.** Dockerfiles for the four services and
+the frontend (`node:24-bookworm-slim` pinned by digest, non-root, permissions normalized,
+built from the repository root), a local-only `docker/spec-tools` image for the payment
+fake and collector, and `compose.yaml` (127.0.0.1-only ports, read-only file systems,
+all capabilities dropped, health checks). `tools/compose-smoke.mjs` passes 13/13. CTL-001..005
+pass. The patch `docs/spec-drafts/env-01-docker-and-browser-container.patch` removes the
+`@awaiting:ENV-01` tags. It also fixes a spec bug: the compose reader ignored YAML merge
+keys, which Compose honors. And it moves the browser suite into the pinned Playwright
+container, with re-rendered baselines, because Mac-rendered baselines failed on Linux CI
+by about 1% of pixels. Original scope: an agent builds the Dockerfiles and `compose.yaml`
 until the `local` and `pipeline` static scenarios pass. The existing harness must
 still pass unchanged (the runtime contract is unaffected). Closes ARCH-05 (A-17).
 

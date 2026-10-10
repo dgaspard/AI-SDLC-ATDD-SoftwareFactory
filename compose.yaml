@@ -1,0 +1,107 @@
+# ENV-01 (DC-005): the whole system locally, in the same images the cloud will run.
+#   docker compose up --build -d     then open http://localhost:3000
+#   docker compose down
+# Services reach each other by service name; the browser reaches them through ports
+# published on 127.0.0.1 only. Demo values only: no real secrets belong here.
+name: petclinic
+
+x-hardening: &hardening
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  init: true
+  restart: unless-stopped
+
+x-service-env: &service-env
+  CLINIC_NOW: ${CLINIC_NOW:-2026-10-05T09:00:00-05:00}
+  AUTH_TOKEN_SECRET: demo-only-not-a-secret
+  SEED_DATA_DIR: /app/spec/seed-data
+  FRONTEND_ORIGIN: http://localhost:3000
+  PETCLINIC_TEST_ENDPOINTS: enabled
+  CUSTOMER_URL: http://customer:4001
+  RESERVATION_URL: http://reservation:4002
+  VETERINARIAN_SERVICES_URL: http://veterinarian-services:4003
+  CHECKOUT_URL: http://checkout:4004
+  PAYMENT_PROVIDER_URL: http://payment-fake:4010
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: none
+  OTEL_LOGS_EXPORTER: none
+  OTEL_BSP_SCHEDULE_DELAY: "100"
+
+x-healthcheck: &healthcheck
+  test: ["CMD", "node", "-e", "fetch('http://localhost:'+process.env.PORT+'/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+  interval: 5s
+  timeout: 3s
+  retries: 6
+  start_period: 5s
+
+services:
+  customer:
+    <<: *hardening
+    build: { context: ., dockerfile: services/customer/Dockerfile }
+    environment: { <<: *service-env, OTEL_SERVICE_NAME: petclinic-customer }
+    ports: ["127.0.0.1:4001:4001"]
+    healthcheck: *healthcheck
+    depends_on: [otel-collector]
+
+  reservation:
+    <<: *hardening
+    build: { context: ., dockerfile: services/reservation/Dockerfile }
+    environment: { <<: *service-env, OTEL_SERVICE_NAME: petclinic-reservation }
+    ports: ["127.0.0.1:4002:4002"]
+    healthcheck: *healthcheck
+    depends_on: [otel-collector]
+
+  veterinarian-services:
+    <<: *hardening
+    build: { context: ., dockerfile: services/veterinarian-services/Dockerfile }
+    environment: { <<: *service-env, OTEL_SERVICE_NAME: petclinic-veterinarian-services }
+    ports: ["127.0.0.1:4003:4003"]
+    healthcheck: *healthcheck
+    depends_on: [otel-collector]
+
+  checkout:
+    <<: *hardening
+    build: { context: ., dockerfile: services/checkout/Dockerfile }
+    environment: { <<: *service-env, OTEL_SERVICE_NAME: petclinic-checkout }
+    ports: ["127.0.0.1:4004:4004"]
+    healthcheck: *healthcheck
+    depends_on: [otel-collector, payment-fake]
+
+  frontend:
+    <<: *hardening
+    build: { context: ., dockerfile: frontend/Dockerfile }
+    environment:
+      # The browser calls the services directly, so these are host-published URLs.
+      CUSTOMER_URL: http://localhost:4001
+      RESERVATION_URL: http://localhost:4002
+      VETERINARIAN_SERVICES_URL: http://localhost:4003
+      CHECKOUT_URL: http://localhost:4004
+    ports: ["127.0.0.1:3000:3000"]
+    healthcheck: *healthcheck
+    depends_on:
+      customer: { condition: service_healthy }
+      reservation: { condition: service_healthy }
+      veterinarian-services: { condition: service_healthy }
+      checkout: { condition: service_healthy }
+
+  payment-fake:
+    <<: *hardening
+    build: { context: ., dockerfile: docker/spec-tools/Dockerfile }
+    image: petclinic-spec-tools
+    command: ["spec/fakes/payment/start"]
+    environment: { PORT: "4010", PETCLINIC_TEST_ENDPOINTS: enabled }
+    ports: ["127.0.0.1:4010:4010"]
+    healthcheck: *healthcheck
+
+  otel-collector:
+    <<: *hardening
+    build: { context: ., dockerfile: docker/spec-tools/Dockerfile }
+    image: petclinic-spec-tools
+    command: ["spec/harness/collector/start"]
+    environment: { PORT: "4318", PETCLINIC_TEST_ENDPOINTS: enabled }
+    ports: ["127.0.0.1:4318:4318"]
+    healthcheck: *healthcheck
