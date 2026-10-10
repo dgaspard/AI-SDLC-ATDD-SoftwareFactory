@@ -227,6 +227,33 @@ No open questions remain for the first slice.
     `root-of-trust.json` → `agentIdentities`, and give agent sessions its credentials
     instead of yours. Then remove `@awaiting:CI-02` from CTL-025 at a freeze.
 
+## Decided 2026-10-10: thin workflows and continuous delivery
+
+Recorded as A-21..A-23 in `PROJECT-PLAN.md`; the control changes are backlog item
+SPEC-09.
+
+**Thin workflows, thick scripts (A-21).** OIDC lets a job swap a short-lived GitHub
+token for AWS credentials. Whoever writes a workflow therefore decides which jobs can
+obtain credentials, and the IAM trust policy is the real boundary. Workflow YAML stays
+small and human-owned, and holds only privilege: triggers, permissions, environment,
+role. Agents build the scripts the YAML calls. A human edits YAML only when a privilege
+changes, which is the one change that must have a human in the loop.
+
+**Continuous delivery (A-22).** PR, then ephemeral non-prod plus the live tier, then
+human approval and merge, then automatic promotion of the same images to prod. The
+human gate moves from a prod-environment click to PR approval, so "agent authors, human
+approves" is the separation of duties. Two consequences:
+- Non-prod runs agent-written scripts from unreviewed branches. That is acceptable only
+  because non-prod is an isolated account bounded by SCPs, and its role trusts only this
+  repo's `nonprod` environment.
+- Prod must prove it received what was tested. PRs must be up to date with `main`, and
+  prod checks that the attested tree hash equals `main`'s tree.
+
+**Release record (A-23).** Reporting and governance documentation is a by-product: each
+promotion publishes who changed what, under which spec, with which tests and evidence,
+and when it ran. It's a GitHub Release now, and S3 Object Lock in a log-archive account
+once one exists.
+
 ## Decided after the freeze (2026-10-10)
 
 **Controls whose delivery code isn't built yet: `@awaiting:<backlog ID>`.** Freezing
