@@ -10,7 +10,7 @@ Feature: Duplicate payment protection
   # SPEC-07: accepted risk. Expected to fail on builds that don't record the attempt
   # key before a dependency's transport failure (ENG-02 REV-001, Python Checkout r4).
   # It runs only in the accepted-risks suite; a pass is reported as a STATE CHANGE.
-  @accepted-risk @risk:REV-001 @source:eng-02-review-r4-python-2026-10-07 @owner:dustin @review:2027-01-31
+  # @accepted-risk @risk:REV-001 @source:eng-02-review-r4-python-2026-10-07 @owner:dustin @review:2027-01-31
   Scenario: A same-key retry after Customer drops the connection does not charge again
     Given the fake payment provider will authorize the card
     And Customer will drop the connection on the next account change
