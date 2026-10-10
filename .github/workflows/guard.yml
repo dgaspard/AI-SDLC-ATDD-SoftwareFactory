@@ -50,8 +50,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: spec/package-lock.json
+          cache-dependency-path: |
+            spec/package-lock.json
+            services/platform/package-lock.json
       - run: npm --prefix spec ci
+      # Runtime contract RT-001: each project's setup installs its own dependencies (the
+      # services share services/platform). Language-neutral: a rebuilt Python service's
+      # setup works the same way.
+      - run: for s in services/*/setup frontend/setup; do (cd "$(dirname "$s")" && ./setup); done
+      - run: npx --prefix spec playwright install --with-deps chromium
       - run: npm test
       - if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

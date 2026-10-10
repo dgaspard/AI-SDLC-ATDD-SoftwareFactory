@@ -137,7 +137,7 @@ A production-shaped AWS member account environment. It runs only images already 
 | Human-owned root of trust | guard.yml, CODEOWNERS, spec/guard | required | CI's own run of the spec is authoritative. | CTL-022 | enforced |
 | Signed build provenance (SLSA) | GitHub artifact attestations | required | Verified before deploying. | CTL-020 | specified, awaiting CI-02 |
 | AI provenance attestation | GitHub artifact attestations, in-toto | required | Verified before deploying. | CTL-021 | specified, awaiting CI-02 |
-| Human approval to release | GitHub Environments | required | An agent can build and test, but only a human can release. | CTL-023, CTL-025, CTL-026 | specified, awaiting CI-02, ENV-03 |
+| Human approval to release | GitHub Environments | required | An agent can build and test, but only a human can release. | CTL-023, CTL-025, CTL-026 | partly enforced, awaiting ENV-03 |
 | Organization guardrails (SCPs) | AWS Organizations | required | Guardrails apply to every member account. | CTL-050, CTL-051, CTL-052 | specified, awaiting ENV-02 |
 | Audit trail and configuration history | AWS CloudTrail, AWS Config | required | Every cloud change is recorded. | — | planned |
 | Hardened ECS Fargate tasks | Amazon ECS on AWS Fargate | required | Test endpoints off. | CTL-032, CTL-033 | specified, awaiting ENV-02 |
@@ -162,7 +162,7 @@ A production-shaped AWS member account environment. It runs only images already 
 - [x] Human-owned root of trust
 - [ ] Signed build provenance (SLSA) (specified, awaiting CI-02)
 - [ ] AI provenance attestation (specified, awaiting CI-02)
-- [ ] Human approval to release (specified, awaiting CI-02, ENV-03)
+- [ ] Human approval to release (partly enforced, awaiting ENV-03)
 - [ ] Organization guardrails (SCPs) (specified, awaiting ENV-02)
 - [ ] Audit trail and configuration history (planned)
 - [ ] Hardened ECS Fargate tasks (specified, awaiting ENV-02)

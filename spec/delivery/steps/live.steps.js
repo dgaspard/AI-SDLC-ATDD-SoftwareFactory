@@ -80,6 +80,29 @@ Then("no agent identity has admin permission on the repository", function () {
   none("CTL-025 agent identity is an admin and can bypass rules", bad);
 });
 
+// An App is never a collaborator, so the admin check above can't catch it; a ruleset can
+// still list the App (actor_type Integration) as a bypass actor.
+Then("no ruleset for branch {string} lets an agent identity bypass it", function (branch) {
+  const appId = repo.rootOfTrust.agentApp?.id;
+  const rulesetIds = [...new Set(branchRules(this, branch).map((r) => r.ruleset_id))];
+  const bad = rulesetIds.flatMap((id) =>
+    (api(`repos/${this.slug}/rulesets/${id}`).bypass_actors ?? [])
+      .filter((a) => a.actor_type === "Integration" && a.actor_id === appId)
+      .map((a) => `ruleset ${id} lets App ${a.actor_id} bypass (${a.bypass_mode})`),
+  );
+  none(`CTL-025 agent can bypass ${branch}`, bad);
+});
+
+// Otherwise a branch the agent pushed could run a prod deployment job.
+Then("the GitHub environment {string} accepts deployments only from protected branches", function (env) {
+  reviewersRule(this, env);
+  assert.equal(
+    this.environment.deployment_branch_policy?.protected_branches,
+    true,
+    `CTL-025: environment ${env} accepts deployments from any branch`,
+  );
+});
+
 // DC-008: `infra/deploy prod` records what it deployed.
 Given("the images recorded by the last prod deployment", function () {
   const rel = "infra/out/prod/deployed-images.json";

@@ -1,0 +1,54 @@
+diff --color -ruN a/spec/delivery/features/agent-governance/live-governance.feature b/spec/delivery/features/agent-governance/live-governance.feature
+--- a/spec/delivery/features/agent-governance/live-governance.feature	2026-10-10 12:38:56
++++ b/spec/delivery/features/agent-governance/live-governance.feature	2026-10-10 13:27:02
+@@ -12,7 +12,7 @@
+     Then the rules for branch "main" require a pull request with code-owner review
+     And the rules for branch "main" require every check named in the root of trust
+ 
+-  @CTL-025 @awaiting:CI-02 @nist:AC-5 @ssdf:PO.2.1 @env:prod
++  @CTL-025 @nist:AC-5 @ssdf:PO.2.1 @env:prod
+   Scenario: Agents act under their own GitHub identity, which can never approve prod
+     Decided 2026-10-10: one maintainer, so self-review is allowed. Separation of duties is
+     between the human and the agents: agents never use the maintainer's credentials.
+@@ -21,6 +21,8 @@
+     And at least one agent identity is listed in the root of trust
+     And no agent identity is a reviewer for the GitHub environment "prod"
+     And no agent identity has admin permission on the repository
++    And no ruleset for branch "main" lets an agent identity bypass it
++    And the GitHub environment "prod" accepts deployments only from protected branches
+ 
+   @CTL-026 @awaiting:ENV-03 @nist:SR-4 @ssdf:PS.2.1 @env:prod
+   Scenario: Every image running in prod has verified build and AI provenance
+diff --color -ruN a/spec/delivery/steps/live.steps.js b/spec/delivery/steps/live.steps.js
+--- a/spec/delivery/steps/live.steps.js	2026-10-10 12:38:56
++++ b/spec/delivery/steps/live.steps.js	2026-10-10 13:27:02
+@@ -80,6 +80,29 @@
+   none("CTL-025 agent identity is an admin and can bypass rules", bad);
+ });
+ 
++// An App is never a collaborator, so the admin check above can't catch it; a ruleset can
++// still list the App (actor_type Integration) as a bypass actor.
++Then("no ruleset for branch {string} lets an agent identity bypass it", function (branch) {
++  const appId = repo.rootOfTrust.agentApp?.id;
++  const rulesetIds = [...new Set(branchRules(this, branch).map((r) => r.ruleset_id))];
++  const bad = rulesetIds.flatMap((id) =>
++    (api(`repos/${this.slug}/rulesets/${id}`).bypass_actors ?? [])
++      .filter((a) => a.actor_type === "Integration" && a.actor_id === appId)
++      .map((a) => `ruleset ${id} lets App ${a.actor_id} bypass (${a.bypass_mode})`),
++  );
++  none(`CTL-025 agent can bypass ${branch}`, bad);
++});
++
++// Otherwise a branch the agent pushed could run a prod deployment job.
++Then("the GitHub environment {string} accepts deployments only from protected branches", function (env) {
++  reviewersRule(this, env);
++  assert.equal(
++    this.environment.deployment_branch_policy?.protected_branches,
++    true,
++    `CTL-025: environment ${env} accepts deployments from any branch`,
++  );
++});
++
+ // DC-008: `infra/deploy prod` records what it deployed.
+ Given("the images recorded by the last prod deployment", function () {
+   const rel = "infra/out/prod/deployed-images.json";

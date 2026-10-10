@@ -6,3 +6,5 @@ test-results/
 tools/security/.spike-output/
 .venv/
 __pycache__/
+.env
+.env.local

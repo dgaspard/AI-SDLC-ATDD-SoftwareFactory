@@ -42,6 +42,13 @@ Backlog tasks state which phase they run in.
 
 ## Requirements
 
+- Agent GitHub operations must use the `ai-sdlc-bdd-agent` GitHub App (App ID
+  `5265528`), through `node tools/github/agent.mjs gh <args>` or
+  `node tools/github/agent.mjs git <args>` for authenticated Git operations.
+  Run `node tools/github/agent.mjs check` to verify authentication. Never fall
+  back to the maintainer's personal token, default `gh` login, or personal
+  GitHub connector to create PRs. If App authentication fails, stop that operation.
+
 - Treat files under `spec/features/` as product requirements.
 - Do not modify feature files or test steps merely to make a failing build pass.
 - Change a feature only when the requested behavior has intentionally changed.
