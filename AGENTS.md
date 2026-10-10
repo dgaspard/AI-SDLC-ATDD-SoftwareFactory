@@ -72,6 +72,7 @@ Backlog tasks state which phase they run in.
 - Follow the test loop below. Work is complete only when `npm run test:verify` passes.
 
 ## Test loop
+
 pm run test:verify
 The browser suite runs in the pinned Playwright container (spec/tests/browser/run-in-container.sh), so Docker must be running for test:gate; if Docker is missing it fails with tooling:, never as a product failure.
 
