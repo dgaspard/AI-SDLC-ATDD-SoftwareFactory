@@ -103,6 +103,31 @@ Then("the GitHub environment {string} accepts deployments only from protected br
   );
 });
 
+const bare = (login) => String(login ?? "").replace(/\[bot\]$/, "").toLowerCase();
+
+Then("no agent identity is a code owner", function () {
+  const owners = repo.exists(".github/CODEOWNERS") ? repo.read(".github/CODEOWNERS").toLowerCase() : "";
+  none("CTL-025 agent identity listed in CODEOWNERS", agents().filter((a) => owners.includes(`@${bare(a)}`)));
+});
+
+Then("the rules for branch {string} require an up-to-date branch and approval of the last push", function (branch) {
+  const rules = branchRules(this, branch);
+  const strict = rules.some((r) => r.type === "required_status_checks" && r.parameters?.strict_required_status_checks_policy === true);
+  const lastPush = rules.some((r) => r.type === "pull_request" && r.parameters?.require_last_push_approval === true);
+  none(`CTL-025 ${branch} ruleset`, [
+    ...(strict ? [] : ["does not require branches to be up to date before merging"]),
+    ...(lastPush ? [] : ["does not require approval of the most recent push"]),
+  ]);
+});
+
+Then("none of the last {int} merged pull requests was merged by an agent identity", function (count) {
+  const [owner, name] = this.slug.split("/");
+  const query = `query($o:String!,$n:String!){repository(owner:$o,name:$n){pullRequests(states:MERGED,last:${count}){nodes{number mergedBy{login}}}}}`;
+  const nodes = JSON.parse(gh(["api", "graphql", "-f", `query=${query}`, "-F", `o=${owner}`, "-F", `n=${name}`])).data.repository.pullRequests.nodes;
+  const agentLogins = agents().map(bare);
+  none("CTL-028 pull request merged by an agent", nodes.filter((pr) => agentLogins.includes(bare(pr.mergedBy?.login))).map((pr) => `#${pr.number}`));
+});
+
 // DC-008: `infra/deploy prod` records what it deployed.
 Given("the images recorded by the last prod deployment", function () {
   const rel = "infra/out/prod/deployed-images.json";

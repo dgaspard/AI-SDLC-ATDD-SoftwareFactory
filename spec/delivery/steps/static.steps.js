@@ -3,6 +3,7 @@
 // least one X exists, so an empty repository is red, never vacuously green.
 import { Given, Then } from "@cucumber/cucumber";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import path from "node:path";
 import * as repo from "./support/repo.js";
 
@@ -175,7 +176,7 @@ Then("delivery runs each portable security scan:", function (table) {
   const missing = [];
   for (const script of scripts) {
     const hits = repo.jobs(this.workflows).flatMap((j) =>
-      j.steps.filter((s) => (s.run ?? "").includes(script)).map((step) => ({ ...j, step, script })),
+      j.steps.filter((s) => (repo.effectiveRun(s)).includes(script)).map((step) => ({ ...j, step, script })),
     );
     if (hits.length === 0) missing.push(script);
     this.scanSteps.push(...hits);
@@ -194,7 +195,7 @@ Then("those scan steps set SECURITY_GATE to {string}", function (value) {
 
 Then("no scan step or its job can continue on error", function () {
   const bad = this.scanSteps.filter(
-    (s) => s.step["continue-on-error"] === true || s.job["continue-on-error"] === true || /\|\|\s*true/.test(s.step.run ?? ""),
+    (s) => s.step["continue-on-error"] === true || s.job["continue-on-error"] === true || /\|\|\s*true/.test(repo.effectiveRun(s.step)),
   );
   none("CTL-013 scan failure is swallowed", bad.map((s) => `${s.label} (${s.script})`));
 });
@@ -215,7 +216,7 @@ Then("at least one job builds a container image", function () {
 
 Then("every job that builds a container image also generates an SBOM with Syft", function () {
   const bad = imageJobs(this.workflows).filter(
-    (j) => !j.steps.some((s) => repo.actionName(s) === "anchore/sbom-action" || /\bsyft\b/.test(s.run ?? "")),
+    (j) => !j.steps.some((s) => repo.actionName(s) === "anchore/sbom-action" || /\bsyft\b/.test(repo.effectiveRun(s))),
   );
   none("CTL-014 image built without an SBOM", bad.map((j) => j.label));
 });
@@ -250,7 +251,7 @@ Then("it runs on every pull request and on every push to main", function () {
 });
 
 Then("it runs the guard check and the delivery suite", function () {
-  const runs = repo.jobs([this.workflow]).flatMap((j) => j.steps.map((s) => s.run ?? ""));
+  const runs = repo.jobs([this.workflow]).flatMap((j) => j.steps.map((s) => repo.effectiveRun(s)));
   assert.ok(runs.some((r) => r.includes("guard:check")), "CTL-022: root of trust does not run guard:check");
   assert.ok(runs.some((r) => r.includes("spec/delivery")), "CTL-022: root of trust does not run the spec/delivery suite");
 });
@@ -266,7 +267,7 @@ Then("no delivery workflow is part of the root of trust", function () {
 });
 
 const deployJobs = (wfs, env) =>
-  repo.jobs(wfs).filter((j) => j.steps.some((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(s.run ?? "")));
+  repo.jobs(wfs).filter((j) => j.steps.some((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(repo.effectiveRun(s))));
 
 Then("at least one job deploys to {string}", function (env) {
   assert.ok(deployJobs(this.workflows, env).length > 0, `DC-003: no delivery job runs "infra/deploy ${env}"`);
@@ -279,8 +280,8 @@ Then("every job that deploys to {string} runs in the GitHub environment {string}
 
 Then("every job that deploys to {string} verifies both attestations before it deploys", function (env) {
   const bad = deployJobs(this.workflows, env).filter((j) => {
-    const deployAt = j.steps.findIndex((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(s.run ?? ""));
-    const before = j.steps.slice(0, deployAt).map((s) => s.run ?? "").join("\n");
+    const deployAt = j.steps.findIndex((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(repo.effectiveRun(s)));
+    const before = j.steps.slice(0, deployAt).map((s) => repo.effectiveRun(s)).join("\n");
     const verifies = before.match(/gh attestation verify/g) ?? [];
     return verifies.length < 2 || !before.includes("ai-provenance/v1");
   });
@@ -291,10 +292,10 @@ const always = (cond) => /\balways\(\)/.test(String(cond ?? ""));
 
 Then("every job that deploys to {string} is followed by {string} that runs even if tests fail", function (env, command) {
   const bad = deployJobs(this.workflows, env).filter((j) => {
-    const deployAt = j.steps.findIndex((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(s.run ?? ""));
-    const laterStep = j.steps.slice(deployAt + 1).some((s) => always(s.if) && (s.run ?? "").includes(command));
+    const deployAt = j.steps.findIndex((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(repo.effectiveRun(s)));
+    const laterStep = j.steps.slice(deployAt + 1).some((s) => always(s.if) && (repo.effectiveRun(s)).includes(command));
     const laterJob = repo.jobs([j.wf]).some(
-      (k) => [k.job.needs ?? []].flat().includes(j.id) && always(k.job.if) && k.steps.some((s) => (s.run ?? "").includes(command)),
+      (k) => [k.job.needs ?? []].flat().includes(j.id) && always(k.job.if) && k.steps.some((s) => (repo.effectiveRun(s)).includes(command)),
     );
     return !laterStep && !laterJob;
   });
@@ -313,7 +314,78 @@ Then("a scheduled delivery workflow runs {string} at least every {int} minutes",
   const ok = this.workflows.some((wf) => {
     const schedule = repo.triggers(wf.doc).schedule ?? [];
     const frequent = schedule.some((s) => everyMinutes(s.cron) <= limit);
-    return frequent && repo.jobs([wf]).some((j) => j.steps.some((s) => (s.run ?? "").includes(command)));
+    return frequent && repo.jobs([wf]).some((j) => j.steps.some((s) => (repo.effectiveRun(s)).includes(command)));
   });
   assert.ok(ok, `CTL-043: no delivery workflow runs ${command} on a schedule of every ${limit} minutes or less`);
+});
+
+// ---------------------------------------------------------------------------
+// SPEC-09: thin workflows (A-21), continuous delivery (A-22), release record (A-23)
+// ---------------------------------------------------------------------------
+const workflowsDeploying = (wfs, env) => wfs.filter((wf) => deployJobs([wf], env).length > 0);
+
+Then("every workflow that deploys to {string} runs on pull requests and never on {string}", function (env, forbidden) {
+  const bad = workflowsDeploying(this.workflows, env).filter((wf) => {
+    const on = repo.triggers(wf.doc);
+    return !("pull_request" in on) || forbidden in on;
+  });
+  none(`CTL-015 ${env} deploy not triggered by same-repository pull requests`, bad.map((wf) => wf.file));
+});
+
+Then("every workflow that deploys to {string} runs only on push to {string}", function (env, branch) {
+  const bad = workflowsDeploying(this.workflows, env).filter((wf) => {
+    const on = repo.triggers(wf.doc);
+    const branches = on.push?.branches;
+    return Object.keys(on).join() !== "push" || !Array.isArray(branches) || branches.join() !== branch;
+  });
+  none(`CTL-015 ${env} deploy triggered by something other than push to ${branch}`, bad.map((wf) => wf.file));
+});
+
+Then("every run step is a single call to a delivery script with plain arguments", function () {
+  const bad = repo.jobs(this.workflows).flatMap((j) =>
+    j.steps.filter((s) => s.run !== undefined && !repo.THIN_RUN.test(String(s.run).trim())).map((s) => `${j.label}: ${String(s.run).trim().split("\n")[0]}`),
+  );
+  none("CTL-027 run step is not a single delivery-script call (DC-009)", bad);
+});
+
+Then("every delivery script a run step calls exists and is executable", function () {
+  const scripts = new Set(repo.jobs(this.workflows).flatMap((j) => j.steps.filter((s) => s.run).map((s) => String(s.run).trim().split(/\s+/)[0])));
+  const bad = [...scripts].filter((rel) => {
+    if (!repo.exists(rel)) return true;
+    const stat = fs.statSync(repo.abs(rel));
+    return !stat.isFile() || (stat.mode & 0o111) === 0;
+  });
+  none("CTL-027 missing or non-executable delivery script", bad);
+});
+
+const beforeDeploy = (j, env) => {
+  const at = j.steps.findIndex((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(repo.effectiveRun(s)));
+  return { before: j.steps.slice(0, at), after: j.steps.slice(at + 1) };
+};
+
+Then("every job that deploys to {string} compares the attested tree with main's tree before it deploys", function (env) {
+  const bad = deployJobs(this.workflows, env).filter((j) => !beforeDeploy(j, env).before.some((s) => /\^\{tree\}/.test(repo.effectiveRun(s))));
+  none(`CTL-023 ${env} deploy without a tree-hash comparison`, bad.map((j) => j.label));
+});
+
+Then("every job that deploys to {string} checks who merged the change before it deploys", function (env) {
+  const bad = deployJobs(this.workflows, env).filter((j) => !beforeDeploy(j, env).before.some((s) => /merged_?by/i.test(repo.effectiveRun(s))));
+  none(`CTL-023 ${env} deploy without checking who merged`, bad.map((j) => j.label));
+});
+
+Then("every job that deploys to {string} writes the release record with {string} after it deploys", function (env, script) {
+  const bad = deployJobs(this.workflows, env).filter((j) => !beforeDeploy(j, env).after.some((s) => String(s.run ?? "").trim().startsWith(script)));
+  none(`CTL-060 ${env} deploy without ${script}`, bad.map((j) => j.label));
+});
+
+Then("every job that deploys to {string} publishes the release record as a GitHub Release", function (env) {
+  const bad = deployJobs(this.workflows, env).filter((j) => !beforeDeploy(j, env).after.some((s) => /gh release create/.test(repo.effectiveRun(s))));
+  none(`CTL-060 ${env} deploy without a GitHub Release`, bad.map((j) => j.label));
+});
+
+Then("every job that deploys to {string} attests the release record with predicate type {string}", function (env, type) {
+  const bad = deployJobs(this.workflows, env).filter(
+    (j) => !beforeDeploy(j, env).after.some((s) => repo.actionName(s) === "actions/attest" && s.with?.["predicate-type"] === type),
+  );
+  none(`CTL-060 ${env} release record not attested`, bad.map((j) => j.label));
 });

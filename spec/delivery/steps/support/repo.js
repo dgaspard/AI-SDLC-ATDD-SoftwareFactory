@@ -71,8 +71,18 @@ export function permission(wf, job, scope) {
   return perms?.[scope] ?? "none";
 }
 
+// A-21 thin workflows: a step's `run:` is one call to a delivery script (DC-009). What
+// the step does is that line plus the scripts it calls, so checks read both.
+export const THIN_RUN = /^(?:scripts\/ci|infra)\/[\w.-]+(?: [\w./:=@-]+)*$/;
+const invokedScripts = (run) => [...run.matchAll(/(?:^|\s)((?:scripts\/ci|infra)\/[\w.-]+)/g)].map((m) => m[1]);
+export function effectiveRun(step) {
+  const run = step.run ?? "";
+  const bodies = invokedScripts(run).filter((rel) => exists(rel) && fs.statSync(abs(rel)).isFile()).map(read);
+  return [run, ...bodies].join("\n");
+}
+
 export const buildsImage = (step) =>
-  actionName(step) === "docker/build-push-action" || /\bdocker\s+(buildx\s+)?build\b/.test(step.run ?? "");
+  actionName(step) === "docker/build-push-action" || /\bdocker\s+(buildx\s+)?build\b/.test(effectiveRun(step));
 
 export function triggers(doc) {
   const on = doc.on ?? doc[true]; // YAML 1.1 parsers turn `on` into true

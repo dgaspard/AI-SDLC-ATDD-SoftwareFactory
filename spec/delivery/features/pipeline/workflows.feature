@@ -36,6 +36,25 @@ Feature: Workflows run with least privilege and pinned dependencies
     And no scan step or its job can continue on error
     And each portable scan script reads SECURITY_GATE
 
+  @CTL-015 @awaiting:ENV-03 @nist:CM-3 @ssdf:PO.5.1 @env:nonprod @env:prod
+  Scenario: Pull requests deploy to non-prod; only main deploys to prod
+    A-22: every PR is tested in an ephemeral non-prod environment before a human approves it.
+    pull_request_target is never used: it runs with secrets on code from forks.
+    Given the delivery workflows
+    Then at least one job deploys to "nonprod"
+    And every workflow that deploys to "nonprod" runs on pull requests and never on "pull_request_target"
+    And every job that deploys to "nonprod" runs in the GitHub environment "nonprod"
+    And every workflow that deploys to "prod" runs only on push to "main"
+
+  @CTL-027 @awaiting:CI-02 @nist:CM-5 @ssdf:PO.3.2 @env:nonprod @env:prod @pillar:governance
+  Scenario: Delivery workflows hold privilege only; scripts hold the logic
+    A-21: the YAML decides triggers, permissions, OIDC, environment and role, and is
+    human-owned. Each step is one call to an agent-built script with plain arguments, so
+    no expression is interpolated into a shell and logic never hides in YAML.
+    Given the delivery workflows
+    Then every run step is a single call to a delivery script with plain arguments
+    And every delivery script a run step calls exists and is executable
+
   @CTL-014 @awaiting:CI-02 @nist:CM-8 @ssdf:PS.3.2 @env:nonprod @env:prod
   Scenario: Every image build produces an SBOM
     Given the delivery workflows
