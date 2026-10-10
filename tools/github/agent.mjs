@@ -16,6 +16,30 @@ if (!['check', 'gh', 'git'].includes(command)) {
   console.error('Usage: node tools/github/agent.mjs check | gh <args> | git <args>');
   process.exit(2);
 }
+// A-22: agents never approve, merge or bypass. Refuse those operations before any token is
+// issued. Preventive and local only; CTL-028 is the independent, agent-neutral check.
+function forbidden(cmd, argv) {
+  const words = argv.map(String);
+  const joined = words.join(' ');
+  if (cmd === 'gh') {
+    if (words[0] === 'pr' && words[1] === 'merge') return 'merging a pull request';
+    if (words[0] === 'pr' && words[1] === 'review' && words.some((w) => w === '--approve' || w === '-a')) return 'approving a pull request';
+    if (words[0] === 'api' && /pulls\/\d+\/(merge|reviews)|pending_deployments|\/rulesets|\/environments\/|\/branches\/[^/]+\/protection/.test(joined)) {
+      return 'merging, reviewing, approving deployments or changing repository rules through the API';
+    }
+    if (words[0] === 'api' && /mergePullRequest|enablePullRequestAutoMerge|addPullRequestReview|approve/i.test(joined)) {
+      return 'merging or approving through GraphQL';
+    }
+  }
+  if (cmd === 'git' && words[0] === 'push' && words.some((w) => /^(?:\S+:)?(?:refs\/heads\/)?main$/.test(w))) return 'pushing to main';
+  return null;
+}
+const refused = command === 'check' ? null : forbidden(command, args);
+if (refused) {
+  console.error(`Refused: agents never approve, merge or bypass (A-22); this would be ${refused}. A human does this.`);
+  process.exit(3);
+}
+
 let token;
 async function api(endpoint, auth, method = 'GET', body) {
   const response = await fetch(`https://api.github.com${endpoint}`, {
