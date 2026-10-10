@@ -241,8 +241,10 @@ changes, which is the one change that must have a human in the loop.
 
 **Continuous delivery (A-22).** PR, then ephemeral non-prod plus the live tier, then
 human approval and merge, then automatic promotion of the same images to prod. The
-human gate moves from a prod-environment click to PR approval, so "agent authors, human
-approves" is the separation of duties. Two consequences:
+human gate moves from a prod-environment click to PR approval or merge. The separation of
+duties is "agents never approve, merge or bypass". With one maintainer, Dustin's own PRs
+merge through the admin bypass; that's a human decision, so it promotes normally and the
+release record labels it a self-merge. Two consequences:
 - Non-prod runs agent-written scripts from unreviewed branches. That is acceptable only
   because non-prod is an isolated account bounded by SCPs, and its role trusts only this
   repo's `nonprod` environment.

@@ -240,10 +240,11 @@ decisions of 2026-10-10. Drafted as a patch and frozen by Dustin, like SPEC-08.
 - **Rewrite CTL-023:** the prod deploy runs only on push to `main`, in the `prod`
   environment (protected branches, no required reviewer). It verifies both attestations,
   and that the attested tree hash equals `main`'s tree.
-- **Rewrite CTL-025:** the agent identity can't bypass rules or approve. The `main`
-  ruleset requires code-owner approval, approval of the last push (so nobody can push
-  after approval), and branches up to date before merging. The prod reviewer clause is
-  dropped.
+- **Rewrite CTL-025:** the agent identity can't approve, merge or bypass: it isn't a
+  code owner, a ruleset bypass actor or a reviewer. The `main` ruleset requires
+  code-owner approval or a human admin bypass, approval of the last push (so nobody can
+  push after approval), and branches up to date before merging (a merge queue later).
+  The prod reviewer clause is dropped.
 - **New, static, CI-02 (A-21):** every `run:` step in `delivery-*.yml` calls one script
   under `scripts/ci/` or `infra/`. Privileges live only in workflow YAML.
 - **New, template, ENV-02:** every IAM role that trusts GitHub's OIDC provider pins
@@ -252,8 +253,9 @@ decisions of 2026-10-10. Drafted as a patch and frozen by Dustin, like SPEC-08.
 - **New, static, ENV-03:** non-prod deploys run on same-repo `pull_request`, never
   `pull_request_target`. Prod deploys run on push to `main` and need non-prod evidence
   for the same tree.
-- **New, live, ENV-03:** a merge without a human approval that differs from the PR
-  author does not auto-promote.
+- **New, live, ENV-03:** a change promotes only if a human approved it or merged it.
+  A merge through the human admin bypass counts and is recorded as a self-merge. Anything
+  merged by the agent identity does not promote.
 - **New, EVID-01 (A-23):** every prod promotion publishes a release record with the
   required fields as a GitHub Release, plus an attestation. Later (ENV-02/03): the record
   is copied to an S3 Object Lock bucket in the log-archive account.
