@@ -10,7 +10,7 @@
     "features":      { "name": "Service features (Cucumber)", "cmd": "npx", "args": ["cucumber-js"],
                        "scopeByService": { "args": ["cucumber-js", "features/{service}/*.feature"] } },
     "workflows":     { "name": "Backend journeys (Playwright HTTP)", "cmd": "npx", "args": ["cucumber-js", "--profile", "workflows"] },
-    "browser":       { "name": "Frontend journeys (headless Chromium)", "cmd": "npx", "args": ["playwright", "test", "--config", "tests/browser/playwright.config.js"] },
+    "browser":       { "name": "Frontend journeys (headless Chromium, reference container)", "cmd": "bash", "args": ["tests/browser/run-in-container.sh"] },
     "performance":   { "name": "Local performance", "cmd": "node", "args": ["--test", "--test-reporter=spec", "--test-concurrency=1", "tests/performance/*.test.js"] },
     "accepted-risks": { "name": "Accepted risks (expected to fail; SPEC-07)", "cmd": "node", "args": ["guard/accepted-risks.js"] },
     "delivery":      { "name": "Delivery spec", "cmd": "npm", "args": ["--prefix", "delivery", "test"] }

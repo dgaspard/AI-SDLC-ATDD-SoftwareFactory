@@ -18,8 +18,9 @@ The agent's fast loop and the developer's laptop. Same images as the cloud, star
 
 | Practice | Tools | Use | Why here | Enforced by | Status |
 | --- | --- | --- | --- | --- | --- |
-| Hardened container images | Docker | required | The same image runs locally and in the cloud, so local results carry over. | CTL-001, CTL-002, CTL-003, CTL-004 | specified, awaiting ENV-01 |
-| Local system in one command | Docker Compose | required | Gives agents and developers the whole system without cloud access. | CTL-005 | specified, awaiting ENV-01 |
+| Hardened container images | Docker | required | The same image runs locally and in the cloud, so local results carry over. | CTL-001, CTL-002, CTL-003, CTL-004 | enforced |
+| Local system in one command | Docker Compose | required | Gives agents and developers the whole system without cloud access. | CTL-005 | enforced |
+| Browser tests in a pinned reference container | Docker, Playwright container image | required | Agents and developers compare screenshots in the same environment CI uses; Docker must be running. | `spec/tests/browser/run-in-container.sh`, `spec/frontend/visual-baselines/reference-environment.json` | enforced |
 | Code, secret and dependency scans | Semgrep, detect-secrets, npm audit | informational | Agents see findings while building; SECURITY_GATE unset, so they report only (A-13). | CTL-013 | specified, awaiting CI-02 |
 | Pre-push full-suite verification | git hooks, spec/run-all.js | required | Catches failures before they reach CI. | — | planned |
 | Human-owned root of trust | guard.yml, CODEOWNERS, spec/guard | required | The protect-paths hook stops agents editing the spec. | CTL-022 | enforced |
@@ -29,8 +30,9 @@ The agent's fast loop and the developer's laptop. Same images as the cloud, star
 
 ### Defaults for new work in Local
 
-- [ ] Hardened container images (specified, awaiting ENV-01)
-- [ ] Local system in one command (specified, awaiting ENV-01)
+- [x] Hardened container images
+- [x] Local system in one command
+- [x] Browser tests in a pinned reference container
 - [ ] Pre-push full-suite verification (planned)
 - [x] Human-owned root of trust
 - [x] OTLP test collector
@@ -66,7 +68,8 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 
 | Practice | Tools | Use | Why here | Enforced by | Status |
 | --- | --- | --- | --- | --- | --- |
-| Hardened container images | Docker | required | Non-prod tests the exact image prod will run. | CTL-001, CTL-002, CTL-003, CTL-004 | specified, awaiting ENV-01 |
+| Hardened container images | Docker | required | Non-prod tests the exact image prod will run. | CTL-001, CTL-002, CTL-003, CTL-004 | enforced |
+| Browser tests in a pinned reference container | Docker, Playwright container image | required | CI runs the same container, so a visual difference means a real change, not a different operating system. | `spec/tests/browser/run-in-container.sh`, `spec/frontend/visual-baselines/reference-environment.json` | enforced |
 | Least-privilege, pinned workflows | GitHub Actions | required | The pipeline that deploys non-prod is itself supply-chain surface. | CTL-010, CTL-011 | enforced |
 | Short-lived AWS credentials (OIDC) | GitHub OIDC, AWS IAM | required | Only CI deploys, and only with short-lived credentials. | CTL-012 | specified, awaiting CI-02 |
 | Code, secret and dependency scans | Semgrep, detect-secrets, npm audit | required | SECURITY_GATE=fail; a finding blocks the image from being built. | CTL-013 | specified, awaiting CI-02 |
@@ -91,7 +94,8 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 
 ### Defaults for new work in Non-prod
 
-- [ ] Hardened container images (specified, awaiting ENV-01)
+- [x] Hardened container images
+- [x] Browser tests in a pinned reference container
 - [x] Least-privilege, pinned workflows
 - [ ] Short-lived AWS credentials (OIDC) (specified, awaiting CI-02)
 - [ ] Code, secret and dependency scans (specified, awaiting CI-02)
@@ -128,7 +132,7 @@ A production-shaped AWS member account environment. It runs only images already 
 
 | Practice | Tools | Use | Why here | Enforced by | Status |
 | --- | --- | --- | --- | --- | --- |
-| Hardened container images | Docker | required | Prod runs only images built and tested earlier. | CTL-001, CTL-002, CTL-003, CTL-004 | specified, awaiting ENV-01 |
+| Hardened container images | Docker | required | Prod runs only images built and tested earlier. | CTL-001, CTL-002, CTL-003, CTL-004 | enforced |
 | Least-privilege, pinned workflows | GitHub Actions | required | The pipeline that deploys prod is itself supply-chain surface. | CTL-010, CTL-011 | enforced |
 | Short-lived AWS credentials (OIDC) | GitHub OIDC, AWS IAM | required | Only CI deploys, and only with short-lived credentials. | CTL-012 | specified, awaiting CI-02 |
 | Code, secret and dependency scans | Semgrep, detect-secrets, npm audit | required | Prod promotes only images that passed the non-prod gate. | CTL-013 | specified, awaiting CI-02 |
@@ -153,7 +157,7 @@ A production-shaped AWS member account environment. It runs only images already 
 
 ### Defaults for new work in Prod
 
-- [ ] Hardened container images (specified, awaiting ENV-01)
+- [x] Hardened container images
 - [x] Least-privilege, pinned workflows
 - [ ] Short-lived AWS credentials (OIDC) (specified, awaiting CI-02)
 - [ ] Code, secret and dependency scans (specified, awaiting CI-02)
@@ -179,6 +183,7 @@ A production-shaped AWS member account environment. It runs only images already 
 ### Deliberately not used in Prod
 
 - **Local system in one command**: ECS runs the images in the cloud.
+- **Browser tests in a pinned reference container**: Screenshots are compared before deployment, never in prod.
 - **Pre-push full-suite verification**: CI reruns everything independently.
 - **Network hardening**: Deferred 2026-10-10: test application, no data to protect; would also need a NAT gateway or VPC endpoints, which breaks the budget.
 - **OTLP test collector**: Replaced by the AWS collector.
@@ -191,6 +196,7 @@ A production-shaped AWS member account environment. It runs only images already 
 | --- | --- |
 | Hardened container images | Free to build; ECR storage costs cents per month. |
 | Local system in one command | Free. |
+| Browser tests in a pinned reference container | Free; the image is about 2 GB, pulled once. |
 | Least-privilege, pinned workflows | Free. |
 | Short-lived AWS credentials (OIDC) | Free. |
 | Code, secret and dependency scans | Free. |
