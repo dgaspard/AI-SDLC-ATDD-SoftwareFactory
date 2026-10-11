@@ -1,7 +1,8 @@
-# Presenter demo tools (A-12)
+# Reconstruction experiment tools (EXP-01)
 
-Not protected and not part of `npm test`. These files only change how the frozen
-tests are *shown*; they never change what the tests assert.
+Not protected and not part of `npm test`. These scripts run the reconstruction
+experiment in `PROJECT-PLAN.md` (delete Checkout, rebuild it with a fresh agent, verify)
+and show the frozen tests visibly; they never change what the tests assert.
 
 ## Visible customer journey
 
@@ -32,7 +33,7 @@ and content matched). The demo therefore compares against baselines captured fro
 the visible browser, with the same frozen tolerance. The frozen headless suite
 still checks the original baselines on every `npm test`.
 
-Create or refresh them only on the presenter's Mac, then review the images before
+Create or refresh them only on the operator's machine, then review the images before
 committing:
 
 ```
@@ -44,7 +45,7 @@ change, or after a Chromium upgrade, never to make a failing demo pass.
 Change the pace with `DEMO_SLOWMO_MS=1500 npm run demo:journey` (the delay is added
 before every click and entry; page loads and checks are not slowed).
 
-Presenter-paced mode: `npm run demo:journey:step` opens the Playwright Inspector,
+Step-through mode: `npm run demo:journey:step` opens the Playwright Inspector,
 pauses before each browser action, and highlights the test line. Press **Step over**
 (F10) to advance one action or **Resume** (F8) to run to the end. It shows the test
 code beside the browser, which is useful when explaining what the test checks.
@@ -58,7 +59,7 @@ code beside the browser, which is useful when explaining what the test checks.
 | 2. JavaScript "before" run | `npm run demo:journey` (in the workspace) | no |
 | 3. Delete Checkout (asks first) | `tools/demo/delete-checkout.sh` | yes, starts the clock |
 | 4. Rebuild in fresh Claude Code | `claude "$(cat tools/demo/rebuild-checkout-prompt.md)"` | yes |
-| 5. Verify and report | `tools/demo/finish-rehearsal.sh` (rehearsals) or `--journey-only` (on stage) | yes |
+| 5. Verify and report | `tools/demo/finish-rehearsal.sh` (full) or `--journey-only` (visible journey only) | yes |
 
 Workspaces go to `~/petclinic-demo-runs/<name>` (override with `DEMO_RUNS_DIR`),
 built from tag `demo-01-baseline`. Each has a fresh git history that never
@@ -76,9 +77,8 @@ logged in `.demo/run.log`. The JavaScript prompt allows the shared
 `services/platform/` runtime, as in the original build, so JavaScript rebuild times
 are not directly comparable with Python ones.
 
-Full verification (visible journey + `npm test`) took 9m28s in r1. On stage, use
-`--journey-only` (about 20 s) and show the agent's own passing `npm test` summary;
-rehearsals and the fallback recording keep the full run.
+Full verification (visible journey + `npm test`) took 9m28s in r1. `--journey-only`
+(about 20 s) shows the outcome quickly; experiment records keep the full run.
 
 Disclosed limits: the rebuild prompt is prepared and identical every run; the
 shared JavaScript `services/platform/` and project docs (including the JavaScript

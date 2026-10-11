@@ -627,7 +627,7 @@ This long-term piece is a design note for the playbook, not built here.
    doc's "Disposition" section; D-57 records REV-003's fix). Note:
    `isolation: "worktree"` (the confirmed fresh-agent mechanism) isn't
    available in this Cowork environment — see the amendment in
-   `docs/eng-02-planning.md`.
+   `docs/design/eng-02-review.md`.
 4. **Threat-model note:** record known architectural risks, starting with the single
    shared HS256 secret (any compromised service can forge user tokens); disclose
    as a demo limitation.
@@ -750,7 +750,7 @@ Scope:
 - Admin can add and deactivate veterinarians (new API, domain contract changes).
 - Admin can view all appointments; veterinarian privileges narrow to their own work.
 - Frontend admin screen with accessible labels and a browser check.
-- Fold in [SPEC-06](../../BACKLOG.md#spec-06--close-checkout-specification-gaps-found-in-rehearsal)
+- Fold in [SPEC-06](backlog-completed.md#spec-06--close-checkout-specification-gaps-found-in-rehearsal)
   (GAP-09–15) in the same spec review and freeze cycle.
 
 Veterinarian and administrator test scenarios to add (found in rehearsals):
@@ -768,3 +768,306 @@ After it lands, rerun one fresh Python Checkout rehearsal before 2026-11-07.
 Out of scope (remain in MVP-02): office capacity, reassigning other veterinarians'
 appointments, departure policies for future appointments and history, multi-visit
 payments.
+
+## Moved 2026-10-11
+
+Moved verbatim from `BACKLOG.md` on 2026-10-11. Status lines are as last recorded;
+the items are merged or frozen. Final state: SPEC-08 frozen and merged (PR #1–#2), ENV-01
+(PR #3–#4), SPEC-09 (PR #6). The draft patches they mention were applied and removed
+on 2026-10-11.
+
+### DEMO-01 — Rehearse deletion and reconstruction
+
+Status: **evidence accepted (2026-10-03, A-14)**. Checkpoint tag
+`demo-01-baseline`. Tools, prompts, and the visible journey are in
+[tools/demo](../../tools/demo/README.md). Agent: Claude Code in a fresh session;
+disposable workspace with no prior Checkout history; prepared prompt (reading
+the shared JavaScript runtime is allowed and disclosed).
+
+| Run | Direction | Rebuild time | Result | Interventions | Record |
+| --- | --- | ---: | --- | ---: | --- |
+| r1 (2026-09-28) | JavaScript → Python | 25m 49s (agent) | 10/10 suites + visible journey; verification 9m28s | 0 | [r1](../rehearsals/r1.md) |
+| r2 (2026-09-29) | Python → JavaScript | ≤32m23s | 10/10 suites + visible journey; verification 8m13s | 0 | [r2](../rehearsals/r2.md) |
+| r3 | JavaScript → Python (optional recorded fallback) | — | not started | — | — |
+| r4 (2026-10-07) | JavaScript → Python, against SPEC-06 specs (`exp-01-spec06-baseline`) | 24m03s (agent 14m46s) | 10/10 suites, 977 tests; verification 27m37s total; recorded (DEMO-03 fallback) | 0 | [r4](../rehearsals/r4.md) |
+
+Live gate (A-12), revised by A-14 (2026-10-03): r1 and r2 — zero interventions,
+both language directions — are sufficient evidence the reconstruction claim
+holds. r3's screen recording is no longer a blocking milestone; it's an
+optional fallback recording (expected under an hour), done whenever before the
+talks. Watch for r1's unreproduced startup hang if/when r3 runs. On stage use
+`finish-rehearsal.sh --journey-only`.
+
+### SPEC-06 — Close Checkout specification gaps found in rehearsal
+
+Status: **Done criteria met 2026-10-07: fresh Python rebuild [r4](../rehearsals/r4.md) passed every suite against the new specs. ENG-02 on r4 still pending. New gaps GAP-16 and GAP-17 are under open follow-ups.** Earlier: JavaScript fixes verified: D-58–D-65 accepted; specifications frozen; all ten `npm test` suites pass. D-66 was already decided and frozen separately. Phase: build verification. See [SPEC-06 handoff](../handoffs/spec-06.md) for gap-to-test coverage, verification and remaining implementation work. Next: independent engineering review and a fresh Python reconstruction against the updated specs. Sources: [rehearsal r1](../rehearsals/r1.md),
+[rehearsal r2](../rehearsals/r2.md). MVP-02A shipped first, so SPEC-06 now
+runs its own review-and-freeze cycle. r3 (DEMO-01) should run against the
+specs it produces.
+
+The rebuilds passed every test but reported behavior the contracts leave silent or
+inconsistent. For each gap: decide the intended behavior, then add or amend the
+contract, OBS rule, and scenario so a test pins it down.
+
+| Gap | Question to decide | Likely artifacts |
+| --- | --- | --- |
+| GAP-08 | (Carried over from MVP-02A.) Promotion and cash return 403 `not_assigned_veterinarian`, but OBS-030/033's closed outcome lists don't include it, so the trace tests can't assert it. Add it? | OBS-030/033 outcome lists; trace tests |
+| GAP-09 | What does promotion/cash return when Reservation cannot record completion (502 `dependency_failed`)? | `checkout.openapi.json` responses; scenario |
+| GAP-10 | Is there an internal-error problem code, or is 500 `dependency_failed` intended? | common problem codes; runtime/contract note |
+| GAP-11 | Confirm the agents' guesses: $0 bill completes as settled; booking fee excluded from `paymentAttempts` but counted in `previouslyPaidAmount` (r1 Python and r2 JavaScript chose this independently); same-key retry after payment returns current state plus original attempt | business decision entry; scenarios |
+| GAP-12 | Idempotency key scopes (r2): booking fee keyed per reservation; card and cash keyed per checkout. Is reusing one key across booking and visit payment, or across card and cash, two separate requests or a conflict? | D-12 clarification; scenarios for cross-scope key reuse |
+| GAP-13 | Card approved but follow-up fails: the same-key retry returns the same 502 `authorized_completion_failed` without re-charging or retrying the follow-up. Covered only by unprotected engineering checks today; should a frozen scenario pin it? | scenario; possibly OBS rule |
+| GAP-14 | Completion and account-change repeats (r2): Checkout skips re-sending an identical completion and treats Reservation `already_completed` / Customer `already_applied` as success. Intended? | contract note; scenarios with downstream "already done" replies |
+| GAP-15 | A $0 promotion is stored but sends no discount to Customer (r2). Intended, and should it appear in the bill and trace? | scenario; OBS-030 attribute note |
+
+Done when: decisions recorded, protected changes human-reviewed and frozen, the
+JavaScript Checkout updated so `npm test` passes, and one fresh Python rehearsal
+passes against the new specs (earlier rehearsal evidence predates them).
+
+### SPEC-07 — Suppressing tests and retiring features through the spec
+
+Status: **next, before CI-01** (decided 2026-10-07: this could make or break the
+process). Design discussion first; no protected change until Dustin approves the
+approach. Captured 2026-10-07 after r4/ENG-02.
+
+The problem: today there is no sanctioned way to say "this check is knowingly
+suppressed" or "this feature is gone." Both happen informally, and an agent can't
+tell an intentional retirement from a gap to fill.
+
+- **Suppression.** The REV-003 skip in
+  `tools/review/project-specific/engineering-review.test.mjs` is a code comment plus
+  a conditional `skip:`. The guard (`spec/guard/guard.js`, `SKIP_CODE` and
+  `SKIP_TAG`) blocks skips only under `spec/`, and only in literal forms such as
+  `.skip(` or `{ skip: true }`. A conditional `skip: cond && "reason"` would get
+  past it even under `spec/`. The guard works on syntax, not on intent.
+- **Retirement.** IMPL-01 (legacy visit cancellation, retired by D-24) was
+  removed by deleting it. Nothing stops a rebuild from bringing back a
+  decommissioned feature, or building from an old spec, if it finds traces in
+  docs, history or an earlier tag.
+
+Goal: suppressing a check and retiring a feature both go through the protected
+spec layer and human freeze, and the harness catches anything built that
+shouldn't be.
+
+Options to weigh (not decisions):
+
+- **Feature-file tags with a required reason.** For example `@accepted-risk(REV-003)`
+  or `@retired(D-24)`, where the guard requires a reference to a decision or review
+  record and rejects bare `@skip`. A suppression list frozen with the specs, which
+  the runner reads, instead of skips inside test code.
+- **Retired behavior as a negative scenario.** "Given D-24, when a client calls the
+  old cancellation endpoint, then it gets 404 and no trace is emitted." This turns a
+  decommissioned feature into an executable "must not exist" check, so a rebuild
+  that brings it back fails.
+- **Contract-level allowlist.** The harness fails if a service exposes any route or
+  span not in the current OpenAPI or OBS registry, catching old-spec or invented
+  endpoints in general, not just known retirements.
+- **Spec version pinning.** Each run record names the spec freeze it was built
+  against, so a build from a stale spec is detectable (the runner already records
+  the policy sha256).
+- **Expiry.** An accepted risk carries an owner and a review date, so suppression
+  isn't permanent by default. This fits the regulated-audience framing.
+
+Decided (Dustin, 2026-10-07):
+
+- **Detection: negative scenarios.** Each retired feature gets an executable
+  "must not exist" scenario. A contract allowlist and spec pinning are not
+  chosen for now.
+- **Suppression: feature-file tags** (for example `@accepted-risk(REV-003)`), with
+  the guard requiring a reference to a decision or review record.
+- **Scope: `spec/` only.** Engineering checks in `tools/review/` stay advisory and
+  can be skipped with a comment (as REV-003 was).
+- **`@accepted-risk` scenarios still run and are expected to fail.** A failure is
+  reported as "accepted." A pass is flagged so someone removes the tag. The risk
+  stays visible on every run.
+- **Only BDD scenarios can be suppressed.** Contract, OBS, auth, schema and runtime
+  tests (`node:test`) are hard gates with no suppression mechanism. If one is
+  wrong, the contract changes through freeze.
+- **Retirement scenarios live in the owning service's feature folder** (for
+  example `reservation/retired.feature`, tagged `@retired(D-24)`).
+- **Retirement covers only features that once shipped,** meaning they existed in a
+  tagged build or frozen spec and a decision later decommissioned them. Proposals
+  that never shipped are not included.
+- **Accepted risk expires.** The tag carries an owner and a review date, for
+  example `@accepted-risk(REV-003, owner=dustin, review=2027-01-31)`. The guard
+  fails after the review date, so an accepted risk is never permanent by default.
+
+**Frozen and verified 2026-10-07 (`03b374b`): full gate complete, 11/11 suites on
+tree `650e97bee43a`. REV-001 reports STATE CHANGE failing → passing on JavaScript, as
+expected. Still to confirm: ACCEPTED on a Python Checkout build.** Earlier: drafted in
+protected files and reviewed by Dustin.
+Includes stub transport faults and the REV-001 accepted risk. Seven calibration
+plants were all caught. See [docs/design/spec-07-suppression-and-retirement.md](../design/spec-07-suppression-and-retirement.md),
+"Implementation (as drafted)". Original next step: draft the design. This means the tag grammar, the guard changes (reject
+bare `@skip`, close the conditional-`skip:` hole, validate references and dates),
+expected-failure handling in the Cucumber runner, and one worked example of each
+(a retired IMPL-01 cancellation under D-24, and one accepted risk). Then Dustin
+reviews it before anything protected changes.
+
+### SPEC-08 — Delivery as an executable specification
+
+Status: **frozen 2026-10-10; follow-up patch awaiting review and freeze.**
+- Design: [docs/design/spec-08-delivery.md](../design/spec-08-delivery.md).
+- Spec: [spec/delivery/](../../spec/delivery/README.md).
+- Human guide (generated): [docs/delivery/environments.md](../delivery/environments.md).
+
+29 control scenarios plus 4 catalog checks, calibrated with 27 plants (all caught).
+Since the freeze:
+- **Done:** cfn-guard 3.2.1 policies calibrated (12/12); A-20 boundary; `guard.yml`
+  actions pinned, with the `Delivery spec` job; `delivery` suite in the gate; `main`
+  rulesets and the `prod` environment configured (CTL-024 passes live).
+- **Problem found:** red controls in a required check blocked every merge and
+  `test:verify`.
+- **Decided 2026-10-10:** tag them `@awaiting:<backlog ID>` (information only until a
+  human removes the tag), and rewrite CTL-025 around a separate agent GitHub identity,
+  since a single maintainer is allowed to self-review.
+- **Next:** apply `docs/spec-drafts/spec-08-awaiting-and-agent-identity.patch`, add the
+  `AGENTS.md` rule, and freeze. Expected: required 7/7 green.
+
+### ENV-01 — Local environment as a by-product
+
+Status: **built 2026-10-10; awaiting freeze.** Dockerfiles for the four services and
+the frontend (`node:24-bookworm-slim` pinned by digest, non-root, permissions normalized,
+built from the repository root), a local-only `docker/spec-tools` image for the payment
+fake and collector, and `compose.yaml` (127.0.0.1-only ports, read-only file systems,
+all capabilities dropped, health checks). `tools/compose-smoke.mjs` passes 13/13. CTL-001..005
+pass. The patch `docs/spec-drafts/env-01-docker-and-browser-container.patch` removes the
+`@awaiting:ENV-01` tags. It also fixes a spec bug: the compose reader ignored YAML merge
+keys, which Compose honors. And it moves the browser suite into the pinned Playwright
+container, with re-rendered baselines, because Mac-rendered baselines failed on Linux CI
+by about 1% of pixels. Original scope: an agent builds the Dockerfiles and `compose.yaml`
+until the `local` and `pipeline` static scenarios pass. The existing harness must
+still pass unchanged (the runtime contract is unaffected). Closes ARCH-05 (A-17).
+
+### SPEC-09 — Continuous delivery controls (A-21..A-23)
+
+Status: **drafted 2026-10-10; awaiting review and freeze.** Patch:
+`docs/spec-drafts/spec-09-continuous-delivery.patch`. Spec work only, no AWS.
+- New controls: CTL-015 (pull requests deploy to non-prod; only `main` deploys to prod),
+  CTL-027 (thin workflows), CTL-028 (no agent merges), CTL-035 (OIDC trust pinned),
+  CTL-060 (release record). Rewritten: CTL-023 and CTL-025.
+- New contract rules: DC-009 (thin workflows) and DC-010 (release record), with
+  `contracts/release-record.v1.schema.json`.
+- Static checks now follow each run step into the script it calls, so the existing
+  controls keep working with thin workflows.
+- Calibrated with 19 plants, all caught.
+- Against this repository: the required tier passes, the new controls await their
+  backlog items, and CTL-028 passes live.
+- CTL-025 fails live until the `main` ruleset requires up-to-date branches and approval
+  of the most recent push. That's a settings change for Dustin before the freeze.
+- Preventive half of "agents never merge": `tools/github/agent.mjs` now refuses to merge,
+  approve, approve deployments, change rules or push to `main`.
+Original plan:
+- **Rewrite CTL-023:** the prod deploy runs only on push to `main`, in the `prod`
+  environment (protected branches, no required reviewer). It verifies both attestations,
+  and that the attested tree hash equals `main`'s tree.
+- **Rewrite CTL-025:** the agent identity can't approve, merge or bypass: it isn't a
+  code owner, a ruleset bypass actor or a reviewer. The `main` ruleset requires
+  code-owner approval or a human admin bypass, approval of the last push (so nobody can
+  push after approval), and branches up to date before merging (a merge queue later).
+  The prod reviewer clause is dropped.
+- **New, static, CI-02 (A-21):** every `run:` step in `delivery-*.yml` calls one script
+  under `scripts/ci/` or `infra/`. Privileges live only in workflow YAML.
+- **New, template, ENV-02:** every IAM role that trusts GitHub's OIDC provider pins
+  `aud` to `sts.amazonaws.com` and `sub` to this repo plus one environment (`nonprod` or
+  `prod`), with no wildcards. The non-prod role lives only in the non-prod account.
+- **New, static, ENV-03:** non-prod deploys run on same-repo `pull_request`, never
+  `pull_request_target`. Prod deploys run on push to `main` and need non-prod evidence
+  for the same tree.
+- **New, live, ENV-03:** a change promotes only if a human approved it or merged it.
+  A merge through the human admin bypass counts and is recorded as a self-merge. Anything
+  merged by the agent identity does not promote.
+- **New, EVID-01 (A-23):** every prod promotion publishes a release record with the
+  required fields as a GitHub Release, plus an attestation. Later (ENV-02/03): the record
+  is copied to an S3 Object Lock bucket in the log-archive account.
+
+## Moved 2026-10-11 (talks leave the repository, A-25)
+
+Moved verbatim from `BACKLOG.md`. The project's goal became the software factory;
+the talks and their preparation are no longer tracked here.
+
+### DEMO-03 — Language swap demonstration
+
+Status: **shown as a recording at NOAI (A-24)**, not run live. The r4 recording
+(2026-10-07) is the candidate. No Checkout rebuild appears at Black Tech NOLA. The flow
+below describes what the recording shows. Decisions A-05, A-12. The original on-stage flow:
+
+- Run the FE-002 journey visibly (`npm run demo:journey`) on the all-JavaScript build
+  (login → book → vet accepts/records visit → bill → pay; no sign-up screen).
+- Timed delete of `services/checkout/`; the agent rebuilds it in Python from the
+  unchanged specs and tests while the presenter talks.
+- Rerun the visible journey (`finish-rehearsal.sh --journey-only`); show the agent's
+  `npm test` summary, the elapsed time, and the connected trace.
+- Fallback: the recorded r3 rehearsal. Stretch (recorded): whole backend in Python.
+
+### ARCH-05 — Evaluate Docker Compose isolation
+
+Status: **decided 2026-10-10 (A-17): containers everywhere, Compose locally.** The work
+moves to [ENV-01](../history/backlog-completed.md#env-01--local-environment-as-a-by-product). Original note: evaluate Compose for the services,
+collector, and payment fake: startup/shutdown, health checks, isolated networks,
+port ownership, reproducibility, and safer human control over AI-driven process
+management. No Docker files before an explicit review.
+
+### CI-01 — Wire SEC-01's security gates into CI/CD on push to main
+
+Status: **superseded 2026-10-10 by [SPEC-08](../history/backlog-completed.md#spec-08--delivery-as-an-executable-specification)
+and [CI-02](../../BACKLOG.md#ci-02--delivery-pipeline-as-a-by-product).** Each scope bullet below is
+now a scenario: scans gate delivery (CTL-013), the root of trust runs guard and the
+delivery suite (CTL-022). The branch ruleset and the pre-push hook are planned catalog
+entries. Kept for history.
+
+Correction (2026-10-10): `.github/workflows/guard.yml` exists. It runs a required
+guard job and an informational full-suite job. Neither runs SEC-01's scanners, which
+still only run locally via `tools/security/run-sec01-spike.sh` and
+`tools/security/portable/run-*.sh`. The original text follows.
+Nothing currently stops an insecure change from reaching `main` through a
+normal push or merge. Related open gap: the "GUARD-01 remote" follow-up
+(branch ruleset: PR required, guard check required, code-owner review) is
+also still unconfigured — this item should close both at once rather than
+wiring security scanning into CI without branch protection to enforce it.
+
+Why this order: per the A-13 CI/CD placement framework, these checks belong
+in the agent's local loop *and* as a required remote gate, not one or the
+other — local catches issues before commit, CI catches anything that
+slipped through or came from a push outside the usual agent loop. Placed
+after the November MVP (DEMO-01/02/03, MVP-02A, PLAY-01) so it doesn't
+compete with talk-prep time, and explicitly before any database/persistence
+work ([DATA-01](../../BACKLOG.md#data-01--durable-state))
+so that work lands on a repo that already enforces its security floor,
+rather than retrofitting the gate after data-handling code exists.
+
+Scope (sketch, to be specced properly when picked up):
+
+- `.github/workflows/security.yml` (or equivalent) running
+  `portable/run-sast.sh`, `portable/run-secret-scan.sh`,
+  `portable/run-dependency-audit.sh` on every push/PR to `main`; add Bandit
+  for Python once its `.venv`/vendor exclusion (flagged in the SEC-01
+  write-up) is fixed, so CI doesn't choke on noise.
+- Configure the branch ruleset: PR required, the guard check (`guard:check`)
+  required, code-owner review required (closes "GUARD-01 remote").
+- Pre-push git hook running `npm run test:verify` (PERF-03): blocks a push
+  unless every full-tier suite passed on the exact tree being pushed. Pre-push,
+  not pre-commit, so red checkpoint commits stay allowed. Decide how the hook
+  is installed (`core.hooksPath` vs a setup script) and whether `--no-verify`
+  is acceptable when CI is the backstop.
+- Promote the "Full test suite (informational)" job in `guard.yml` to a
+  required check running `npm test` (full tier, no cache); upload
+  `test-results/runs/` as the run-record artifact.
+- Decide fail-vs-warn per check to start (SEC-01's 62.5% catch rate argues
+  for treating these as a floor, not a perfect gate, at least initially).
+- `.github/` is CODEOWNERS-protected — any workflow file change here needs
+  human review and a `guard:freeze` run before merge, same as other
+  protected paths.
+
+### DEMO-02 and PLAY-01 — Talk scripts and the Excella playbook
+
+- **DEMO-02** (talk scripts and decks): Dustin's talk outline and draft decks, kept
+  outside the repository (A-24). Evidence they draw on lives in `docs/rehearsals/` and
+  `docs/engineering-reviews/`.
+- **PLAY-01** (Excella playbook package): superseded 2026-10-11. The Excella visit
+  presents the current state honestly and proposes an Excella software factory: Excella
+  owns the core, and each agency or project owns its own rules. Dustin continues the
+  factory work either way ([START-02](../../BACKLOG.md#start-02--software-factory-template-repo-dev-container-and-organization-layer)).
+
+Both left the repository on 2026-10-11 (A-25). Talk material lives in Dustin's talk folder.
+

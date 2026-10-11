@@ -3,7 +3,7 @@
 # elapsed time since deletion. Appends one line to .demo/run.log.
 #
 #   tools/demo/finish-rehearsal.sh                 # rehearsals: journey + npm test
-#   tools/demo/finish-rehearsal.sh --journey-only  # on stage: visible journey only
+#   tools/demo/finish-rehearsal.sh --journey-only  # visible journey only
 #                                                  # (the agent already ran npm test)
 set -uo pipefail
 

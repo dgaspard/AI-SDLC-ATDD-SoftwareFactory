@@ -1,10 +1,8 @@
 # SPEC-07 design: suppressing tests and retiring features through the spec
 
-Status: **drafted in the protected files, awaiting Dustin's review and
-`guard:freeze` (2026-10-07).** Until the freeze, `guard:check` fails on the modified
-files, which is expected. See "Implementation (as drafted)" at the end for what was
+Status: **frozen and verified 2026-10-07 (`03b374b`).** See "Implementation (as drafted)" at the end for what was
 built, how it differs from this design, and the calibration results. Decisions this builds on are in
-[BACKLOG.md § SPEC-07](../BACKLOG.md#spec-07--suppressing-tests-and-retiring-features-through-the-spec).
+[the SPEC-07 history entry](../history/backlog-completed.md#spec-07--suppressing-tests-and-retiring-features-through-the-spec).
 
 ## Summary
 
@@ -180,7 +178,7 @@ Before freezing, on a scratch copy, plant each of these and confirm it is caught
    risks also depend on databases, libraries and cloud, not just language. A
    risk applies to whatever is built. A pass is reported as an explicit
    `STATE CHANGE`, not a failure (see §3).
-2. **Scope for November:** ship the guard and runner changes with only the D-24
+2. **Initial scope:** ship the guard and runner changes with only the D-24
    retirement example, and leave the REV-001 accepted risk (which needs the stub
    change) for later? Or do both now?
 3. **Expiry warning:** is 14 days before the review date the right lead time?

@@ -1,7 +1,7 @@
 # ENG-02 independent review — impl-02 (JavaScript baseline + MVP-02A)
 
 Date: 2026-10-05. Reviewer: fresh agent session, no prior memory of this
-codebase or its build history (per `docs/eng-02-planning.md`'s governance
+codebase or its build history (per `docs/design/eng-02-review.md`'s governance
 model and `tools/review/review-prompt.md`'s mandate). This is the first
 independent run of ENG-02's checklist against the real MVP-02A code, not a
 rerun of the self-review that produced `docs/engineering-reviews/impl-02-javascript.md`
@@ -9,7 +9,7 @@ or the structural audit in `docs/engineering-reviews/eng-02-observability-audit.
 
 ## What this run did and did not do
 
-- Read `docs/eng-02-planning.md`, `tools/review/project-specific/threat-model.md`,
+- Read `docs/design/eng-02-review.md`, `tools/review/project-specific/threat-model.md`,
   `spec/contracts/auth-contract.md`, `docs/observability.md`,
   `docs/engineering-reviews/eng-02-observability-audit.md`, and
   `docs/history/backlog-completed.md`'s ENG-01 section before starting, as
@@ -139,7 +139,7 @@ business-span gating in `serve()` (`:482-522`).
   route's allowlist) is applied once, structurally, for every route — there
   is no per-route opt-out.
 - No new instance of the "admin-only route missing its role check"
-  calibration defect (#6 in `docs/eng-02-planning.md`'s list) was found on
+  calibration defect (#6 in `docs/design/eng-02-review.md`'s list) was found on
   the real MVP-02A routes. That's a meaningful, if narrow, answer to the
   planning doc's open question about whether the synthetic version of this
   defect behaves like the real one: here, because the role check is
@@ -400,7 +400,7 @@ authentication risk outside of those two was found.
 
 ## Suggested additions to the living checklist
 
-Per `docs/eng-02-planning.md`'s "living list" framing, two defect shapes
+Per `docs/design/eng-02-review.md`'s "living list" framing, two defect shapes
 surfaced here that the current checklist (and six-item calibration list)
 don't explicitly name:
 

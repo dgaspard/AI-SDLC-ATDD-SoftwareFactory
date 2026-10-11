@@ -83,7 +83,7 @@ it("authorized payment with failed completion: concurrent and sequential retries
 // Skipped for the Python Checkout (r4), on purpose. ENG-02 REV-003
 // (docs/engineering-reviews/eng-02-review-r4-python-2026-10-07.md): the Python build
 // relies on Customer's per-visit charge dedupe instead of refusing to retry. This is
-// accepted and documented, not fixed. Talk notes, Lesson 8: the review loop never ends,
+// accepted and documented, not fixed. The review loop never ends,
 // so decide when to stop. The JavaScript build still runs this check.
 const pythonCheckout = existsSync(
   new URL("../../../services/checkout/requirements.txt", import.meta.url),

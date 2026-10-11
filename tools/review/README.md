@@ -12,7 +12,7 @@ tools/review/
 
 Supports the ENG-02 backlog item: an independent, calibrated engineering
 review that supersedes ENG-01's self-review. Full planning and decisions:
-[`docs/eng-02-planning.md`](../../docs/eng-02-planning.md). Five components,
+[`docs/design/eng-02-review.md`](../../docs/design/eng-02-review.md). Five components,
 per `BACKLOG.md`:
 
 1. Automated gates — duplicate-code detection, the import-boundary check,
@@ -56,7 +56,7 @@ separate, deliberate decision, not a side effect of this move.
 `.github/CODEOWNERS` now has mandatory-review entries for both
 `tools/security/portable/` and `tools/review/portable/` (added 2026-10-04,
 alongside `tools/review/project-specific/threat-model.md` — see
-`docs/eng-02-planning.md`'s "Resolved (2026-10-04, second pass)" section).
+`docs/design/eng-02-review.md`'s "Resolved (2026-10-04, second pass)" section).
 
 ## Automated gates: status
 

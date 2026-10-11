@@ -12,7 +12,7 @@ code, following `tools/review/review-prompt.md`. No code, spec, or test was
 edited. This file is the only one created.
 
 Scope: `services/platform/runtime.js`, every `services/*/server.js`, and every
-`frontend/*.js`, each read in full. Context read first: `docs/eng-02-planning.md`,
+`frontend/*.js`, each read in full. Context read first: `docs/design/eng-02-review.md`,
 `tools/review/project-specific/threat-model.md`, `spec/contracts/auth-contract.md`,
 `spec/contracts/runtime-contract.md` (CORS, logging), `docs/observability.md`
 (OBS table), `docs/engineering-reviews/eng-02-observability-audit.md`, and the

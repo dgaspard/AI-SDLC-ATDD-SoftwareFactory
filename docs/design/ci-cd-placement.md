@@ -2,15 +2,15 @@
 
 > **Restored 2026-10-10** from tag `ci-perf-01-required` (commit `a957981`), which was
 > never merged into `main`, so A-13 pointed at a missing file. The framework below is
-> current; SPEC-08 applies it through the `@tier:` tags ([design](spec-08-delivery-design.md)).
+> current; SPEC-08 applies it through the `@tier:` tags ([design](spec-08-delivery.md)).
 > **Not on `main`:** the "Applied: PERF-01" section describes a required `performance`
 > job that exists only on that tag. `main`'s `guard.yml` still runs PERF-01 inside the
 > informational `suite` job.
 
 A decision record, not a specification. Captures the framework from the
 2026-10-03 analysis session so it can be referenced later, reused on other
-projects, and pointed to from talks. See [A-13](../PROJECT-PLAN.md) for the
-one-line project-plan entry and [ENG-02](../BACKLOG.md#eng-02) for the related
+projects. See [A-13](../decisions/architecture.md) for the
+one-line decision-log entry and [ENG-02](../history/backlog-completed.md#eng-02--independent-calibrated-engineering-review) for the related
 portable/project-specific split of review checks.
 
 ## The problem

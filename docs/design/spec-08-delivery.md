@@ -1,9 +1,9 @@
 # SPEC-08 design: delivery as an executable specification
 
-Status: **frozen in [spec/delivery/](../spec/delivery/README.md) (2026-10-10).** A follow-up
-patch (`@awaiting` tags, and CTL-025 rewritten around a separate agent identity) is
-waiting for review and freeze: see "Decided after the freeze" below. No AWS spend and no delivery code until after 2026-11-13. Backlog:
-[SPEC-08](../BACKLOG.md#spec-08--delivery-as-an-executable-specification).
+Status: **frozen in [spec/delivery/](../../spec/delivery/README.md) (2026-10-10).** The follow-up
+(`@awaiting` tags, and CTL-025 rewritten around a separate agent identity) is frozen too
+(PR #1–#2): see "Decided after the freeze" below. No AWS spend and no delivery code until after 2026-11-13. Backlog:
+[SPEC-08](../history/backlog-completed.md#spec-08--delivery-as-an-executable-specification).
 
 ## Purpose and scope
 
@@ -34,7 +34,7 @@ Non-goals for now: persistence (DATA-01 stays last), real payments, network hard
 
 ## Decisions (2026-10-10)
 
-Recorded as A-16..A-20 in [PROJECT-PLAN.md](../PROJECT-PLAN.md#architecture-decisions-for-a-language-neutral-demo).
+Recorded as A-16..A-20 in [docs/decisions/architecture.md](../decisions/architecture.md).
 
 1. **A-16 Compliance anchor:** NIST SP 800-53 Rev 5 Moderate and NIST SP 800-218 (SSDF),
    as scenario tags. Mapping is at the base-control level (`IA-5`, not `IA-5(7)`), since
@@ -57,7 +57,7 @@ Also decided:
 
 - ~~Do test endpoints exist in non-prod, and behind what boundary?~~ **Decided 2026-10-10:
   yes, with no special boundary.** This is a test application with no data. Network
-  hardening is deferred to the bottom of the project plan. Prod keeps them off (CTL-033).
+  hardening is deferred ([BACKLOG.md § Network hardening](../../BACKLOG.md#network-hardening)). Prod keeps them off (CTL-033).
 - ~~AWS account structure?~~ **Decided 2026-10-10: AWS Organizations with SCPs.** The
   management account holds the organization, SCPs, billing and budgets. Non-prod and
   prod are member accounts. This is new ground, so it is a learning item: SCPs are
@@ -95,8 +95,8 @@ scheduled teardown.
 
 ## Shape
 
-See the draft [README](../spec/delivery/README.md) for the tag vocabulary
-and commands, and [contract.md](../spec/delivery/contract.md) for DC-001..DC-008.
+See the draft [README](../../spec/delivery/README.md) for the tag vocabulary
+and commands, and [contract.md](../../spec/delivery/contract.md) for DC-001..DC-008.
 
 | Tier | Reads | Runs | Credentials |
 | --- | --- | --- | --- |
@@ -219,17 +219,17 @@ No open questions remain for the first slice.
 8. Done 2026-10-10: frozen. The delivery suite was 7/30, and the red controls blocked
    `test:verify` and the required `Delivery spec` check. That's the problem the
    follow-up below solves.
-9. Apply `docs/spec-drafts/spec-08-awaiting-and-agent-identity.patch` (`git apply`), run `npm --prefix spec/delivery run catalog:render`, add the
+9. Done 2026-10-10 (merged in PR #1): applied the `@awaiting` and agent-identity patch, ran `npm --prefix spec/delivery run catalog:render`, add the
    `AGENTS.md` rule below, review, and `guard:freeze`. Expected: `npm --prefix spec/delivery test`
    7/7 green; `test:awaiting` reports CI-02 5, ENV-01 5, ENV-02 12, ENV-03 1 still red.
-10. Create the agent's GitHub identity (CI-02): a separate account or app that has write
+10. Done 2026-10-10 (PR #2, the `ai-sdlc-bdd-agent` GitHub App): create the agent's GitHub identity (CI-02): a separate account or app that has write
     access but isn't an admin and isn't a `prod` reviewer. List it in
     `root-of-trust.json` → `agentIdentities`, and give agent sessions its credentials
     instead of yours. Then remove `@awaiting:CI-02` from CTL-025 at a freeze.
 
 ## Decided 2026-10-10: thin workflows and continuous delivery
 
-Recorded as A-21..A-23 in `PROJECT-PLAN.md`; the control changes are backlog item
+Recorded as A-21..A-23 in [docs/decisions/architecture.md](../decisions/architecture.md); the control changes are backlog item
 SPEC-09.
 
 **Thin workflows, thick scripts (A-21).** OIDC lets a job swap a short-lived GitHub
@@ -281,8 +281,8 @@ with the maintainer's GitHub credentials: GitHub can't tell that agent apart fro
 human, so it could approve a prod deployment or merge with admin bypass. Agents
 therefore work under their own GitHub identity, listed in `root-of-trust.json`. CTL-025
 checks live that the identity is neither a `prod` reviewer nor a repository admin. This
-works for any agent and is enforced by GitHub, not by a local hook. Until the identity
-exists, CTL-025 awaits CI-02.
+works for any agent and is enforced by GitHub, not by a local hook. The identity was
+created in PR #2, and CTL-025 no longer awaits CI-02.
 
 Calibration of the follow-up:
 - **Required profile:** 7/7 on this repository.
