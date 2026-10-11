@@ -6,7 +6,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import * as repo from "./support/repo.js";
 
 const none = (rule, items) => assert.deepEqual(items, [], `${rule}: ${items.join("; ")}`);
-const AI_PREDICATE = "https://github.com/dgaspard/ai-sdlc-specc-bdd-design/ai-provenance/v1";
+const AI_PREDICATE = "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/ai-provenance/v1";
 
 function gh(args) {
   try {

@@ -1,6 +1,6 @@
 {
   "description": "A-20: the small set of delivery files humans own. Everything else that delivers the system (Dockerfiles, compose.yaml, infra/, .github/workflows/delivery-*.yml) is agent-built and checked by these features.",
-  "repository": "dgaspard/ai-sdlc-specc-bdd-design",
+  "repository": "dgaspard/AI-SDLC-ATDD-SoftwareFactory",
   "paths": [".github/workflows/guard.yml", ".github/CODEOWNERS", "spec/delivery/"],
   "deliveryWorkflowPattern": "^delivery-.*\\.ya?ml$",
   "agentIdentities": ["ai-sdlc-bdd-agent[bot]"],

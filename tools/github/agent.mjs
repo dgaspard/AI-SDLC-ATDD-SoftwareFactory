@@ -8,7 +8,7 @@ import { sign } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const slug = 'dgaspard/ai-sdlc-specc-bdd-design';
+const slug = 'dgaspard/AI-SDLC-ATDD-SoftwareFactory';
 const expectedApp = 5265528;
 const env = { ...parseEnv(fs.readFileSync(path.join(root, '.env'), 'utf8')), ...process.env };
 const [command, ...args] = process.argv.slice(2);

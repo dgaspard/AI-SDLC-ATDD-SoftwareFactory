@@ -171,7 +171,7 @@ all for the right reason.
 
 No undefined steps and no tooling errors.
 
-Live tier, run read-only against `dgaspard/ai-sdlc-specc-bdd-design` (`gh api` GETs only):
+Live tier, run read-only against `dgaspard/AI-SDLC-ATDD-SoftwareFactory` (`gh api` GETs only):
 all 3 fail, for the right reason.
 - CTL-024: no ruleset requires a pull request on `main`. This confirms the GUARD-01
   remote follow-up is still open, so the "required" guard check isn't enforced by GitHub today.
