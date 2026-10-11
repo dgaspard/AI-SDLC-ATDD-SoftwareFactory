@@ -37,7 +37,7 @@ the current checkout. Distinguish approved expectations from proposed designs.
 2. Write **service** feature files, one folder per service (D-28).
 2a. Set the language-neutral architecture and test protection first: repository
    layout, runtime contract, black-box harness, telemetry collector, guard
-   (PROJECT-PLAN A-01–A-07; BACKLOG ARCH-01..04, GUARD-01).
+   (A-01–A-07 in docs/decisions/architecture.md; BACKLOG ARCH-01..04, GUARD-01).
 3. Derive each service's API contract from its features and the domain schemas.
 4. Write service and schema contract tests. Every test must fail on creation.
    These tests are protected: the implementing agent may not modify them.
@@ -87,7 +87,7 @@ Each service owns its feature files. Start with one capability file per service
 and split by business capability as needed; do not force an entire service into
 one large file. Cross-service workflows have their own files.
 
-Repository layout (ARCH-01, PROJECT-PLAN A-01):
+Repository layout (ARCH-01, A-01):
 
 ```text
 services/customer/  services/reservation/  services/veterinarian-services/  services/checkout/
@@ -99,7 +99,7 @@ spec/
   tests/               steps, contract, observability, performance, guard
   harness/             starts services, resets state
   fakes/payment/       fake payment provider
-docs/                  plan, decisions, domain model (docs/specs is protected)
+docs/                  decisions, design notes, evidence (docs/specs is protected; map in docs/README.md)
 ```
 
 Service scenarios cover detailed rules owned by that service. Workflow scenarios
@@ -120,7 +120,9 @@ Use the following sources rather than duplicating changing facts across document
 | --- | --- |
 | `AGENTS.md` | Agent guardrails and entry points |
 | This document | Development sequence and feature organization |
-| `BACKLOG.md` and linked specs | Scope, decisions, prerequisites, stage, next action |
+| `BACKLOG.md` and linked specs | Scope, prerequisites, stage, next action |
+| `docs/decisions/architecture.md`, `docs/specs/business-decisions.md` | Decisions (A-xx, D-xx) |
+| `docs/README.md` | Where each kind of document lives |
 | `spec/features/` | Business requirements |
 | `spec/contracts/` | Published API expectations |
 | `docs/observability.md` | Telemetry rule registry and rule-to-test coverage |

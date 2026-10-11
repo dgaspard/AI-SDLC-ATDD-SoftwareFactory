@@ -427,7 +427,7 @@ crafted tokens.
   account to apply promotions and record cash. The result is a UUID that
   matches no veterinarian. The contract already notes an open attribution
   question (`checkout.openapi.json:451`, which points to
-  `docs/mvp-02a-planning.md`).
+  `docs/design/mvp-02a-admin-roster.md`).
 - **Severity:** low.
 - **Needs human sign-off?** No. It feeds into the existing open attribution
   decision.

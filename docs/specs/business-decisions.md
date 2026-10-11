@@ -76,7 +76,7 @@ the current implementation, feature files, or existing published contract.
 | D-66 | ENG-02 REV-016, decided 2026-10-05 (refines D-48): billing actions on a visit (promotion, cash recording, and the finalize-repeat check) follow the visit's **current** veterinarian, as Reservation records it. After a fill-in self-claim, the new veterinarian can bill the visit and the original one can't, unless the original is an administrator (D-41). Checkout asks Reservation each time rather than keeping a copy. Pinned by two workflow scenarios (frozen in `bafcbbe`). |
 
 Full planning context and the gap analysis that led to D-39–D-44:
-[`docs/mvp-02a-planning.md`](../mvp-02a-planning.md).
+[`docs/design/mvp-02a-admin-roster.md`](../design/mvp-02a-admin-roster.md).
 
 ## Architectural implications
 

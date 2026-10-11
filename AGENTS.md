@@ -4,7 +4,8 @@ This repository demonstrates how executable specifications guide AI-assisted dev
 
 ## Rules
 
-- Consult `PROJECT-PLAN.md` for milestones, reconstruction experiment boundaries, and demo readiness criteria.
+- Consult `PROJECT-PLAN.md` for scope, service boundaries, and the reconstruction experiment protocol, and `docs/decisions/architecture.md` for architecture and delivery decisions (A-xx).
+- Follow `docs/README.md` for where each kind of document lives. Add to an existing home; don't create dated recaps, scratch plans, or other one-off documents. Every feature's code review includes the docs pass in `docs/README.md`, run by a fresh session.
 - Follow `docs/development-workflow.md` for specification-first sequencing, service/workflow feature organization, and persistent task handoffs.
 - Consult `BACKLOG.md` for scope, sequencing, and unresolved business decisions.
 - Design and review API contracts, observability contracts, and BDD features before new implementation; proposed backlog items are not approved requirements.

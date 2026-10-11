@@ -2,7 +2,7 @@
 
 **Frozen 2026-10-10.** Scenarios whose delivery code isn't built yet carry `@awaiting:<backlog ID>`.
 They run as information only, and everything else is required.
-Design and rationale: [docs/spec-08-delivery-design.md](../../docs/spec-08-delivery-design.md).
+Design and rationale: [docs/design/spec-08-delivery.md](../../docs/design/spec-08-delivery.md).
 
 What has to be true of the images, workflows, cloud templates and environments that
 deliver this system. Agents build the delivery code (Dockerfiles, `compose.yaml`,

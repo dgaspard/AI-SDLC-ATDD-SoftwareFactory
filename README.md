@@ -57,12 +57,19 @@ services/platform/                 Shared HTTP/auth/schema/telemetry infrastruct
 frontend/                          Vanilla JavaScript clinic UI and HTTP server
 spec/                              Protected: features, contracts, seed data, tests, harness, fakes
 docs/specs/                        Protected: decisions, domain model, schema decisions
-docs/observability.md              Telemetry rules OBS-001..OBS-042 and coverage
-PROJECT-PLAN.md                    Milestones, experiment protocol, demo gate
-BACKLOG.md                         Task status and open items
+docs/observability.md              Telemetry rules OBS-001..OBS-048 and coverage
+docs/decisions/architecture.md     Architecture and delivery decisions A-01..A-24
+docs/design/                       One design note per backlog item
+docs/engineering-reviews/, docs/rehearsals/, docs/handoffs/   Evidence records
+docs/history/                      Completed backlog items and superseded plans
+PROJECT-PLAN.md                    Scope, service boundaries, experiment protocol, risks
+BACKLOG.md                         Task status, key dates, proposals, deferred work
 docs/development-workflow.md       Working sequence and handoff rules
 AGENTS.md                          Guardrails for coding agents
 ```
+
+Where each kind of document belongs, and the rules for adding one:
+[docs/README.md](docs/README.md).
 
 ## Prerequisites and commands
 

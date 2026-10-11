@@ -1,6 +1,7 @@
 # MVP-02A + SPEC-06 planning: administrator role and veterinarian roster
 
-Status: **draft brainstorm, not yet reviewed or frozen.** This is a working
+Status: [MVP-02A](../history/backlog-completed.md#mvp-02a--administrator-role-and-veterinarian-roster)
+is complete; this is the planning record. This is a working
 document, not a protected spec — `docs/specs/business-decisions.md` stays the
 single source of truth for frozen decisions. Nothing here authorizes any
 feature file, contract, or test change. Once the open question at the bottom

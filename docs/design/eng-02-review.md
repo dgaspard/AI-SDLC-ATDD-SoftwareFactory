@@ -1,9 +1,8 @@
 # ENG-02 planning: independent, calibrated engineering review
 
-Status: **draft brainstorm, decisions captured 2026-10-04, tooling not yet
-built.** Mirrors `docs/mvp-02a-planning.md`'s role — a working doc, not a
-protected spec. Nothing here is implemented yet; two open questions below
-need answers before the first line of tooling gets written.
+Status: [ENG-02](../history/backlog-completed.md#eng-02--independent-calibrated-engineering-review)
+is complete; this is the planning record (decisions captured 2026-10-04). Mirrors
+`docs/design/mvp-02a-admin-roster.md`'s role — a working doc, not a protected spec.
 
 ## Decided this session
 
@@ -43,7 +42,7 @@ security/boundary findings on every review afterward.
    real risk, or did the real case behave differently? This is deliberately
    a retrospective check on the spike's own methodology, not just a rerun
    of the same test. Feeds directly into the "second test" segment of
-   `docs/talk-notes.md` — this is its payoff moment, not a side note.
+   the talk notes (now in Dustin's talk outline) — this is its payoff moment, not a side note.
 4. Python rebuild application (r1, r2, future r3) is **not** in ENG-02's
    near-term scope — see the open question below on exactly what this means
    for the live demo.
@@ -128,7 +127,7 @@ decisions are now answered:
    aren't starting from zero.
 4. **Threat-model note: its own single-purpose file**, not folded into
    another record's prose. Built at
-   [`tools/review/project-specific/threat-model.md`](../tools/review/project-specific/threat-model.md),
+   [`tools/review/project-specific/threat-model.md`](../../tools/review/project-specific/threat-model.md),
    ID-keyed (`THREAT-01`, `THREAT-02`, ...) so other records — decisions,
    contracts, future reviews — reference an entry by ID instead of
    duplicating it. `business-decisions.md` D-44 and `auth-contract.md` were

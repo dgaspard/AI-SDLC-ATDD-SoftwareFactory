@@ -12,7 +12,7 @@ logic → it's project-specific, it doesn't belong here no matter how it's
 abstracted. (This is the same test `tools/security/portable/README.md`
 uses — ENG-02's import-boundary check is where this split started.)
 
-## What's planned here (not yet built — see `docs/eng-02-planning.md`)
+## What's planned here (not yet built — see `docs/design/eng-02-review.md`)
 
 - **Import-boundary check** — reads each service's actual imports and flags
   a cross-service one that isn't `services/platform/`. The folder-to-service

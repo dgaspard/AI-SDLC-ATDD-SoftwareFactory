@@ -3,7 +3,7 @@
 Hand this file's contents to a **fresh agent session with no memory of
 building this code** — the Agent tool's `isolation: "worktree"` mode (a
 genuinely separate instance working on an isolated copy of the repo), per
-`docs/eng-02-planning.md`'s confirmed mechanism. Never run this review in
+`docs/design/eng-02-review.md`'s confirmed mechanism. Never run this review in
 the same session that just wrote or fixed the code under review — that
 defeats the entire point of ENG-02 superseding ENG-01's self-review, which
 was never independently tested and missed what a calibrated review later
@@ -13,7 +13,7 @@ This is a **living checklist**, not a fixed, closed scope. It starts from
 ENG-01's original criteria plus everything ENG-02 added. When a new defect
 class or check proves itself useful — through calibration, through a real
 bug it would have caught, through a pattern that recurs — add it here. The
-goal, stated plainly in `docs/eng-02-planning.md`: get better at this over
+goal, stated plainly in `docs/design/eng-02-review.md`: get better at this over
 time, and eventually hand the list to someone else so they aren't starting
 from zero.
 
@@ -28,7 +28,7 @@ should be marked as one explicitly if you want to raise it anyway.
 
 ## Before you start: read these
 
-- `docs/eng-02-planning.md` — why this review exists and how it's governed.
+- `docs/design/eng-02-review.md` — why this review exists and how it's governed.
 - `tools/review/project-specific/threat-model.md` — already-disclosed,
   already-accepted risks (currently: the shared HS256 secret, THREAT-01;
   the dual-role account's blast radius, THREAT-02). Don't re-report these
@@ -187,9 +187,17 @@ hand-rolled crypto/auth implementation deserves:
   2026-10-05, from a real finding: a veterinarian's `active` flag could be
   set to `false` but every booking-path route still ignored it.)
 
+### 6. Documentation (the docs pass)
+
+Run the checklist in `docs/README.md` ("The docs pass, after every feature commit")
+against the change under review. Report doc findings separately from code findings:
+stale status, decisions recorded outside their log, files outside the allowed homes,
+duplicated facts, and broken links (cite the file and line, as for code). Propose the
+fix as a diff; a broken link in a protected file goes to the human as a patch.
+
 ## Calibration defects this checklist should already be able to catch
 
-Living list — currently six (`docs/eng-02-planning.md`): copied business
+Living list — currently six (`docs/design/eng-02-review.md`): copied business
 logic across services, a payment reference leaked into a span, a token
 check that skips signature verification, cross-service store access, a
 missing OBS attribute on an untested rule, and an admin-only route missing

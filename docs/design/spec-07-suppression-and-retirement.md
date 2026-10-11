@@ -1,10 +1,8 @@
 # SPEC-07 design: suppressing tests and retiring features through the spec
 
-Status: **drafted in the protected files, awaiting Dustin's review and
-`guard:freeze` (2026-10-07).** Until the freeze, `guard:check` fails on the modified
-files, which is expected. See "Implementation (as drafted)" at the end for what was
+Status: **frozen and verified 2026-10-07 (`03b374b`).** See "Implementation (as drafted)" at the end for what was
 built, how it differs from this design, and the calibration results. Decisions this builds on are in
-[BACKLOG.md § SPEC-07](../BACKLOG.md#spec-07--suppressing-tests-and-retiring-features-through-the-spec).
+[the SPEC-07 history entry](../history/backlog-completed.md#spec-07--suppressing-tests-and-retiring-features-through-the-spec).
 
 ## Summary
 
