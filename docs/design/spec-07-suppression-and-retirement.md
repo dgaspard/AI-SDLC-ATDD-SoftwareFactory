@@ -178,7 +178,7 @@ Before freezing, on a scratch copy, plant each of these and confirm it is caught
    risks also depend on databases, libraries and cloud, not just language. A
    risk applies to whatever is built. A pass is reported as an explicit
    `STATE CHANGE`, not a failure (see §3).
-2. **Scope for November:** ship the guard and runner changes with only the D-24
+2. **Initial scope:** ship the guard and runner changes with only the D-24
    retirement example, and leave the REV-001 accepted risk (which needs the stub
    change) for later? Or do both now?
 3. **Expiry warning:** is 14 days before the review date the right lead time?

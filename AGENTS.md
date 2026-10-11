@@ -1,13 +1,13 @@
 # Agent Working Agreement
 
-This repository demonstrates how executable specifications guide AI-assisted development.
+This repository is the working prototype of an AI-SDLC software factory: humans freeze executable specifications, agents build against them, and independent evidence supports release.
 
 ## Rules
 
-- Consult `PROJECT-PLAN.md` for scope, service boundaries, and the reconstruction experiment protocol, and `docs/decisions/architecture.md` for architecture and delivery decisions (A-xx).
+- Consult `PROJECT-PLAN.md` for the objective, the ordered roadmap, reference-project boundaries, and the reconstruction experiment protocol, and `docs/decisions/architecture.md` for architecture and delivery decisions (A-xx).
 - Follow `docs/README.md` for where each kind of document lives. Add to an existing home; don't create dated recaps, scratch plans, or other one-off documents. Every feature's code review includes the docs pass in `docs/README.md`, run by a fresh session.
 - Follow `docs/development-workflow.md` for specification-first sequencing, service/workflow feature organization, and persistent task handoffs.
-- Consult `BACKLOG.md` for scope, sequencing, and unresolved business decisions.
+- Consult `BACKLOG.md` for status, work items in roadmap order, and unresolved business decisions.
 - Design and review API contracts, observability contracts, and BDD features before new implementation; proposed backlog items are not approved requirements.
 - Follow `docs/observability.md`, preserving its distinction between binding contracts and proposed standards.
 - Follow `docs/specs/observability-traceability.md`: retain stable OBS IDs, include asserted IDs in test titles, and update the coverage table with test changes.
@@ -74,7 +74,12 @@ Backlog tasks state which phase they run in.
 
 ## Test loop
 
-pm run test:verify
+```bash
+npm run test:fast      # while building
+npm run test:gate      # before declaring work complete
+npm run test:verify    # proof: every full-tier suite passed on this tree
+```
+
 The browser suite runs in the pinned Playwright container (spec/tests/browser/run-in-container.sh), so Docker must be running for test:gate; if Docker is missing it fails with tooling:, never as a product failure.
 
 `spec/test-policy.json` (protected) defines the suites, the tiers, and which changed paths

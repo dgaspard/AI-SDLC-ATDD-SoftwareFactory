@@ -1,42 +1,30 @@
-# AI SDLC PetClinic
+# AI-SDLC Software Factory
 
-A demonstration of **controlling AI development with executable specifications**,
-prepared for a November presentation.
+A repeatable way to build software with AI agents: humans decide and freeze executable
+expectations (business examples, API and domain contracts, observability rules,
+delivery controls), agents build against them inside enforced boundaries, and
+independent evidence supports every decision to ship.
 
-The approach is test-driven:
+This repository is the factory's working prototype. Its reference project is a
+four-service veterinary clinic (PetClinic) built entirely from frozen specifications:
 
 1. Lock business decisions, the domain model, and schemas.
 2. Write feature files for each service, then derive API contracts.
 3. Write service and schema contract tests an AI agent cannot modify. Every test fails on creation.
 4. Write workflow features and tests for journeys that span services.
-5. Ask an AI agent to build the entire application until every test passes.
-6. Delete a service and have the agent rebuild it from the specifications and tests.
+5. Ask an AI agent to build the application until every test passes.
+6. Delete a service and have a fresh agent rebuild it from the specifications and tests.
 
-## Current state
+## Where it stands
 
-Tag `test-01` marks completion of service-level executable specification work.
-Business decisions D-01–D-38, domain schemas, per-service API contracts, and 166
-service scenarios are present. The latest access-control and telemetry rehearsal
-passed 310 checks against temporary services and detected 13 deliberate defects;
-see the [rehearsal report](docs/history/test-slices-5-6-rehearsal.md).
-
-The four JavaScript services are implemented with independent in-memory stores,
-HTTP APIs, authentication, and OpenTelemetry export. Reviewed and frozen SPEC-05
-adds complete self-registration, partial payments, clinical corrections, and
-catalog updates; there are now 219 service scenarios. The frontend implements the
-approved login, appointment, visit, billing, and payment journey. IMPL-02 validation and ENG-01 findings are
-recorded in the [JavaScript engineering review](docs/engineering-reviews/impl-02-javascript.md).
-
-TEST-02 now has nine frozen backend journeys using Playwright HTTP requests without
-launching a browser. These retain the existing workflows without extra UI/setup
-flows. IMPL-02 and the JavaScript
-[Engineering Discipline review](docs/history/backlog-completed.md#eng-01--review-implementation-quality-across-the-language-swap)
-passed the complete `npm test` aggregate at tag `impl-02`.
-FE-01 adds approved, human-frozen design assets, three visual references,
-and five headless Chromium checks. Its implementation and validation are recorded in the
-[FE-01 handoff](docs/handoffs/fe-01.md) and [design preview](docs/design/fe-01-design-preview.html).
-[BACKLOG.md](BACKLOG.md) tracks verification and task status. The earlier
-single-app version remains preserved at tag `1.0`.
+The reference project is complete: four JavaScript services, a frontend, contract,
+authentication, observability, workflow, browser and performance suites, and a fresh
+agent has rebuilt the Checkout service in Python from the frozen expectations with zero
+interventions. Delivery controls are specified in `spec/delivery/` and the system runs
+locally in containers. Next is governed delivery to the cloud, then operation, durable
+state, and extracting the factory core for a second project. The roadmap is in
+[PROJECT-PLAN.md](PROJECT-PLAN.md); status is in [BACKLOG.md](BACKLOG.md). The original
+single-app version is preserved at tag `1.0`.
 
 ## Services
 
@@ -58,12 +46,12 @@ frontend/                          Vanilla JavaScript clinic UI and HTTP server
 spec/                              Protected: features, contracts, seed data, tests, harness, fakes
 docs/specs/                        Protected: decisions, domain model, schema decisions
 docs/observability.md              Telemetry rules OBS-001..OBS-048 and coverage
-docs/decisions/architecture.md     Architecture and delivery decisions A-01..A-24
+docs/decisions/architecture.md     Architecture and delivery decisions A-01..A-25
 docs/design/                       One design note per backlog item
 docs/engineering-reviews/, docs/rehearsals/, docs/handoffs/   Evidence records
 docs/history/                      Completed backlog items and superseded plans
-PROJECT-PLAN.md                    Scope, service boundaries, experiment protocol, risks
-BACKLOG.md                         Task status, key dates, proposals, deferred work
+PROJECT-PLAN.md                    Objective, factory shape, roadmap, experiment protocol, risks
+BACKLOG.md                         Work items in roadmap order, proposals, deferred work
 docs/development-workflow.md       Working sequence and handoff rules
 AGENTS.md                          Guardrails for coding agents
 ```
@@ -99,13 +87,9 @@ node tools/compose-smoke.mjs        # health, login, CORS and traces through the
 docker compose down                 # stop it before npm test: they share ports
 ```
 
-Full validation requires permission to bind local test ports. The service-BDD
-harness lifecycle correction is authorized and human-frozen; all 219 service
-scenarios and nine backend journeys pass in the complete aggregate run.
-The [engineering review](docs/engineering-reviews/impl-02-javascript.md) records
-the fixes, evidence, and in-memory limitations. The [frontend engineering review](docs/engineering-reviews/fe-01-javascript.md)
-records FE-01 evidence. PERF-01's local performance checks are human-frozen and
-pass; see its [handoff](docs/handoffs/perf-01.md).
+Full validation requires permission to bind local test ports. Evidence for each
+completed item (engineering reviews, rehearsals, handoffs) is indexed in
+[docs/README.md](docs/README.md).
 The browser suite runs in the pinned Playwright container
 (`spec/tests/browser/run-in-container.sh`) so screenshots match on every host.
 Only a human reviews and freezes protected changes.

@@ -42,7 +42,7 @@ security/boundary findings on every review afterward.
    real risk, or did the real case behave differently? This is deliberately
    a retrospective check on the spike's own methodology, not just a rerun
    of the same test. Feeds directly into the "second test" segment of
-   the talk notes (now in Dustin's talk outline) — this is its payoff moment, not a side note.
+   the change-request story — this is its payoff moment, not a side note.
 4. Python rebuild application (r1, r2, future r3) is **not** in ENG-02's
    near-term scope — see the open question below on exactly what this means
    for the live demo.
@@ -74,8 +74,8 @@ protection on `tools/review/portable/` mirrors `tools/security/portable/`.
 
 1. **Python demo scope: unaffected.** "Continue to work in JS" applies only
    to ENG-02's review-application order and MVP-02A's build language. The
-   live November demo (A-05/A-12 — build in JS, live-delete-and-rebuild
-   Checkout in Python on stage) stays exactly as already decided; that's a
+   Checkout reconstruction (A-05 — build in JS, delete and rebuild
+   Checkout in Python) stays exactly as already decided; that's a
    separate, already-proven capability from r1/r2, not something this
    touches.
 2. **Cleanup scope: full repo audit, deferred until ENG-02's duplicate-code

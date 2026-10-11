@@ -9,7 +9,7 @@
 
 A decision record, not a specification. Captures the framework from the
 2026-10-03 analysis session so it can be referenced later, reused on other
-projects, and pointed to from talks. See [A-13](../decisions/architecture.md) for the
+projects. See [A-13](../decisions/architecture.md) for the
 one-line decision-log entry and [ENG-02](../history/backlog-completed.md#eng-02--independent-calibrated-engineering-review) for the related
 portable/project-specific split of review checks.
 

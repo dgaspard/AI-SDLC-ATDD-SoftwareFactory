@@ -772,7 +772,9 @@ payments.
 ## Moved 2026-10-11
 
 Moved verbatim from `BACKLOG.md` on 2026-10-11. Status lines are as last recorded;
-the items are merged or frozen.
+the items are merged or frozen. Final state: SPEC-08 frozen and merged (PR #1–#2), ENV-01
+(PR #3–#4), SPEC-09 (PR #6). The draft patches they mention were applied and removed
+on 2026-10-11.
 
 ### DEMO-01 — Rehearse deletion and reconstruction
 
@@ -978,3 +980,94 @@ Original plan:
 - **New, EVID-01 (A-23):** every prod promotion publishes a release record with the
   required fields as a GitHub Release, plus an attestation. Later (ENV-02/03): the record
   is copied to an S3 Object Lock bucket in the log-archive account.
+
+## Moved 2026-10-11 (talks leave the repository, A-25)
+
+Moved verbatim from `BACKLOG.md`. The project's goal became the software factory;
+the talks and their preparation are no longer tracked here.
+
+### DEMO-03 — Language swap demonstration
+
+Status: **shown as a recording at NOAI (A-24)**, not run live. The r4 recording
+(2026-10-07) is the candidate. No Checkout rebuild appears at Black Tech NOLA. The flow
+below describes what the recording shows. Decisions A-05, A-12. The original on-stage flow:
+
+- Run the FE-002 journey visibly (`npm run demo:journey`) on the all-JavaScript build
+  (login → book → vet accepts/records visit → bill → pay; no sign-up screen).
+- Timed delete of `services/checkout/`; the agent rebuilds it in Python from the
+  unchanged specs and tests while the presenter talks.
+- Rerun the visible journey (`finish-rehearsal.sh --journey-only`); show the agent's
+  `npm test` summary, the elapsed time, and the connected trace.
+- Fallback: the recorded r3 rehearsal. Stretch (recorded): whole backend in Python.
+
+### ARCH-05 — Evaluate Docker Compose isolation
+
+Status: **decided 2026-10-10 (A-17): containers everywhere, Compose locally.** The work
+moves to [ENV-01](../history/backlog-completed.md#env-01--local-environment-as-a-by-product). Original note: evaluate Compose for the services,
+collector, and payment fake: startup/shutdown, health checks, isolated networks,
+port ownership, reproducibility, and safer human control over AI-driven process
+management. No Docker files before an explicit review.
+
+### CI-01 — Wire SEC-01's security gates into CI/CD on push to main
+
+Status: **superseded 2026-10-10 by [SPEC-08](../history/backlog-completed.md#spec-08--delivery-as-an-executable-specification)
+and [CI-02](../../BACKLOG.md#ci-02--delivery-pipeline-as-a-by-product).** Each scope bullet below is
+now a scenario: scans gate delivery (CTL-013), the root of trust runs guard and the
+delivery suite (CTL-022). The branch ruleset and the pre-push hook are planned catalog
+entries. Kept for history.
+
+Correction (2026-10-10): `.github/workflows/guard.yml` exists. It runs a required
+guard job and an informational full-suite job. Neither runs SEC-01's scanners, which
+still only run locally via `tools/security/run-sec01-spike.sh` and
+`tools/security/portable/run-*.sh`. The original text follows.
+Nothing currently stops an insecure change from reaching `main` through a
+normal push or merge. Related open gap: the "GUARD-01 remote" follow-up
+(branch ruleset: PR required, guard check required, code-owner review) is
+also still unconfigured — this item should close both at once rather than
+wiring security scanning into CI without branch protection to enforce it.
+
+Why this order: per the A-13 CI/CD placement framework, these checks belong
+in the agent's local loop *and* as a required remote gate, not one or the
+other — local catches issues before commit, CI catches anything that
+slipped through or came from a push outside the usual agent loop. Placed
+after the November MVP (DEMO-01/02/03, MVP-02A, PLAY-01) so it doesn't
+compete with talk-prep time, and explicitly before any database/persistence
+work ([DATA-01](../../BACKLOG.md#data-01--durable-state))
+so that work lands on a repo that already enforces its security floor,
+rather than retrofitting the gate after data-handling code exists.
+
+Scope (sketch, to be specced properly when picked up):
+
+- `.github/workflows/security.yml` (or equivalent) running
+  `portable/run-sast.sh`, `portable/run-secret-scan.sh`,
+  `portable/run-dependency-audit.sh` on every push/PR to `main`; add Bandit
+  for Python once its `.venv`/vendor exclusion (flagged in the SEC-01
+  write-up) is fixed, so CI doesn't choke on noise.
+- Configure the branch ruleset: PR required, the guard check (`guard:check`)
+  required, code-owner review required (closes "GUARD-01 remote").
+- Pre-push git hook running `npm run test:verify` (PERF-03): blocks a push
+  unless every full-tier suite passed on the exact tree being pushed. Pre-push,
+  not pre-commit, so red checkpoint commits stay allowed. Decide how the hook
+  is installed (`core.hooksPath` vs a setup script) and whether `--no-verify`
+  is acceptable when CI is the backstop.
+- Promote the "Full test suite (informational)" job in `guard.yml` to a
+  required check running `npm test` (full tier, no cache); upload
+  `test-results/runs/` as the run-record artifact.
+- Decide fail-vs-warn per check to start (SEC-01's 62.5% catch rate argues
+  for treating these as a floor, not a perfect gate, at least initially).
+- `.github/` is CODEOWNERS-protected — any workflow file change here needs
+  human review and a `guard:freeze` run before merge, same as other
+  protected paths.
+
+### DEMO-02 and PLAY-01 — Talk scripts and the Excella playbook
+
+- **DEMO-02** (talk scripts and decks): Dustin's talk outline and draft decks, kept
+  outside the repository (A-24). Evidence they draw on lives in `docs/rehearsals/` and
+  `docs/engineering-reviews/`.
+- **PLAY-01** (Excella playbook package): superseded 2026-10-11. The Excella visit
+  presents the current state honestly and proposes an Excella software factory: Excella
+  owns the core, and each agency or project owns its own rules. Dustin continues the
+  factory work either way ([START-02](../../BACKLOG.md#start-02--software-factory-template-repo-dev-container-and-organization-layer)).
+
+Both left the repository on 2026-10-11 (A-25). Talk material lives in Dustin's talk folder.
+

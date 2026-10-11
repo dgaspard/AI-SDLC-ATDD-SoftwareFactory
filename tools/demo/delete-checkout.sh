@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# On-stage step: ask the presenter, then delete the current Checkout (timed).
+# Experiment step: ask the operator, then delete the current Checkout (timed).
 # Run inside a demo workspace (prepare-rehearsal.sh or fork-workspace.sh), never
 # in the main repo.
 #

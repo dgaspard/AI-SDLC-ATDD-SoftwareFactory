@@ -14,7 +14,7 @@ preserved at tag `1.0` and are not part of the new suite (D-24).
 
 ## OpenTelemetry conformance
 
-Services follow OpenTelemetry specifications (PROJECT-PLAN A-08, BACKLOG OTEL-01): the
+Services follow OpenTelemetry specifications (A-08 in docs/decisions/architecture.md, BACKLOG OTEL-01): the
 official SDK per language, OTLP/HTTP protobuf export only (A-10), W3C Trace Context, standard resource attributes,
 and semantic conventions for HTTP spans and errors. The `petclinic.*` names below are
 only for business attributes with no standard equivalent. Reference version: semantic

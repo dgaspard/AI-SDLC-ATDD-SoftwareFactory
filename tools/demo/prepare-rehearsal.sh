@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create a disposable demo workspace from a tagged checkpoint (A-12, DEMO-01).
-# Not timed. Run on the presenter's Mac before a rehearsal or talk.
+# Not timed. Run on the operator's machine before a reconstruction run.
 #
 #   tools/demo/prepare-rehearsal.sh [run-name] [tag]
 #
@@ -41,7 +41,7 @@ git add -A
 git -c user.name=demo -c user.email=demo@localhost commit -q \
   -m "Demo workspace from $tag (Checkout excluded from history)"
 
-# Preinstall everything so the talk never waits on the network for these.
+# Preinstall everything so the timed run never waits on the network for these.
 npm --prefix spec ci --no-audit --no-fund
 for s in services/*/setup frontend/setup; do
   [ -x "$s" ] && "$s"

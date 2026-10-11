@@ -1,116 +1,90 @@
-# Project plan: rebuilding a service from executable expectations
+# Project plan: building an AI-SDLC software factory
 
-What this file owns: the objective and scope, service boundaries, the reconstruction
-experiment protocol, and risks. Task status lives in [BACKLOG.md](BACKLOG.md),
-architecture decisions (A-xx) in [docs/decisions/architecture.md](docs/decisions/architecture.md),
-and deferred work in [BACKLOG.md § Deferred](BACKLOG.md#deferred). The original
-five-week schedule and live-demo gate are in
-[docs/history/project-plan-2026-09.md](docs/history/project-plan-2026-09.md).
+What this file owns: the objective, the factory's shape, the ordered roadmap, the
+reference project's boundaries, the reconstruction protocol and the risks. Task status
+lives in [BACKLOG.md](BACKLOG.md), decisions (A-xx) in
+[docs/decisions/architecture.md](docs/decisions/architecture.md), and everything else
+where [docs/README.md](docs/README.md) says.
 
-> Current business direction: see [SPEC-01 decisions](docs/specs/business-decisions.md).
-> The user has specified four services, including VeterinarianServices, and checkout
-> after a documented visit.
+## Objective
 
-## Objective and scope
+Build a **software factory**: a repeatable way to deliver software with AI agents, where
 
-Prepare a November presentation demonstrating that reviewed BDD scenarios, API
-contracts, and observability contracts can guide an AI agent to recreate a deleted
-service that interoperates with existing services.
+- humans decide and freeze the expectations: business examples (BDD/ATDD), API and
+  domain contracts, observability rules, and delivery controls;
+- agents build the implementation and the delivery code against those frozen,
+  executable expectations, inside enforced boundaries;
+- independent evidence (test run records, calibrated review, release records) supports
+  every decision to ship.
 
-The fourth pillar is **Engineering Discipline**: passing behavioral specifications,
-API contracts, and observability checks is followed by an implementation review of
-service boundaries, payment safety, and maintainability. The required gate is
-[ENG-02](docs/history/backlog-completed.md#eng-02--independent-calibrated-engineering-review), which
-supersedes the self-review in
-[ENG-01](docs/history/backlog-completed.md#eng-01--review-implementation-quality-across-the-language-swap).
-Apply it after code generation at the all-JavaScript implementation checkpoint
-and every Python Checkout reconstruction. Record test results separately from
-review findings; both the automated checks and engineering review must pass.
+The factory has two layers:
 
-Primary demonstration: build all services in JavaScript, show the Playwright workflow
-passing, delete Checkout, have the agent rebuild it **in Python** from the unchanged
-tests, then rerun the same Playwright workflow and performance check (A-05). Stretch:
-a recorded rebuild of the whole backend in Python. The evidence supports this bounded example,
-not a claim that arbitrary enterprise systems can be reconstructed from tests.
+| Factory core (shared, versioned) | Project layer (owned by each project) |
+|---|---|
+| The delivery method and this repository's conventions | Business decisions and domain model |
+| Starter template and dev container | Domain contracts and feature scenarios |
+| Reusable checks, harness, run-record and evidence formats | Data, privacy and compliance constraints |
+| Guard and freeze, agent identity and boundaries | Integrations, environments and accounts |
+| Delivery-control patterns, review checklists, operating guidance | Risk acceptance and release decisions |
 
-**Talk formats (A-24, 2026-10-11, supersedes A-12's talk format).** The source of
-truth is Dustin's outline and decks in `~/Documents/Talks/Software Factory/`
-(`three-talk-outlines.md`). Where anything in this repository disagrees, follow the
-outline.
+Improvements to the core arrive in projects through a reviewed, versioned release and a
+freeze, never as diverging copies (A-15).
 
-- Excella leadership (2026-10-14): an honest status report and a proposal for an Excella
-  software factory, a consistent playbook for the AI incubator across projects. Excella
-  owns the core, and each agency or project owns its own rules. PLAY-01 is superseded.
-  Assumed 30 minutes plus 15 of discussion.
-- Black Tech NOLA (2026-11-07): a **45-minute** hands-on workshop, 12:15–1:00, with up
-  to 30 attendees. One shared build of a small reservation app from a separate
-  Cucumber starter. No PetClinic tour, CI/CD or guards.
-- NOAI (2026-11-13): **50 minutes plus 10 of Q&A**. The Checkout rebuild is shown as a
-  **recording**, not run live.
+## The reference project
 
-The original A-12 plan, kept for history: two one-hour talks, each a general tour of
-the test types, with the agent rebuilding Checkout live while the presenter talks.
-The demo flow below still describes the rebuild that the recording shows.
+This repository's PetClinic is the factory's proving ground: four services, a frontend,
+a black-box harness, and frozen specifications. It has established, within bounds:
 
-Demo flow (A-12, agreed 2026-09-28):
-1. Run the frozen FE-002 browser journey headed and visibly: customer logs in,
-   books, veterinarian accepts and records the visit, customer is billed and pays.
-   It starts at login; customers are seeded, and no sign-up screen is added.
-2. The agent prompts the presenter to delete `services/checkout/`; time the deletion.
-3. The agent rebuilds Checkout in Python from the unchanged specs and tests.
-4. Rerun the same headed journey, then the full aggregate, and show elapsed time.
-Fallback: a pre-recorded screen capture of a successful rehearsal rebuild.
+- **Reconstruction.** A fresh agent rebuilt the deleted Checkout service from the frozen
+  expectations in another language with zero human interventions, three times
+  (r1, r2, r4 in [docs/rehearsals/](docs/rehearsals/)).
+- **Independent, calibrated review** (ENG-02), which found what a green suite missed.
+  A fresh-session review found the r4 retry double charge; the retry scenario is now a
+  required check.
+- **Governed specification change:** suppression and retirement through the spec
+  (SPEC-07), and delivery controls as frozen, executable scenarios (SPEC-08, SPEC-09).
+- **Agent identity:** agents act through their own GitHub App and can't approve, merge or
+  bypass.
 
-### In scope
+Its limits are deliberate: in-memory storage, a fake payment provider, demo
+authentication with one shared secret, no cloud deployment yet, one maintainer, and no
+second project. The roadmap removes them in order.
 
-- Customer, Reservation, VeterinarianServices, and Checkout as separate local HTTP processes,
-  each its own project in one repo (A-01), able to use different languages.
-- A separate plain HTML/JS frontend project (A-04) and a minimum performance test (A-06).
-- Independent in-memory stores and a deterministic fake payment boundary.
-- A small browser workflow for appointment reservation and checkout.
-- Service-owned feature files, separate cross-service workflow feature files,
-  published API contracts, and executable telemetry requirements.
-- Independent verification, repeatable reconstruction experiments, and demo recovery.
-- Preserve tag `1.0` as history. The new four-service application replaces the legacy
-  app; no migration is required (D-24).
+## Roadmap
 
-### Outside the initial scope
+Ordered. Each phase finishes before the next starts, and items are in
+[BACKLOG.md](BACKLOG.md).
 
-Persistent databases, durable idempotency, cloud deployment, Docker/containers
-(decided against for the November demo: added complexity, little value for an unshared project;
-revisited for the post-November delivery initiative by A-17), Kubernetes, message
-brokers, real payments, authentication infrastructure, production monitoring, and
-automatic refund/reconciliation systems. Their absence must be explicit in the talk.
-No new feature beyond the core demonstration is required to prove the hypothesis.
+| Phase | Goal | Done when |
+|---|---|---|
+| 0. Reference project | A small, real, multi-service system built from frozen expectations | Complete (see BACKLOG § Done) |
+| 1. Governed delivery | Local, non-prod and prod environments delivered from `spec/delivery`, with evidence produced by delivery itself | Every `@awaiting` delivery control is required and green; a release record exists for a prod promotion; EXP-02 rebuilds the delivery code from the spec |
+| 2. Operate it | Production observability and cloud security on the deployed system | OBS rules asserted against the deployed environment; runtime compliance and drift checks in place |
+| 3. Durable state | A real database, schema change over time, and reconstruction of a service that owns data | A stateful service survives the reconstruction protocol, or the limit is documented |
+| 4. The factory | Extract the core: template repo, dev container, organization layer, versioned control package | A second, independent project starts from the template and passes its own checks (the ENG-02 graduation test) |
 
-## Current position
+Phase 4 waits for phase 3 on purpose: understand every layer of an application,
+including durable state, before productizing it (decided 2026-10-10).
 
-Status is tracked in [BACKLOG.md](BACKLOG.md); this plan doesn't repeat it. As of
-2026-10-11: the four JavaScript services, the frontend, performance, security (SEC-01),
-the admin role (MVP-02A), independent review (ENG-02), suppression and retirement
-(SPEC-07), and the delivery specification with local containers (SPEC-08, ENV-01,
-SPEC-09) are complete. Reconstruction evidence: r1, r2 and r4, all with zero
-interventions; r4 is the NOAI recording. Next: talk preparation, then the sequence in
-[BACKLOG.md § After the talks](BACKLOG.md#after-the-talks-2026-11-13--governed-delivery).
+### Outside the current scope
+
+Kubernetes, message brokers, real payments, external identity providers, network
+hardening (deferred in [BACKLOG.md](BACKLOG.md#network-hardening)), and multi-team
+operation before phase 4.
 
 ## Working agreements and ownership
 
 Follow [the development workflow](docs/development-workflow.md) for each capability:
 features → API contracts → standards/telemetry → specification review → executable
-failing checks → implementation → independent verification.
+failing checks → implementation → independent verification → docs pass.
 
-The presenter owns business decisions, acceptance of specifications, and the final
-presentation scope. The agent drafts artifacts, identifies gaps, builds authorized
-checks and implementation, and records evidence. Review expectations independently
-of generated code; a separate human review is useful where available, not assumed.
+The maintainer owns business decisions, acceptance and freezing of specifications, and
+release decisions. Agents draft artifacts, identify gaps, build authorized checks and
+implementation, and record evidence. Agents never approve, merge or bypass (A-22).
+Every feature's code review includes the fresh-session docs pass
+([docs/README.md](docs/README.md#the-docs-pass-after-every-feature-commit)).
 
-The plan owns scope and experiment criteria. [BACKLOG.md](BACKLOG.md) owns task
-status and unresolved decisions. [docs/README.md](docs/README.md) says where every
-other kind of document belongs. [Observability documentation](docs/observability.md)
-owns telemetry definitions and coverage. Do not turn this plan into a second copy of
-the requirements. Review and test each bounded slice before moving to the next.
-
-## Target service boundaries
+## Reference project service boundaries
 
 | Service | Owns | Dependencies |
 | --- | --- | --- |
@@ -183,19 +157,21 @@ Evidence paths:
 Outcome and next action:
 ```
 
-## Risks and scope decisions
+The scripted procedure for Checkout is in [tools/demo/](tools/demo/README.md).
+
+## Risks
 
 | Risk | Response |
 | --- | --- |
-| Specifications omit important behavior | Review concrete counterexamples and use independent evaluation cases |
+| Specifications omit important behavior | Review concrete counterexamples; independent evaluation cases; calibrated review |
 | Agent changes tests or recalls deleted code | Frozen hashes, diff review, clean context, isolated source snapshot |
-| Slow/flaky browser tests obscure business logic | Small browser workflow set; detailed checks at service/API level |
+| A green suite misses a failure mode (as r4's retry did) | Fault injection in the harness; independent review; a found gap becomes a required scenario |
 | Two services share the same wrong assumption | Provider/consumer contract assertions and independently verified state |
 | Telemetry looks correct while behavior is wrong | Pair trace checks with API, state, and payment call-count checks |
-| In-memory state is mistaken for production resilience | Explain restart data/idempotency loss; exclude durability claims |
-| Five-week scope grows | Drop two-service and recovery stretch work first; retain core correctness |
-| Reconstruction is too slow live | Use rehearsal gate and a disclosed recording; report actual timings |
-| Language swap exposes hidden JavaScript assumptions in tests | Black-box HTTP tests only (A-03); exact specs for money format, time zone, IDs; rehearse the Python rebuild early |
-| Python environment fails at the venue | Preinstall runtime and dependencies; pin versions; keep a recording |
-| Performance results vary by machine | Modest thresholds; same machine for both runs; report actual numbers |
-
+| Governance checks prove less than they claim (text-search proxies, unscheduled live checks) | Calibrate every control with planted defects; behavioral tests for delivery scripts; live tier in CI (proposed BEH-01, LIVE-01) |
+| The human freeze becomes the bottleneck | Small protected patches and a freeze checklist (proposed REVIEW-01) |
+| The agent boundary is only a convention | Agent identity now; an isolated agent runtime holding only the App's credentials (proposed AGENT-01) |
+| Durable state breaks the reconstruction thesis | Phase 3 tests it explicitly before the factory is extracted |
+| The core diverges across projects | Ship the core as a versioned package adopted through a freeze, not as copies |
+| Documentation drifts from the code | The docs pass in every feature's code review (proposed DOCS-01 makes it executable) |
+| Cloud cost grows | $25/month ceiling; ephemeral environments with TTLs (SPEC-08) |

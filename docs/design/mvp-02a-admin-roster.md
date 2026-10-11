@@ -10,7 +10,7 @@ is settled, the candidate decisions below get folded into
 
 Why this item matters beyond the feature itself: this is the first time the
 project evolves an already-tested, already-frozen system rather than building
-from a clean spec. That's worth being explicit about in the November talk —
+from a clean spec. That's worth being explicit about when presenting the method —
 candidate framing: "here's what changes, and doesn't, when you add a feature
 to a system with frozen contracts and protected tests, instead of writing
 requirements from scratch."

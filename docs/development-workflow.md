@@ -2,12 +2,12 @@
 
 ## Purpose
 
-This is the working process for the next five weeks of development and the
-November demonstration. Repository artifacts preserve decisions between sessions;
+This is the working process for every capability the factory builds, in the
+reference project and beyond. Repository artifacts preserve decisions between sessions;
 conversation history is helpful context, not the only record of requirements.
 
-The demonstration uses BDD, API contracts, and observability contracts to guide
-implementation and reconstruction. Keep in-memory storage and the fake payment
+The method uses BDD, API contracts, observability contracts and delivery controls to
+guide implementation and reconstruction. Keep in-memory storage and the fake payment
 boundary unless the user intentionally changes scope. Preserve the `1.0` baseline.
 
 ## Domain contract testing
@@ -120,7 +120,7 @@ Use the following sources rather than duplicating changing facts across document
 | --- | --- |
 | `AGENTS.md` | Agent guardrails and entry points |
 | This document | Development sequence and feature organization |
-| `BACKLOG.md` and linked specs | Scope, prerequisites, stage, next action |
+| `BACKLOG.md` and linked specs | Status, prerequisites, stage, next action |
 | `docs/decisions/architecture.md`, `docs/specs/business-decisions.md` | Decisions (A-xx, D-xx) |
 | `docs/README.md` | Where each kind of document lives |
 | `spec/features/` | Business requirements |

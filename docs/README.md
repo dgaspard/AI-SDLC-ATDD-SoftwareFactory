@@ -12,11 +12,11 @@ into the homes below and let git history keep the conversation.
 |---|---|---|---|
 | Orientation: what the repo is, how to run it | [`README.md`](../README.md) | No | Anyone |
 | Agent rules | [`AGENTS.md`](../AGENTS.md) | No | Human only (protected) |
-| Scope, service boundaries, experiment protocol, risks | [`PROJECT-PLAN.md`](../PROJECT-PLAN.md) | No | Agent drafts, human approves |
-| Work items, status, key dates, open follow-ups, proposals, deferred work | [`BACKLOG.md`](../BACKLOG.md) | No | Agent drafts, human approves |
+| Objective, factory shape, ordered roadmap, reference-project boundaries, experiment protocol, risks | [`PROJECT-PLAN.md`](../PROJECT-PLAN.md) | No | Agent drafts, human approves |
+| Work items in roadmap order, status, open follow-ups, proposals, deferred work | [`BACKLOG.md`](../BACKLOG.md) | No | Agent drafts, human approves |
 | Product and business decisions (D-xx), domain model, schema decisions | [`docs/specs/`](specs/) | No | Human only (protected) |
 | Architecture and delivery decisions (A-xx) | [`docs/decisions/architecture.md`](decisions/architecture.md) | No: add a row | Agent drafts, human approves |
-| Design notes for one backlog item: options, decisions in progress, how it was built | [`docs/design/`](design/) | One per item: `<item-id>-<topic>.md` | Agent drafts, human approves |
+| Design notes for one backlog item: options, decisions in progress, how it was built | [`docs/design/`](design/) | One per backlog item or decision: `<id>-<topic>.md` | Agent drafts, human approves |
 | Standing guides: the development workflow, observability standards | [`docs/development-workflow.md`](development-workflow.md), [`docs/observability.md`](observability.md) | No | Agent drafts, human approves |
 | Generated delivery guide | [`docs/delivery/environments.md`](delivery/environments.md) | No | Generated from `spec/delivery/catalog.yaml`; never hand-edit |
 | Engineering and security review records | [`docs/engineering-reviews/`](engineering-reviews/) | One per review, dated | Reviewer agent writes, human signs off |
@@ -24,7 +24,7 @@ into the homes below and let git history keep the conversation.
 | Task handoffs between sessions | [`docs/handoffs/`](handoffs/) | One per item | Agent writes |
 | Completed backlog items, superseded plans | [`docs/history/`](history/) | Rarely: append to an existing file | Agent moves content verbatim |
 | Draft changes to protected files | The pull request (a patch for the human to apply) | Never in `docs/` | Agent drafts, human applies and freezes |
-| Talk scripts, decks, outlines | Outside this repo (Dustin's talk folder) | No | Dustin |
+| Talks, decks, presentation notes | Not kept in this repository (A-25) | No | — |
 
 ## Rules
 
