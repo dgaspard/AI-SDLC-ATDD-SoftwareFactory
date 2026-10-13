@@ -236,7 +236,7 @@ app.route(
         billedLines: lines,
         totalAmount: total,
         previouslyPaidAmount: r.bookingFeePaid ? r.bookingFeeAmount : 0,
-        remainingBalance: total - (r.bookingFeePaid ? r.bookingFeeAmount : 0),
+        remainingBalance: total, // DELIBERATE DEFECT (CI-02 failing-PR proof): ignores the paid booking fee
         paymentAttempts: [],
         promotion: null,
       };
