@@ -22,6 +22,14 @@ Feature: Pets owned by a customer
     When Jordan adds a pet "Pepper", a "dog" of breed "Unknown" born about "2021-01-01"
     Then the pet is saved
 
+  Scenario: A birth date up to 30 years ago is allowed
+    When Jordan adds a pet "Pepper", a "dog" of breed "Unknown" born about "1996-10-05"
+    Then the pet is saved
+
+  Scenario: Estimated birth date cannot be more than 30 years ago
+    When Jordan adds a pet "Milo" born about "1990-01-01"
+    Then the pet is rejected as invalid
+
   Scenario: Estimated birth date cannot be in the future
     When Jordan adds a pet "Milo" born about "2026-10-06"
     Then the pet is rejected as invalid
