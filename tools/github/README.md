@@ -19,7 +19,7 @@ are not printed or stored in Git configuration. Node 22+ and `gh` are required.
 ```sh
 node tools/github/agent.mjs check
 node tools/github/agent.mjs git push -u origin my-branch
-node tools/github/agent.mjs gh pr create --repo dgaspard/ai-sdlc-specc-bdd-design --base main --head my-branch --title 'Change title' --body-file /tmp/pr-body.md
+node tools/github/agent.mjs gh pr create --repo dgaspard/AI-SDLC-ATDD-SoftwareFactory --base main --head my-branch --title 'Change title' --body-file /tmp/pr-body.md
 ```
 
 Authenticated Git operations must use the HTTPS origin. SSH remotes use SSH keys

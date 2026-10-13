@@ -16,7 +16,7 @@ Feature: Agent-built delivery stays accountable to humans
   Scenario: Every image build publishes an AI provenance attestation
     Given the delivery workflows
     Then at least one job builds a container image
-    And every job that builds a container image attests with predicate type "https://github.com/dgaspard/ai-sdlc-specc-bdd-design/ai-provenance/v1"
+    And every job that builds a container image attests with predicate type "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/ai-provenance/v1"
 
   @CTL-022 @nist:CM-5 @ssdf:PO.3.2 @env:local @env:nonprod @env:prod
   Scenario: The human-owned root of trust runs the delivery spec

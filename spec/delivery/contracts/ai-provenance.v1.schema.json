@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dgaspard/ai-sdlc-specc-bdd-design/ai-provenance/v1",
+  "$id": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/ai-provenance/v1",
   "title": "AI provenance predicate (DC-007)",
   "description": "In-toto predicate attached to every image: which agent produced the code, under which frozen spec, and which human approved it.",
   "type": "object",

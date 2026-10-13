@@ -11,4 +11,4 @@ Feature: Every prod promotion leaves a release record
     Then at least one job deploys to "prod"
     And every job that deploys to "prod" writes the release record with "scripts/ci/release-record" after it deploys
     And every job that deploys to "prod" publishes the release record as a GitHub Release
-    And every job that deploys to "prod" attests the release record with predicate type "https://github.com/dgaspard/ai-sdlc-specc-bdd-design/release-record/v1"
+    And every job that deploys to "prod" attests the release record with predicate type "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/release-record/v1"

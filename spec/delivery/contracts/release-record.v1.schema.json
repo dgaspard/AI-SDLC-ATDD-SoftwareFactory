@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dgaspard/ai-sdlc-specc-bdd-design/release-record/v1",
+  "$id": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/release-record/v1",
   "title": "Release record (DC-010, A-23)",
   "description": "Written by the pipeline for every prod promotion: who changed what, under which spec, with which tests and evidence, and when. Published as an attested GitHub Release; later also retained in S3 Object Lock.",
   "type": "object",
