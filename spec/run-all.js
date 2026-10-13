@@ -5,6 +5,7 @@
 //   node run-all.js --tier full --cache  the gate: run only suites not yet passed on this exact tree
 //   node run-all.js --suite auth,observability   run named suites (unscoped results count toward the gate)
 //   node run-all.js --verify           run nothing; exit 0 only if the gate is complete for this tree
+//   --verify --json                    the same, printed as JSON for evidence reports (EVID-01)
 //   --dry-run                          print what would run and why, run nothing
 //   --diff A..B                        fast tier: select from paths changed between two refs (CI, PRs)
 //
@@ -93,9 +94,35 @@ function gateStatus(records) {
     provenBy: Object.fromEntries(FULL.filter((id) => proven.has(id)).map((id) => [id, proven.get(id).runId])) };
 }
 
+// EVID-01: the verifier's view as JSON, so evidence reports reuse its tree identity and rules
+// instead of re-deriving them. Each full-tier suite is pass (proven on this basis), fail (its
+// latest result on this basis failed) or missing.
+function verifyReport(records, gate) {
+  const basis = records.filter(sameBasis);
+  const proven = provenSuites(records);
+  const latest = new Map();
+  for (const r of basis) for (const s of r.suites ?? []) if (!s.scope) latest.set(s.id, { runId: s.cachedFrom ?? r.runId, result: s });
+  const suites = FULL.map((id) => {
+    const l = latest.get(id);
+    const status = proven.has(id) ? "pass" : l && l.result.status !== "pass" ? "fail" : "missing";
+    const pick = status === "pass" ? proven.get(id) : status === "fail" ? l : null;
+    return { id, name: policy.suites[id].name, status, runId: pick?.runId ?? null, cachedFrom: pick?.result.cachedFrom ?? null,
+      counts: pick?.result.counts ?? null, durationMs: pick?.result.durationMs ?? null, log: pick?.result.log ?? null };
+  });
+  return { schema: 1, tree, head, branch: gitInfo.branch, dirty: gitInfo.dirty, nodeMajor,
+    policy: { file: "spec/test-policy.json", sha256: policySha }, complete: gate.complete,
+    missing: suites.filter((s) => s.status === "missing").map((s) => s.id),
+    failed: suites.filter((s) => s.status === "fail").map((s) => s.id),
+    unreadable, suites, stateChanges: [...new Set(basis.flatMap((r) => r.stateChanges ?? []))] };
+}
+
 const prior = readRecords();
 if (verifyOnly) {
   const gate = gateStatus(prior);
+  if (flag("--json")) {
+    console.log(JSON.stringify(verifyReport(prior, gate), null, 2));
+    process.exit(gate.complete ? 0 : 1);
+  }
   console.log(gate.complete
     ? `GATE PASS: every full-tier suite passed on tree ${tree.slice(0, 12)}.`
     : `GATE INCOMPLETE on tree ${tree.slice(0, 12)}${gitInfo.dirty ? " (uncommitted changes)" : ""}. Missing: ${gate.missing.join(", ")}`);

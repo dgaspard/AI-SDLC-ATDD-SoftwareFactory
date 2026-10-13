@@ -114,6 +114,24 @@ describe("run-all gate and verifier (CI-02)", () => {
     assert.match(v.out, /Missing: flaky$/m);
   });
 
+  it("[EVID-01] --verify --json reports the verifier's view: full tree, policy and each suite's status", () => {
+    assert.equal(run().code, 0);
+    let v = run("--verify", "--json");
+    assert.equal(v.code, 0);
+    let j = JSON.parse(v.out);
+    assert.match(j.tree, /^[0-9a-f]{40}$/);
+    assert.match(j.policy.sha256, /^[0-9a-f]{64}$/);
+    assert.equal(j.complete, true);
+    assert.deepEqual(j.suites.map((s) => [s.id, s.status]), [["first", "pass"], ["second", "pass"], ["flaky", "pass"]]);
+    write("test-results/flaky", "");
+    assert.equal(run("--suite", "flaky").code, 1);
+    v = run("--verify", "--json");
+    assert.equal(v.code, 1);
+    j = JSON.parse(v.out);
+    assert.deepEqual([j.complete, j.failed, j.missing], [false, ["flaky"], []]);
+    assert.match(j.suites.find((s) => s.id === "flaky").log, /^test-results\/runs\//);
+  });
+
   it("[CI-02] a pass whose log points outside test-results/runs can't be verified", () => {
     assert.equal(run().code, 0);
     write("test-results/elsewhere.log", "looks like a log\n"); // ignored, so the tree is unchanged

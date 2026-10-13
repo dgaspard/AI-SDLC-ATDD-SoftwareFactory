@@ -1,7 +1,6 @@
 # CI-02 local slice: the required application gate
 
-Status: **local slice verified 2026-10-13; the `main` ruleset requires the check and CTL-024
-passes live (2026-10-13); the failing-PR proof is pending
+Status: **local slice and remote enforcement verified 2026-10-13
 verification.** CI-02 overall stays open (SBOM, attestations, scans that gate, OIDC).
 Backlog: [CI-02](../../BACKLOG.md#ci-02--delivery-pipeline-as-a-by-product).
 
@@ -57,7 +56,7 @@ of the diff. Full isolation means running pull-request code in a separate job or
 | 5 | Accepted-risk semantics unchanged | The `accepted-risks` suite and SPEC-07 banner are untouched |
 | 6 | Failed runs keep logs; missing records are visible | Fixture test (a failed suite keeps its record and log); the upload step uses `if: always()` and errors on no files |
 | 7 | Names agree | `Application suite` in `guard.yml`, `root-of-trust.json`, the contract and this checklist |
-| 8 | Local and remote statuses are separate | Local: verified. Remote: ruleset configured and CTL-024 passes live; failing-PR proof pending |
+| 8 | Local and remote statuses are separate | Local: verified. Remote: verified (ruleset, CTL-024 live, failing PR #11) |
 
 ## Remote enforcement checklist (repository admin)
 
@@ -103,4 +102,12 @@ The agent App has no `workflows` permission (A-21), so a human pushes any branch
   message.
 - Remote: the first CI run of `Application suite` passed on PR #10; the `main` ruleset now
   requires it, and the live tier passed 3/3 scenarios (CTL-024, CTL-025, CTL-028).
-- Pending: the failing-PR proof (checklist step 5).
+- Failing-PR proof: PR #11 planted the Checkout balance defect. `Application suite` failed in
+  CI (observability 119/125, features 234/286, backend journeys 3/11, browser 6/9,
+  performance 3/4; runner exit 1) while the guard and delivery checks passed. Closed
+  unmerged; branch deleted.
+- Merging #10: the admin bypass was refused ("approval from someone other than the last
+  pusher"). Because the agent App authored and last pushed the PR, the maintainer's approval
+  was an independent review and the merge went through normally. On a solo project, an
+  admin merge of a PR the maintainer last pushed needs the admin role on the ruleset's bypass
+  list.

@@ -31,9 +31,9 @@ spec, red checks, build, ENG-02 review (including the docs pass), freeze.
 ### CI-02 — Delivery pipeline as a by-product
 
 Status: **local slice verified 2026-10-13** (the required `Application suite` gate, CTL-029;
-[design note](docs/design/ci-02-application-gate.md)). Remote: the `main` ruleset requires
-`Application suite` and CTL-024 passes live (2026-10-13); a throwaway failing PR is the last
-proof (checklist in the design note). The rest of CI-02 is planned. Done when every
+[design note](docs/design/ci-02-application-gate.md)). Remote enforcement verified 2026-10-13: the
+`main` ruleset requires `Application suite`, CTL-024 passes live, and a deliberately failing
+PR (#11) was blocked. The rest of CI-02 is planned. Done when every
 `@awaiting:CI-02` tag is removed at a freeze. Thin
 workflows (A-21): Dustin owns the small `.github/workflows/delivery-*.yml` files, which
 grant privileges; an agent builds the `scripts/ci/` and `infra/` scripts they call,
@@ -68,7 +68,9 @@ crash can take a service down) before prod.
 
 ### EVID-01 — Evidence bundle
 
-Status: planned. Generate the control coverage matrix and a per-run evidence bundle
+Status: **local slice built 2026-10-13**: `npm run evidence:change` writes a readable
+change-evidence report and versioned JSON for the exact tree, from the runner's verifier
+([design note](docs/design/evid-01-change-evidence.md)). The rest is planned. Generate the control coverage matrix and a per-run evidence bundle
 from the Cucumber JSON output (CTL, NIST and SSDF tags), the run record, the image
 digest, the SBOM, both attestations and the approver. Fail when a binding control has
 no evidence. Per prod promotion (A-23), publish a release record: a readable summary
@@ -243,6 +245,14 @@ checks don't prove what's running.
 
 ## Open follow-ups on completed work
 
+- **EVID-01 accepted risks (2026-10-13, low; revisit before production use):**
+  - After an unscoped pass, a scoped failure on the same tree shows as INCOMPLETE rather
+    than FAILED in `--verify --json` and the report (never COMPLETE). One-line runner fix:
+    in `verifyReport`, skip only scoped passes.
+  - Run records are unsigned local files: a forged record plus a log can still reach
+    COMPLETE (predates EVID-01; the report states it as a limitation).
+  - `execution.origin` and the CI URL are self-reported by the environment (stated in the
+    report).
 - **CI-02 accepted risks (2026-10-13, low for a preliminary engagement; revisit before
   production use):**
   - Pull-request code in the gate job could rig later steps through `$GITHUB_PATH`,
