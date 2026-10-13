@@ -31,9 +31,9 @@ spec, red checks, build, ENG-02 review (including the docs pass), freeze.
 ### CI-02 — Delivery pipeline as a by-product
 
 Status: **local slice verified 2026-10-13** (the required `Application suite` gate, CTL-029;
-[design note](docs/design/ci-02-application-gate.md)). Remote enforcement is pending
-verification: the `main` ruleset must require `Application suite`, then a failing PR proves
-it (checklist in the design note). The rest of CI-02 is planned. Done when every
+[design note](docs/design/ci-02-application-gate.md)). Remote: the `main` ruleset requires
+`Application suite` and CTL-024 passes live (2026-10-13); a throwaway failing PR is the last
+proof (checklist in the design note). The rest of CI-02 is planned. Done when every
 `@awaiting:CI-02` tag is removed at a freeze. Thin
 workflows (A-21): Dustin owns the small `.github/workflows/delivery-*.yml` files, which
 grant privileges; an agent builds the `scripts/ci/` and `infra/` scripts they call,
@@ -245,9 +245,6 @@ checks don't prove what's running.
 
 - **CI-02 accepted risks (2026-10-13, low for a preliminary engagement; revisit before
   production use):**
-  - The catalog marks `application-gate` and `branch-ruleset` enforced, which holds only
-    once the `main` ruleset requires `Application suite` (remote checklist in the
-    [CI-02 design note](docs/design/ci-02-application-gate.md)). CTL-024 (live) shows it.
   - Pull-request code in the gate job could rig later steps through `$GITHUB_PATH`,
     `$GITHUB_ENV` or `sudo`; human review of the diff is the defense (proposed GATE-ISO-01).
   - CTL-029's swallow check bans known patterns (it misses `|| echo`, `! cmd`); requiring

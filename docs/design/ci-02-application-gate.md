@@ -1,6 +1,7 @@
 # CI-02 local slice: the required application gate
 
-Status: **local slice verified 2026-10-13; remote enforcement pending
+Status: **local slice verified 2026-10-13; the `main` ruleset requires the check and CTL-024
+passes live (2026-10-13); the failing-PR proof is pending
 verification.** CI-02 overall stays open (SBOM, attestations, scans that gate, OIDC).
 Backlog: [CI-02](../../BACKLOG.md#ci-02--delivery-pipeline-as-a-by-product).
 
@@ -56,7 +57,7 @@ of the diff. Full isolation means running pull-request code in a separate job or
 | 5 | Accepted-risk semantics unchanged | The `accepted-risks` suite and SPEC-07 banner are untouched |
 | 6 | Failed runs keep logs; missing records are visible | Fixture test (a failed suite keeps its record and log); the upload step uses `if: always()` and errors on no files |
 | 7 | Names agree | `Application suite` in `guard.yml`, `root-of-trust.json`, the contract and this checklist |
-| 8 | Local and remote statuses are separate | Local: verified. Remote: pending verification (below) |
+| 8 | Local and remote statuses are separate | Local: verified. Remote: ruleset configured and CTL-024 passes live; failing-PR proof pending |
 
 ## Remote enforcement checklist (repository admin)
 
@@ -100,4 +101,6 @@ The agent App has no `workflows` permission (A-21), so a human pushes any branch
   accepted for now and logged in BACKLOG (open follow-ups).
 - Full gate: complete on the committed tree; the tree and run record are in the commit
   message.
-- Pending: the ruleset change and failing-PR proof above.
+- Remote: the first CI run of `Application suite` passed on PR #10; the `main` ruleset now
+  requires it, and the live tier passed 3/3 scenarios (CTL-024, CTL-025, CTL-028).
+- Pending: the failing-PR proof (checklist step 5).
