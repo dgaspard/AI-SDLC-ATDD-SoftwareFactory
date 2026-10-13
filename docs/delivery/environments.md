@@ -24,6 +24,7 @@ The agent's fast loop and the developer's laptop. Same images as the cloud, star
 | Code, secret and dependency scans | Semgrep, detect-secrets, npm audit | informational | Agents see findings while building; SECURITY_GATE unset, so they report only (A-13). | CTL-013 | specified, awaiting CI-02 |
 | Pre-push full-suite verification | git hooks, spec/run-all.js | required | Catches failures before they reach CI. | — | planned |
 | Human-owned root of trust | guard.yml, CODEOWNERS, spec/guard | required | The protect-paths hook stops agents editing the spec. | CTL-022 | enforced |
+| Required application suite | guard.yml, spec/run-all.js | required | npm run test:verify proves the same gate on the developer's tree. | CTL-029 | enforced |
 | OTLP test collector | spec/harness/collector | required | OBS rules are asserted against real traces. | `spec/tests/observability`, `spec/tests/harness/collector.test.js` | enforced |
 | Structured JSON logs | services/platform | required | Same format everywhere. | — | planned |
 | Local performance thresholds | spec/tests/performance | required | Agents need the signal while building. | `spec/tests/performance`, `spec/features/performance/local-demo.feature` | enforced |
@@ -35,6 +36,7 @@ The agent's fast loop and the developer's laptop. Same images as the cloud, star
 - [x] Browser tests in a pinned reference container
 - [ ] Pre-push full-suite verification (planned)
 - [x] Human-owned root of trust
+- [x] Required application suite
 - [x] OTLP test collector
 - [ ] Structured JSON logs (planned)
 - [x] Local performance thresholds
@@ -82,6 +84,7 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 | Every pull request tested in non-prod | GitHub Actions, GitHub Environments | required | A human reviews a change already proven in a real environment. | CTL-015 | specified, awaiting ENV-03 |
 | Release record per promotion | GitHub Releases, GitHub artifact attestations, S3 Object Lock (planned) | informational | Non-prod runs feed the record (live results), but don't publish one. | CTL-060 | specified, awaiting EVID-01 |
 | Human-owned root of trust | guard.yml, CODEOWNERS, spec/guard | required | CI's own run of the spec is authoritative. | CTL-022 | enforced |
+| Required application suite | guard.yml, spec/run-all.js | required | Blocks the merge once the main ruleset requires it; CTL-024 (live) proves that. | CTL-029 | enforced |
 | Signed build provenance (SLSA) | GitHub artifact attestations | required | Created when the image is built. | CTL-020 | specified, awaiting CI-02 |
 | AI provenance attestation | GitHub artifact attestations, in-toto | required | Created when the image is built. | CTL-021 | specified, awaiting CI-02 |
 | Human gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity | required | Agent-authored pull requests reach non-prod, but only a human can approve or merge them. | CTL-023, CTL-025, CTL-026, CTL-028 | partly enforced, awaiting ENV-03 |
@@ -111,6 +114,7 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 - [ ] Thin workflows, thick scripts (specified, awaiting CI-02)
 - [ ] Every pull request tested in non-prod (specified, awaiting ENV-03)
 - [x] Human-owned root of trust
+- [x] Required application suite
 - [ ] Signed build provenance (SLSA) (specified, awaiting CI-02)
 - [ ] AI provenance attestation (specified, awaiting CI-02)
 - [ ] Human gate at pull request approval (partly enforced, awaiting ENV-03)
@@ -151,6 +155,7 @@ A production-shaped AWS member account environment. It runs only images already 
 | Every pull request tested in non-prod | GitHub Actions, GitHub Environments | required | Only main reaches prod. | CTL-015 | specified, awaiting ENV-03 |
 | Release record per promotion | GitHub Releases, GitHub artifact attestations, S3 Object Lock (planned) | required | Reporting and governance documentation as a by-product of delivery. | CTL-060 | specified, awaiting EVID-01 |
 | Human-owned root of trust | guard.yml, CODEOWNERS, spec/guard | required | CI's own run of the spec is authoritative. | CTL-022 | enforced |
+| Required application suite | guard.yml, spec/run-all.js | required | Blocks the merge once the main ruleset requires it; CTL-024 (live) proves that. | CTL-029 | enforced |
 | Signed build provenance (SLSA) | GitHub artifact attestations | required | Verified before deploying. | CTL-020 | specified, awaiting CI-02 |
 | AI provenance attestation | GitHub artifact attestations, in-toto | required | Verified before deploying. | CTL-021 | specified, awaiting CI-02 |
 | Human gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity | required | Promotion is automatic only after a human decision, and only for the exact tree that was tested. | CTL-023, CTL-025, CTL-026, CTL-028 | partly enforced, awaiting ENV-03 |
@@ -179,6 +184,7 @@ A production-shaped AWS member account environment. It runs only images already 
 - [ ] Every pull request tested in non-prod (specified, awaiting ENV-03)
 - [ ] Release record per promotion (specified, awaiting EVID-01)
 - [x] Human-owned root of trust
+- [x] Required application suite
 - [ ] Signed build provenance (SLSA) (specified, awaiting CI-02)
 - [ ] AI provenance attestation (specified, awaiting CI-02)
 - [ ] Human gate at pull request approval (partly enforced, awaiting ENV-03)
@@ -222,6 +228,7 @@ A production-shaped AWS member account environment. It runs only images already 
 | Every pull request tested in non-prod | About $0.04 per 15-minute run. |
 | Release record per promotion | Free on GitHub; S3 Object Lock storage costs cents per month. |
 | Human-owned root of trust | Free. |
+| Required application suite | Free. |
 | Signed build provenance (SLSA) | Free. |
 | AI provenance attestation | Free. |
 | Human gate at pull request approval | Free. |

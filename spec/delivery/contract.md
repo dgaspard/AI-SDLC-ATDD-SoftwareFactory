@@ -26,5 +26,5 @@ builder's choice. Protected once frozen; each rule is checked by the features li
 | AWS region | `us-east-1` (`catalog.yaml` → `region`) | One region keeps the cost ceiling and the SCP region allow-list simple |
 | Environments | `local`, `nonprod`, `prod` (and `org` for the management account) | A-16..A-20 |
 | TTL tag | `petclinic:ttl` = whole minutes after creation; at most 15 in non-prod and 30 in prod (`catalog.yaml` → `ttl_minutes`) | $25/month ceiling. Non-prod lives as long as its tests; prod lives as long as someone is looking at it (decided 2026-10-10) |
-| Required checks | `Protected specs and tests unchanged`, `Delivery spec` (`root-of-trust.json` → `requiredChecks`): job names in `guard.yml` and required by the `main` ruleset | CTL-022, CTL-024 |
+| Required checks | `Protected specs and tests unchanged`, `Delivery spec`, `Application suite` (`root-of-trust.json` → `requiredChecks`): job names in `guard.yml` and required by the `main` ruleset | CTL-022, CTL-024, CTL-029 |
 | Security gate switch | `SECURITY_GATE=fail` makes the portable scan scripts exit non-zero on findings; unset, they report only | Local stays informational, CI is the gate (A-13) |

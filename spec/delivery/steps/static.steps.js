@@ -266,6 +266,67 @@ Then("no delivery workflow is part of the root of trust", function () {
   none("CTL-022 delivery workflow in the root of trust", repo.rootOfTrust.paths.filter((p) => pattern.test(path.basename(p))));
 });
 
+// CTL-029 (CI-02): the required application gate in the root of trust.
+Then("{string} is a required check in the root of trust", function (name) {
+  assert.ok(repo.rootOfTrust.requiredChecks.includes(name), `CTL-029: "${name}" is not in root-of-trust.json requiredChecks`);
+});
+
+Then("it has a job named {string}", function (name) {
+  this.job = repo.jobs([this.workflow]).find((j) => (j.job.name ?? j.id) === name);
+  assert.ok(this.job, `CTL-029: ${this.workflow.file} has no job named "${name}"`);
+});
+
+Then("that job runs {string} and then {string}", function (first, second) {
+  const at = (cmd) => this.job.steps.findIndex((s) => (s.run ?? "").split("\n").some((l) => l.trim() === cmd));
+  const i = at(first);
+  assert.ok(i >= 0, `CTL-029: ${this.job.label} has no step that runs "${first}"`);
+  assert.ok(at(second) > i, `CTL-029: ${this.job.label} doesn't run "${second}" after "${first}"`);
+});
+
+Then("that job never reuses cached test results", function () {
+  none("CTL-029 cached results stand in for a CI run", this.job.steps.filter((s) => /--cache\b|test:gate/.test(s.run ?? "")).map((s) => s.run));
+});
+
+// Any of these after a command hides its exit status.
+const SWALLOW = /\|\|\s*(?:true|:|exit\s+0)(?=\s|;|$)|;\s*(?:true|:)(?=\s|;|$)|set\s+\+e|set\s+\+o\s+errexit/m;
+
+Then("that job and its steps can't continue on error", function () {
+  const bad = [
+    ...(this.job.job["continue-on-error"] ? [`${this.job.label} (job)`] : []),
+    ...this.job.steps.filter((s) => s["continue-on-error"] || SWALLOW.test(s.run ?? "")).map((s) => s.run ?? s.uses),
+  ];
+  none("CTL-029 failure is swallowed", bad);
+});
+
+Then("that job's steps run unconditionally in the default shell from the repository root", function () {
+  const { wf, job } = this.job;
+  const bad = [
+    ...(job.if !== undefined ? ["job if:"] : []),
+    ...(wf.doc.defaults?.run || job.defaults?.run ? ["defaults.run"] : []),
+    ...this.job.steps.filter((s) => s.run !== undefined && (s.if !== undefined || s.shell !== undefined || s["working-directory"] !== undefined)).map((s) => s.run),
+  ];
+  none("CTL-029 a gate step can be skipped or redirected", bad);
+});
+
+Then("that job calls no agent-built script or local action", function () {
+  none("CTL-029 gate delegates to agent-built code", this.job.steps.filter((s) =>
+    /(?:^|[\s;&|(])(?:\.\/)?(?:scripts\/ci|infra)\//.test(s.run ?? "") || String(s.uses ?? "").startsWith("./")).map((s) => s.run ?? s.uses));
+});
+
+Then("that job then fails if {string} reports any change", function (cmd) {
+  const runs = this.job.steps.map((s) => s.run ?? "");
+  const verify = runs.findIndex((r) => r.includes("--verify"));
+  const check = runs.findIndex((r) => r.split("\n").some((l) => l.trim() === `test -z "$(${cmd})"`));
+  assert.ok(check >= 0, `CTL-029: ${this.job.label} never fails on "${cmd}" output`);
+  assert.ok(check > verify, `CTL-029: ${this.job.label} checks for changes before the evidence check`);
+});
+
+Then("that job uploads {string} even when it fails, and fails when nothing was produced", function (dir) {
+  const uploads = this.job.steps.filter((s) => repo.actionName(s) === "actions/upload-artifact");
+  assert.ok(uploads.length > 0, `CTL-029: ${this.job.label} uploads no test evidence`);
+  none("CTL-029 evidence upload", uploads.filter((s) => !String(s.if ?? "").includes("always()") || !String(s.with?.path ?? "").includes(dir) || s.with?.["if-no-files-found"] !== "error").map((s) => s.with?.name ?? s.uses));
+});
+
 const deployJobs = (wfs, env) =>
   repo.jobs(wfs).filter((j) => j.steps.some((s) => new RegExp(`infra/deploy\\s+${env}\\b`).test(repo.effectiveRun(s))));
 

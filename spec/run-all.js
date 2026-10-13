@@ -62,18 +62,27 @@ const tree = workingTree();
 const gitInfo = { branch: tryGit("rev-parse", "--abbrev-ref", "HEAD"), head, treeHash: tree, dirty: tree !== headTree };
 
 // ---------- earlier records ----------
+let unreadable = 0; // CI-02: malformed records never count, and the verifier says how many it skipped.
 function readRecords() {
   if (!fs.existsSync(RUNS)) return [];
   return fs.readdirSync(RUNS).filter((f) => f.endsWith(".json")).flatMap((f) => {
-    try { return [JSON.parse(fs.readFileSync(path.join(RUNS, f), "utf8"))]; } catch { return []; }
+    try { return [JSON.parse(fs.readFileSync(path.join(RUNS, f), "utf8"))]; } catch { unreadable++; return []; }
   }).sort((a, b) => String(a.finishedAt).localeCompare(String(b.finishedAt)));
 }
+// CI-02: a pass counts only if its log still exists under test-results/runs/, so a record
+// alone can't vouch for a run.
+const logExists = (s) => typeof s.log === "string" && !s.log.split("/").includes("..")
+  && s.log.startsWith("test-results/runs/") && fs.existsSync(path.join(ROOT, s.log));
 const sameBasis = (r) => r.git?.treeHash === tree && r.policy?.sha256 === policySha && r.environment?.nodeMajor === nodeMajor;
-/** Passing, unscoped results for this exact tree, policy, and Node major: suiteId -> { runId, result }. */
+/** Passing, unscoped results for this exact tree, policy, and Node major: suiteId -> { runId, result }.
+ *  Records are in time order; a later failure on the same basis revokes an earlier pass (CI-02). */
 function provenSuites(records) {
   const proven = new Map();
   for (const r of records.filter(sameBasis)) {
-    for (const s of r.suites ?? []) if (s.status === "pass" && !s.scope) proven.set(s.id, { runId: s.cachedFrom ?? r.runId, result: s });
+    for (const s of r.suites ?? []) {
+      if (s.status === "pass" && !s.scope && logExists(s)) proven.set(s.id, { runId: s.cachedFrom ?? r.runId, result: s });
+      else if (s.status !== "pass") proven.delete(s.id);
+    }
   }
   return proven;
 }
@@ -90,6 +99,7 @@ if (verifyOnly) {
   console.log(gate.complete
     ? `GATE PASS: every full-tier suite passed on tree ${tree.slice(0, 12)}.`
     : `GATE INCOMPLETE on tree ${tree.slice(0, 12)}${gitInfo.dirty ? " (uncommitted changes)" : ""}. Missing: ${gate.missing.join(", ")}`);
+  if (unreadable) console.log(`Ignored ${unreadable} unreadable run record${unreadable === 1 ? "" : "s"} in test-results/runs/.`);
   process.exit(gate.complete ? 0 : 1);
 }
 

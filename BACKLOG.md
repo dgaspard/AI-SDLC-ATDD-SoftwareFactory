@@ -30,7 +30,11 @@ spec, red checks, build, ENG-02 review (including the docs pass), freeze.
 
 ### CI-02 — Delivery pipeline as a by-product
 
-Status: planned. Done when every `@awaiting:CI-02` tag is removed at a freeze. Thin
+Status: **local slice verified 2026-10-13** (the required `Application suite` gate, CTL-029;
+[design note](docs/design/ci-02-application-gate.md)). Remote enforcement is pending
+verification: the `main` ruleset must require `Application suite`, then a failing PR proves
+it (checklist in the design note). The rest of CI-02 is planned. Done when every
+`@awaiting:CI-02` tag is removed at a freeze. Thin
 workflows (A-21): Dustin owns the small `.github/workflows/delivery-*.yml` files, which
 grant privileges; an agent builds the `scripts/ci/` and `infra/` scripts they call,
 until the `pipeline/` and `agent-governance/` scenarios pass:
@@ -229,6 +233,7 @@ existing item each could join.
 | **MQ-01** Merge queue | Replace "require branches to be up to date" once several agents open PRs in parallel | Keeps tested tree = merged tree (A-22) | Later |
 | **DOCS-01** Executable docs pass | Make the mechanical half of the docs pass a check: links and repository paths resolve, files exist only in the homes `docs/README.md` allows, and finished items are out of the active backlog | Today the pass is a checklist; the repo's own pattern is to make a rule executable once it matters | CI-02 |
 | **OBS-003-FULL** A span for every rejected attempt | Open the business span before schema validation, so every rejected attempt gets one (full OBS-003). Deferred 2026-10-05 in favour of dropping the unreachable `validation_error` from OBS-046/047 | Complete observability of rejections | OBS-P1 |
+| **GATE-ISO-01** Isolate pull-request code from the gate | Run setup scripts and services in a separate job or container from the steps that run and verify the gate | Pull-request code in the same job can rig later steps through `$GITHUB_PATH`, `$GITHUB_ENV` or `sudo`; today human review of the diff is the defense (CI-02 design note) | CI-02 |
 | **REVIEW-01** Make freezes reviewable | Small protected patches (one control per patch) and a freeze review checklist | The human freeze is the bottleneck and the main risk | Process |
 
 Known weaknesses these address (same review): some static checks are text-search
@@ -238,6 +243,15 @@ checks don't prove what's running.
 
 ## Open follow-ups on completed work
 
+- **CI-02 accepted risks (2026-10-13, low for a preliminary engagement; revisit before
+  production use):**
+  - The catalog marks `application-gate` and `branch-ruleset` enforced, which holds only
+    once the `main` ruleset requires `Application suite` (remote checklist in the
+    [CI-02 design note](docs/design/ci-02-application-gate.md)). CTL-024 (live) shows it.
+  - Pull-request code in the gate job could rig later steps through `$GITHUB_PATH`,
+    `$GITHUB_ENV` or `sudo`; human review of the diff is the defense (proposed GATE-ISO-01).
+  - CTL-029's swallow check bans known patterns (it misses `|| echo`, `! cmd`); requiring
+    each gate step's `run` to be exactly its command would close that (protected change).
 - **GUARD-01 remote:** the `main` ruleset is configured and CTL-024 passes live
   (2026-10-10). Confirm the CODEOWNERS username, then close.
 - **r4 REV-001 retry double charge:** promoted from accepted risk to a required check on

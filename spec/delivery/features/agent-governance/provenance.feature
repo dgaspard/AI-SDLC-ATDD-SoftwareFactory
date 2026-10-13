@@ -3,7 +3,7 @@ Feature: Agent-built delivery stays accountable to humans
   Agents build the delivery code (A-20). Humans own the root of trust that runs this
   spec, and only a human can release to prod. Every image carries two attestations:
   how it was built (SLSA) and who built it (AI provenance, DC-007).
-  Catalog: build-provenance, ai-provenance, root-of-trust, prod-approval.
+  Catalog: build-provenance, ai-provenance, root-of-trust, application-gate, prod-approval.
 
   @CTL-020 @awaiting:CI-02 @nist:SR-4 @ssdf:PS.2.1 @env:nonprod @env:prod
   Scenario: Every image build publishes signed build provenance
@@ -25,6 +25,24 @@ Feature: Agent-built delivery stays accountable to humans
     And it runs the guard check and the delivery suite
     And it has a job named for each required check in the root of trust
     And no delivery workflow is part of the root of trust
+
+  @CTL-029 @nist:SA-11 @ssdf:PW.8.2 @env:local @env:nonprod @env:prod
+  Scenario: A failing application suite fails a required check
+    CI-02 local slice. Every full-tier suite runs uncached on the pull request's exact tree,
+    and the evidence is verified. The job calls the protected runner directly, so a pull
+    request can't redefine the gate it is judged by, and it proves the pull request's own
+    setup and services left the checkout unchanged. Whether GitHub requires the check is
+    CTL-024 (live).
+    Given the root-of-trust workflow "guard.yml"
+    Then "Application suite" is a required check in the root of trust
+    And it has a job named "Application suite"
+    And that job runs "node spec/run-all.js" and then "node spec/run-all.js --verify"
+    And that job never reuses cached test results
+    And that job and its steps can't continue on error
+    And that job's steps run unconditionally in the default shell from the repository root
+    And that job calls no agent-built script or local action
+    And that job then fails if "git status --porcelain" reports any change
+    And that job uploads "test-results/" even when it fails, and fails when nothing was produced
 
   @CTL-023 @awaiting:ENV-03 @nist:AC-5 @ssdf:PO.2.1 @env:prod
   Scenario: Prod receives exactly what was tested and a human let through
