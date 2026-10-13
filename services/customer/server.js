@@ -25,12 +25,18 @@ async function validateVet(v) {
   const vets = await app.dependency(`${urls.reservation}/veterinarians`);
   if (!vets.some((x) => x.id === v && x.active)) fail(400, "validation_error");
 }
+// A pet's estimated birth date is at most 30 years before today on the clinic clock.
+const MAX_PET_AGE_YEARS = 30;
+const earliestBirthDate = (today) =>
+  `${Number(today.slice(0, 4)) - MAX_PET_AGE_YEARS}${today.slice(4)}`;
 const validatePet = (p) => {
+  const today = app.date();
   if (
     !p.name.trim() ||
     !p.type.trim() ||
     !p.breed.trim() ||
-    p.estimatedBirthDate > app.date()
+    p.estimatedBirthDate > today ||
+    p.estimatedBirthDate < earliestBirthDate(today)
   )
     fail(400, "validation_error");
 };
