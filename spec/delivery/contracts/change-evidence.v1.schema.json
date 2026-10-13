@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/change-evidence/v1",
+  "title": "Change evidence (EVID-01 local slice)",
+  "description": "What was checked on one exact source tree, and what remains unknown. Derived from the test runner's verifier and run records; never from a new test run. Field names follow the release record (DC-010) where they mean the same thing. It carries no assurance score and never asserts an approver, deployment, image digest or attestation it can't prove.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "generatedAt", "runIds", "source", "specification", "execution", "verification", "suites", "controls", "risks", "humanDecision", "remoteEnforcement", "limitations"],
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "runId": { "type": "string", "pattern": "^[0-9A-Za-z][0-9A-Za-z._-]*$" }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "change-evidence" },
+    "generatedAt": { "type": "string", "format": "date-time", "description": "Generation time; an input, so fixtures are reproducible" },
+    "runIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/runId" }, "description": "Run records that contributed a suite result" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "head", "sourceTree", "dirty", "branch"],
+      "properties": {
+        "repository": { "type": ["string", "null"], "description": "owner/name from the origin remote, when there is one" },
+        "head": { "oneOf": [{ "$ref": "#/$defs/sha1" }, { "type": "null" }] },
+        "sourceTree": { "$ref": "#/$defs/sha1", "description": "The runner's tree hash of tracked and untracked, non-ignored files (the same identity run records use)" },
+        "dirty": { "type": "boolean", "description": "sourceTree differs from HEAD's tree" },
+        "branch": { "type": ["string", "null"] }
+      }
+    },
+    "specification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protectedManifestSha256", "testPolicySha256"],
+      "properties": {
+        "protectedManifestSha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }], "description": "sha256 of spec/protected.sha256: the human-frozen spec identity" },
+        "testPolicySha256": { "$ref": "#/$defs/sha256", "description": "sha256 of spec/test-policy.json, as run records store it" }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "ciUrl", "nodeMajor"],
+      "properties": {
+        "origin": { "enum": ["local", "ci"] },
+        "ciUrl": { "type": ["string", "null"] },
+        "nodeMajor": { "type": "string", "pattern": "^\\d+$" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate", "missing", "failed", "unreadableRecords"],
+      "properties": {
+        "gate": { "enum": ["COMPLETE", "FAILED", "INCOMPLETE"], "description": "COMPLETE: every required suite passed on this tree. FAILED: a required suite's latest result on this tree failed. INCOMPLETE: otherwise (missing or stale results)." },
+        "missing": { "type": "array", "items": { "type": "string" } },
+        "failed": { "type": "array", "items": { "type": "string" } },
+        "unreadableRecords": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "suites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "required", "result", "runId", "cachedFrom", "counts", "durationMs", "log"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "required": { "type": "boolean" },
+          "result": { "enum": ["passed", "failed", "not-run"] },
+          "runId": { "oneOf": [{ "$ref": "#/$defs/runId" }, { "type": "null" }] },
+          "cachedFrom": { "oneOf": [{ "$ref": "#/$defs/runId" }, { "type": "null" }] },
+          "counts": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["tests"],
+                "properties": {
+                  "tests": { "type": "integer", "minimum": 0 },
+                  "passed": { "type": ["integer", "null"], "minimum": 0 },
+                  "failed": { "type": ["integer", "null"], "minimum": 0 },
+                  "skipped": { "type": ["integer", "null"], "minimum": 0 }
+                }
+              }
+            ]
+          },
+          "durationMs": { "type": ["integer", "null"], "minimum": 0 },
+          "log": { "type": ["string", "null"], "pattern": "^test-results/runs/", "description": "Reference to the log; the report never embeds log contents" }
+        }
+      }
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "tier", "environments", "requirement", "awaiting", "result", "evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^CTL-\\d{3}$" },
+          "tier": { "enum": ["static", "template", "live"] },
+          "environments": { "type": "array", "items": { "enum": ["local", "nonprod", "prod"] } },
+          "requirement": { "enum": ["required", "awaiting"] },
+          "awaiting": { "type": ["string", "null"], "description": "Backlog item an @awaiting control waits for" },
+          "result": { "enum": ["passed", "suite-failed", "not-run", "awaiting"], "description": "passed: its suite passed on this tree. suite-failed: its suite failed on this tree, so this control is unverified. not-run: no result on this tree (including the live tier). awaiting: not built yet; never counts as passed or failed." },
+          "evidence": { "oneOf": [{ "$ref": "#/$defs/runId" }, { "type": "null" }] }
+        }
+      }
+    },
+    "risks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acceptedRisks", "stateChanges"],
+      "properties": {
+        "acceptedRisks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "owner", "review", "source"],
+            "properties": {
+              "id": { "type": "string" },
+              "owner": { "type": ["string", "null"] },
+              "review": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+              "source": { "type": "string", "description": "feature file and line" }
+            }
+          }
+        },
+        "stateChanges": { "type": "array", "items": { "type": "string" }, "description": "SPEC-07 STATE CHANGE and NOT REPRODUCING lines from this tree's runs" }
+      }
+    },
+    "humanDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reference", "verified"],
+      "description": "A recorded name is a statement, not proof, unless backed by verified review provenance.",
+      "properties": {
+        "status": { "enum": ["unrecorded", "recorded"] },
+        "reference": { "type": ["string", "null"] },
+        "verified": { "type": "boolean" }
+      }
+    },
+    "remoteEnforcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reference"],
+      "properties": {
+        "status": { "enum": ["unknown", "recorded", "verified"] },
+        "reference": { "type": ["string", "null"] }
+      }
+    },
+    "limitations": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+  }
+}

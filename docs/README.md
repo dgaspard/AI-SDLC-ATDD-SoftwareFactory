@@ -86,6 +86,7 @@ Prompt for running the pass on its own (for example, after a docs-only change):
 | A-13 | [CI/CD placement framework](design/ci-cd-placement.md) |
 | CI-02 | [The required application gate (local slice)](design/ci-02-application-gate.md) |
 | ENG-02 | [Independent, calibrated engineering review](design/eng-02-review.md) |
+| EVID-01 | [The change-evidence report (local slice)](design/evid-01-change-evidence.md) |
 | FE-01 | [Design preview (inert HTML)](design/fe-01-design-preview.html) |
 | MVP-02A | [Administrator role and veterinarian roster](design/mvp-02a-admin-roster.md) |
 | SPEC-07 | [Suppressing tests and retiring features](design/spec-07-suppression-and-retirement.md) |
