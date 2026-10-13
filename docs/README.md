@@ -85,6 +85,7 @@ Prompt for running the pass on its own (for example, after a docs-only change):
 |---|---|
 | A-13 | [CI/CD placement framework](design/ci-cd-placement.md) |
 | CI-02 | [The required application gate (local slice)](design/ci-02-application-gate.md) |
+| DORA-01 | [Delivery metrics (local slice)](design/dora-01-metrics.md) |
 | ENG-02 | [Independent, calibrated engineering review](design/eng-02-review.md) |
 | EVID-01 | [The change-evidence report (local slice)](design/evid-01-change-evidence.md) |
 | FE-01 | [Design preview (inert HTML)](design/fe-01-design-preview.html) |

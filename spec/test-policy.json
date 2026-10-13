@@ -14,7 +14,8 @@
     "performance":   { "name": "Local performance", "cmd": "node", "args": ["--test", "--test-reporter=spec", "--test-concurrency=1", "tests/performance/*.test.js"] },
     "accepted-risks": { "name": "Accepted risks (expected to fail; SPEC-07)", "cmd": "node", "args": ["guard/accepted-risks.js"] },
     "delivery":      { "name": "Delivery spec", "cmd": "npm", "args": ["--prefix", "delivery", "test"] },
-    "evidence":      { "name": "Change evidence (EVID-01)", "cmd": "node", "args": ["--test", "--test-reporter=spec", "--test-concurrency=1", "tests/evidence/*.test.js"] }
+    "evidence":      { "name": "Change evidence (EVID-01)", "cmd": "node", "args": ["--test", "--test-reporter=spec", "--test-concurrency=1", "tests/evidence/*.test.js"] },
+    "dora":          { "name": "DORA metrics (DORA-01)", "cmd": "node", "args": ["--test", "--test-reporter=spec", "--test-concurrency=1", "tests/dora/*.test.js"] }
   },
   "tiers": {
     "fast": {
@@ -23,7 +24,7 @@
     },
     "full": {
       "purpose": "The gate. Every suite must pass on the exact working tree before work is complete, a commit is pushed, or a PR merges.",
-      "suites": ["guard", "harness", "schema", "runtime", "auth", "observability", "features", "workflows", "browser", "performance", "accepted-risks", "delivery", "evidence"]
+      "suites": ["guard", "harness", "schema", "runtime", "auth", "observability", "features", "workflows", "browser", "performance", "accepted-risks", "delivery", "evidence", "dora"]
     }
   },
   "rules": {
@@ -34,6 +35,7 @@
       { "paths": ["frontend/"], "suites": ["runtime", "browser", "delivery"] },
       { "paths": ["services/", "infra/", "compose.yaml"], "suites": ["delivery"] },
       { "paths": ["tools/evidence/"], "suites": ["evidence"] },
+      { "paths": ["tools/dora/"], "suites": ["dora"] },
       { "paths": ["docs/", "tools/", "README.md", "BACKLOG.md", "PROJECT-PLAN.md", ".gitignore"], "suites": [] }
     ]
   }

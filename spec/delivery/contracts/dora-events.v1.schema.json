@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/dora-events/v1",
+  "title": "DORA input events (DORA-01 local slice)",
+  "description": "Deployments, deployment-caused incidents and dataset completeness for one dataset. Counting rules: spec/delivery/dora.md (calculation version dora-1). Loading these events is an adapter boundary: later GitHub, cloud and incident sources produce this same shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "dataset", "deployments", "incidents"],
+  "$defs": {
+    "time": { "type": "string", "format": "date-time", "pattern": "Z$" },
+    "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "classification": { "enum": ["synthetic", "real"] },
+    "completeness": { "enum": ["complete", "partial", "unknown"] }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "dora-events" },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "classification", "observedFrom", "observedTo", "completeness", "completenessSource"],
+      "properties": {
+        "source": { "type": "string", "description": "Where the records came from" },
+        "classification": { "$ref": "#/$defs/classification" },
+        "observedFrom": { "$ref": "#/$defs/time" },
+        "observedTo": { "$ref": "#/$defs/time", "description": "When observation ended; incidents can arrive later and update earlier cohorts" },
+        "completeness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["deployments", "incidents", "changeHistory"],
+          "properties": {
+            "deployments": { "$ref": "#/$defs/completeness" },
+            "incidents": { "$ref": "#/$defs/completeness", "description": "Incident records and their immediate-intervention classification" },
+            "changeHistory": { "$ref": "#/$defs/completeness", "description": "Earlier deliveries are supplied, so first deliveries can be told apart from redeployments" }
+          }
+        },
+        "completenessSource": { "type": "string", "description": "Who or what asserts the completeness; the calculator doesn't prove it" }
+      }
+    },
+    "deployments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "classification", "service", "environment", "status", "activatedAt", "revision", "commits", "kind", "triggeredByIncident", "evidence"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "classification": { "$ref": "#/$defs/classification" },
+          "service": { "type": "string", "minLength": 1 },
+          "environment": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["succeeded", "failed-after-activation", "failed-before-activation"] },
+          "activatedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }], "description": "When the running service changed; null only for failed-before-activation" },
+          "revision": { "type": "string", "minLength": 1, "description": "Revision or artifact identity that ran" },
+          "commits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sha", "committedAt"],
+              "properties": {
+                "sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+                "committedAt": { "$ref": "#/$defs/time" },
+                "author": { "type": "string", "description": "Accepted but never reported; no individual ranking" }
+              }
+            }
+          },
+          "kind": { "enum": ["planned", "unplanned", "unclassified"] },
+          "triggeredByIncident": { "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+          "evidence": { "type": ["string", "null"], "description": "Optional change-evidence or release-record reference" }
+        }
+      }
+    },
+    "incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "classification", "service", "environment", "causedByDeployment", "failedAt", "restoredAt", "immediateIntervention", "recoveryDeployment"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "classification": { "$ref": "#/$defs/classification" },
+          "service": { "type": "string", "minLength": 1 },
+          "environment": { "type": "string", "minLength": 1 },
+          "causedByDeployment": { "$ref": "#/$defs/id" },
+          "failedAt": { "$ref": "#/$defs/time" },
+          "restoredAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }], "description": "Service restored (not ticket closed); null while open" },
+          "immediateIntervention": { "type": ["boolean", "null"], "description": "null: not yet classified" },
+          "recoveryDeployment": { "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] }
+        }
+      }
+    }
+  }
+}
