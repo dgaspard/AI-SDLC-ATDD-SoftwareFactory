@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "kind": "dora-events",
+  "dataset": {
+    "source": "DORA-01 golden fixture (hand-calculated; SYNTHETIC)",
+    "classification": "synthetic",
+    "observedFrom": "2025-12-01T00:00:00Z",
+    "observedTo": "2026-01-20T00:00:00Z",
+    "completeness": { "deployments": "complete", "incidents": "complete", "changeHistory": "complete" },
+    "completenessSource": "asserted by the fixture author"
+  },
+  "deployments": [
+    { "id": "D0", "classification": "synthetic", "service": "checkout", "environment": "production", "status": "succeeded", "activatedAt": "2025-12-30T12:00:00Z", "revision": "r0", "commits": [{ "sha": "c0c0c0c", "committedAt": "2025-12-30T08:00:00Z", "author": "fixture-author" }], "kind": "planned", "triggeredByIncident": null, "evidence": null },
+    { "id": "D1", "classification": "synthetic", "service": "checkout", "environment": "production", "status": "succeeded", "activatedAt": "2026-01-02T10:00:00Z", "revision": "r1", "commits": [{ "sha": "c1c1c1c", "committedAt": "2026-01-02T09:00:00Z", "author": "fixture-author" }], "kind": "planned", "triggeredByIncident": null, "evidence": null },
+    { "id": "D2", "classification": "synthetic", "service": "checkout", "environment": "production", "status": "succeeded", "activatedAt": "2026-01-03T12:00:00Z", "revision": "r2", "commits": [{ "sha": "c2c2c2c", "committedAt": "2026-01-03T10:00:00Z", "author": "fixture-author" }], "kind": "planned", "triggeredByIncident": null, "evidence": null },
+    { "id": "D3", "classification": "synthetic", "service": "checkout", "environment": "production", "status": "succeeded", "activatedAt": "2026-01-03T13:25:00Z", "revision": "r3", "commits": [{ "sha": "c3c3c3c", "committedAt": "2026-01-03T10:25:00Z", "author": "fixture-author" }], "kind": "unplanned", "triggeredByIncident": "I1", "evidence": null },
+    { "id": "D4", "classification": "synthetic", "service": "checkout", "environment": "production", "status": "succeeded", "activatedAt": "2026-01-05T15:00:00Z", "revision": "r4", "commits": [{ "sha": "c4c4c4c", "committedAt": "2026-01-05T11:00:00Z", "author": "fixture-author" }], "kind": "planned", "triggeredByIncident": null, "evidence": null },
+    { "id": "D5", "classification": "synthetic", "service": "checkout", "environment": "production", "status": "succeeded", "activatedAt": "2026-01-05T17:25:00Z", "revision": "r5", "commits": [{ "sha": "c5c5c5c", "committedAt": "2026-01-05T07:25:00Z", "author": "fixture-author" }], "kind": "unplanned", "triggeredByIncident": "I2", "evidence": null }
+  ],
+  "incidents": [
+    { "id": "I1", "classification": "synthetic", "service": "checkout", "environment": "production", "causedByDeployment": "D2", "failedAt": "2026-01-03T13:00:00Z", "restoredAt": "2026-01-03T13:30:00Z", "immediateIntervention": true, "recoveryDeployment": "D3" },
+    { "id": "I2", "classification": "synthetic", "service": "checkout", "environment": "production", "causedByDeployment": "D4", "failedAt": "2026-01-05T16:00:00Z", "restoredAt": "2026-01-05T17:30:00Z", "immediateIntervention": true, "recoveryDeployment": "D5" }
+  ]
+}

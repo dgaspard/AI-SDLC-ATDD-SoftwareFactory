@@ -12,6 +12,7 @@
     "test:verify": "node spec/run-all.js --verify",
     "evidence:change": "node tools/evidence/change-evidence.mjs",
     "evidence:verify": "node tools/evidence/change-evidence.mjs --verify",
+    "metrics:dora": "node tools/dora/dora-metrics.mjs",
     "test:engineering": "node --test --test-concurrency=1 tools/review/project-specific/*.test.mjs",
     "trace:payment": "node tools/capture-payment-trace.mjs",
     "demo:journey": "spec/node_modules/.bin/playwright test --config tools/demo/playwright.demo.config.mjs",

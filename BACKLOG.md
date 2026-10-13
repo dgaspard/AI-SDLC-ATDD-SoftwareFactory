@@ -77,6 +77,18 @@ no evidence. Per prod promotion (A-23), publish a release record: a readable sum
 plus JSON for reporting. It goes to a GitHub Release with an attestation now, and to
 S3 Object Lock in the log-archive account once ENV-02 exists.
 
+### DORA-01 — Delivery metrics
+
+Status: **local slice built 2026-10-13**: `npm run metrics:dora` calculates the five DORA
+metrics (deployment frequency, change lead time, change fail rate, failed deployment
+recovery time, deployment rework rate) from supplied deployment and incident events, under
+frozen counting rules (calculation `dora-1`;
+[design note](docs/design/dora-01-metrics.md)). Today it runs on a synthetic golden
+fixture; real results are NOT YET MEASURED until ENV-03 produces prod deployments and
+incidents are recorded. Later: adapters for real deployment and incident sources, baselines
+and trends, rollback by redeploying the previous digest, and links from each deployment to
+its change-evidence or release record.
+
 ### EXP-02 — Rebuild the delivery code from the spec
 
 Status: planned. The DEMO-01 experiment applied to delivery. Delete the Dockerfiles,
@@ -229,7 +241,6 @@ existing item each could join.
 | **AGENT-01** Isolate the agent runtime | Run agents in a container or cloud sandbox holding only the App's credentials | Makes "agents never approve or merge" an enforced boundary, not a convention | CI-02 |
 | **SUPPLY-01** The agent as part of the supply chain | Pin model versions; change-control agent configuration (`AGENTS.md`, hooks, skills, MCP servers); record it in AI provenance (DC-007) | The agent is now part of the toolchain | SPEC-09 / EVID-01 |
 | **RUNTIME-01** Runtime compliance | AWS Config with a NIST 800-53 conformance pack, plus drift detection | Templates don't prove the running state | ENV-02 / OBS-P1 |
-| **DORA-01** Delivery metrics from release records | Lead time, deployment frequency, change failure rate; rollback by redeploying the previous digest | The metrics fall out of evidence already produced | EVID-01 / ENV-03 |
 | **OSCAL-01** Machine-readable compliance | Export the control catalog and per-release evidence as OSCAL | Toward continuous authorization to operate | EVID-01 |
 | **DEPS-01** Dependency-update policy | Bot-authored dependency PRs wait for a human under "agents never merge"; accept that or define a narrow, tested exception | An explicit decision instead of a surprise | CI-02 |
 | **MQ-01** Merge queue | Replace "require branches to be up to date" once several agents open PRs in parallel | Keeps tested tree = merged tree (A-22) | Later |
@@ -245,6 +256,18 @@ checks don't prove what's running.
 
 ## Open follow-ups on completed work
 
+- **DORA-01 counting-rule questions for a `dora-2` revision (2026-10-13, low):**
+  - An incident caused by a `failed-before-activation` deployment is accepted and counts in
+    recovery time; reject it or exclude it.
+  - "Provisional when an incident it counts is still open" applies only to recovery time
+    today; say whether fail and rework rates count open incidents.
+  - An unclassified (`immediateIntervention: null`) incident doesn't make recovery
+    provisional.
+  - Not rejected yet: an incident that failed before its deployment activated; one commit
+    with different `committedAt` values; `observedTo` before `observedFrom`; a window that
+    starts before observation did.
+  - The calculator is looser than the input contract on unknown properties and ID length,
+    and stricter on empty source strings; validate against the schema itself.
 - **EVID-01 accepted risks (2026-10-13, low; revisit before production use):**
   - After an unscoped pass, a scoped failure on the same tree shows as INCOMPLETE rather
     than FAILED in `--verify --json` and the report (never COMPLETE). One-line runner fix:

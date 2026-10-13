@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/dora-metrics/v1",
+  "title": "DORA metrics report (DORA-01 local slice)",
+  "description": "The five DORA metrics for one service and environment over one window, with denominators, sample sizes, completeness and provenance. Counting rules: spec/delivery/dora.md. No individual data, no aggregate score.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "calculationVersion", "generatedAt", "label", "input", "scope", "metrics", "openIncidents", "unclassifiedDeployments", "limitations"],
+  "$defs": {
+    "time": { "type": "string", "format": "date-time" },
+    "reason": { "type": ["string", "null"], "description": "Why the value is unavailable; null when it is available" }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "dora-metrics" },
+    "calculationVersion": { "const": "dora-1" },
+    "generatedAt": { "$ref": "#/$defs/time" },
+    "label": { "enum": ["SYNTHETIC — MEASUREMENT DEMONSTRATION", "NOT YET MEASURED", "MEASURED"] },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "source", "classification", "observedTo", "completeness", "completenessSource"],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "source": { "type": "string" },
+        "classification": { "enum": ["synthetic", "real"] },
+        "observedTo": { "$ref": "#/$defs/time" },
+        "completeness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["deployments", "incidents", "changeHistory"],
+          "properties": {
+            "deployments": { "enum": ["complete", "partial", "unknown"] },
+            "incidents": { "enum": ["complete", "partial", "unknown"] },
+            "changeHistory": { "enum": ["complete", "partial", "unknown"] }
+          }
+        },
+        "completenessSource": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["service", "environment", "from", "to", "days"],
+      "properties": {
+        "service": { "type": "string" },
+        "environment": { "type": "string" },
+        "from": { "$ref": "#/$defs/time" },
+        "to": { "$ref": "#/$defs/time" },
+        "days": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deploymentFrequency", "changeLeadTime", "changeFailRate", "failedDeploymentRecoveryTime", "deploymentReworkRate"],
+      "properties": {
+        "deploymentFrequency": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["perDay", "deployments", "days", "reason", "provisional"],
+          "properties": {
+            "perDay": { "type": ["number", "null"], "minimum": 0 },
+            "deployments": { "type": "integer", "minimum": 0 },
+            "days": { "type": "number" },
+            "reason": { "$ref": "#/$defs/reason" },
+            "provisional": { "type": "boolean" }
+          }
+        },
+        "changeLeadTime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["medianHours", "samples", "complete", "reason", "provisional"],
+          "properties": {
+            "medianHours": { "type": ["number", "null"], "minimum": 0 },
+            "samples": { "type": "integer", "minimum": 0 },
+            "complete": { "type": "boolean", "description": "False unless change history is asserted complete" },
+            "reason": { "$ref": "#/$defs/reason" },
+            "provisional": { "type": "boolean" }
+          }
+        },
+        "changeFailRate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rate", "failedDeployments", "deployments", "reason", "provisional"],
+          "properties": {
+            "rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "failedDeployments": { "type": "integer", "minimum": 0 },
+            "deployments": { "type": "integer", "minimum": 0 },
+            "reason": { "$ref": "#/$defs/reason" },
+            "provisional": { "type": "boolean" }
+          }
+        },
+        "failedDeploymentRecoveryTime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["medianMinutes", "recovered", "open", "reason", "provisional"],
+          "properties": {
+            "medianMinutes": { "type": ["number", "null"], "minimum": 0 },
+            "recovered": { "type": "integer", "minimum": 0 },
+            "open": { "type": "integer", "minimum": 0 },
+            "reason": { "$ref": "#/$defs/reason" },
+            "provisional": { "type": "boolean" }
+          }
+        },
+        "deploymentReworkRate": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rate", "reworkDeployments", "deployments", "reason", "provisional"],
+          "properties": {
+            "rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "reworkDeployments": { "type": "integer", "minimum": 0 },
+            "deployments": { "type": "integer", "minimum": 0 },
+            "reason": { "$ref": "#/$defs/reason" },
+            "provisional": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "openIncidents": { "type": "array", "items": { "type": "string" } },
+    "unclassifiedDeployments": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+  }
+}
