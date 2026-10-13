@@ -31,9 +31,9 @@ spec, red checks, build, ENG-02 review (including the docs pass), freeze.
 ### CI-02 — Delivery pipeline as a by-product
 
 Status: **local slice verified 2026-10-13** (the required `Application suite` gate, CTL-029;
-[design note](docs/design/ci-02-application-gate.md)). Remote: the `main` ruleset requires
-`Application suite` and CTL-024 passes live (2026-10-13); a throwaway failing PR is the last
-proof (checklist in the design note). The rest of CI-02 is planned. Done when every
+[design note](docs/design/ci-02-application-gate.md)). Remote enforcement verified 2026-10-13: the
+`main` ruleset requires `Application suite`, CTL-024 passes live, and a deliberately failing
+PR (#11) was blocked. The rest of CI-02 is planned. Done when every
 `@awaiting:CI-02` tag is removed at a freeze. Thin
 workflows (A-21): Dustin owns the small `.github/workflows/delivery-*.yml` files, which
 grant privileges; an agent builds the `scripts/ci/` and `infra/` scripts they call,
