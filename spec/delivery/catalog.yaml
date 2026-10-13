@@ -145,7 +145,7 @@ entries:
     name: Protected main branch
     kind: practice
     tools: [GitHub rulesets]
-    purpose: PR required, guard and delivery checks required, code-owner review (GUARD-01 remote).
+    purpose: PR required, every check in root-of-trust.json required, code-owner review (GUARD-01 remote).
     status: enforced
     controls: [CTL-024]
     environments:
@@ -205,6 +205,19 @@ entries:
       local: { use: required, why: The protect-paths hook stops agents editing the spec. }
       nonprod: { use: required, why: CI's own run of the spec is authoritative. }
       prod: { use: required, why: CI's own run of the spec is authoritative. }
+    cost: Free.
+
+  - id: application-gate
+    name: Required application suite
+    kind: check
+    tools: [guard.yml, spec/run-all.js]
+    purpose: Every full-tier suite runs uncached on the pull request's exact tree and its evidence is verified; a failure blocks the merge (CI-02).
+    status: enforced
+    controls: [CTL-029]
+    environments:
+      local: { use: required, why: "npm run test:verify proves the same gate on the developer's tree." }
+      nonprod: { use: required, why: "Blocks the merge once the main ruleset requires it; CTL-024 (live) proves that." }
+      prod: { use: required, why: "Blocks the merge once the main ruleset requires it; CTL-024 (live) proves that." }
     cost: Free.
 
   - id: build-provenance

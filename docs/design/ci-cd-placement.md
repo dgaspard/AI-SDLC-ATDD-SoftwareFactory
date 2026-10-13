@@ -4,8 +4,8 @@
 > never merged into `main`, so A-13 pointed at a missing file. The framework below is
 > current; SPEC-08 applies it through the `@tier:` tags ([design](spec-08-delivery.md)).
 > **Not on `main`:** the "Applied: PERF-01" section describes a required `performance`
-> job that exists only on that tag. `main`'s `guard.yml` still runs PERF-01 inside the
-> informational `suite` job.
+> job that exists only on that tag. `guard.yml` runs PERF-01 inside the required
+> `Application suite` job ([CI-02](ci-02-application-gate.md)).
 
 A decision record, not a specification. Captures the framework from the
 2026-10-03 analysis session so it can be referenced later, reused on other

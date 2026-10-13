@@ -10,5 +10,5 @@
     "slug": "ai-sdlc-bdd-agent",
     "installationId": 170027882
   },
-  "requiredChecks": ["Protected specs and tests unchanged", "Delivery spec"]
+  "requiredChecks": ["Protected specs and tests unchanged", "Delivery spec", "Application suite"]
 }
