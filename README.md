@@ -21,8 +21,8 @@ The reference project is complete: four JavaScript services, a frontend, contrac
 authentication, observability, workflow, browser and performance suites, and a fresh
 agent has rebuilt the Checkout service in Python from the frozen expectations with zero
 interventions. Delivery controls are specified in `spec/delivery/` and the system runs
-locally in containers. Next is governed delivery to the cloud, then operation, durable
-state, and extracting the factory core for a second project. The roadmap is in
+locally in containers. Next is governed delivery to the cloud, then operation,
+extracting the factory core for a second application, and durable state. The roadmap is in
 [PROJECT-PLAN.md](PROJECT-PLAN.md); status is in [BACKLOG.md](BACKLOG.md). The original
 single-app version is preserved at tag `1.0`.
 

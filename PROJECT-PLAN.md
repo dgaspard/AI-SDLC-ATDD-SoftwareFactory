@@ -60,17 +60,19 @@ Ordered. Each phase finishes before the next starts, and items are in
 | 0. Reference project | A small, real, multi-service system built from frozen expectations | Complete (see BACKLOG § Done) |
 | 1. Governed delivery | Local, non-prod and prod environments delivered from `spec/delivery`, with evidence produced by delivery itself | Every `@awaiting` delivery control is required and green; a release record exists for a prod promotion; EXP-02 rebuilds the delivery code from the spec |
 | 2. Operate it | Production observability and cloud security on the deployed system | OBS rules asserted against the deployed environment; runtime compliance and drift checks in place |
-| 3. Durable state | A real database, schema change over time, and reconstruction of a service that owns data | A stateful service survives the reconstruction protocol, or the limit is documented |
-| 4. The factory | Extract the core: template repo, dev container, organization layer, versioned control package | A second, independent project starts from the template and passes its own checks (the ENG-02 graduation test) |
+| 3. The factory core | A versioned core that several application repositories consume, configured by one file per application ([design](docs/design/start-02-factory-core.md)) | A second, independent application built on the published core passes its own gate (the ENG-02 graduation test) |
+| 4. Durable state | A real database, schema change over time, and reconstruction of a service that owns data; then brownfield adapters for the harness | A stateful service survives the reconstruction protocol, or the limit is documented |
 
-Phase 4 waits for phase 3 on purpose: understand every layer of an application,
-including durable state, before productizing it (decided 2026-10-10).
+The factory core comes before durable state (A-26, 2026-10-13). Extracting it is
+refactoring under full gate coverage and removes the PetClinic coupling that everything
+later depends on. This reverses the 2026-10-10 order; adapters for existing applications
+still wait for durable state.
 
 ### Outside the current scope
 
 Kubernetes, message brokers, real payments, external identity providers, network
 hardening (deferred in [BACKLOG.md](BACKLOG.md#network-hardening)), and multi-team
-operation before phase 4.
+operation before phase 3.
 
 ## Working agreements and ownership
 
@@ -171,7 +173,7 @@ The scripted procedure for Checkout is in [tools/demo/](tools/demo/README.md).
 | Governance checks prove less than they claim (text-search proxies, unscheduled live checks) | Calibrate every control with planted defects; behavioral tests for delivery scripts; live tier in CI (proposed BEH-01, LIVE-01) |
 | The human freeze becomes the bottleneck | Small protected patches and a freeze checklist (proposed REVIEW-01) |
 | The agent boundary is only a convention | Agent identity now; an isolated agent runtime holding only the App's credentials (proposed AGENT-01) |
-| Durable state breaks the reconstruction thesis | Phase 3 tests it explicitly before the factory is extracted |
+| Durable state breaks the reconstruction thesis | Phase 4 tests it explicitly before the factory supports stateful or existing applications |
 | The core diverges across projects | Ship the core as a versioned package adopted through a freeze, not as copies |
 | Documentation drifts from the code | The docs pass in every feature's code review (proposed DOCS-01 makes it executable) |
 | Cloud cost grows | $25/month ceiling; ephemeral environments with TTLs (SPEC-08) |
