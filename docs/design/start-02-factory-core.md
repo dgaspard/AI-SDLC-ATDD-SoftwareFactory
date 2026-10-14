@@ -14,7 +14,7 @@ adopts core upgrades through its own reviewed freeze.
 | Status | Decision |
 |---|---|
 | Decided | [A-26](../decisions/architecture.md): the core comes before durable state. |
-| Proposed | **One repository per application, one for the core.** Each application (or client agency) owns its access, code owners, approvals and rules, which matches the core-versus-project split. A monorepo would make cross-app changes easier but blurs ownership. |
+| Decided | [A-27](../decisions/architecture.md): one repository for the core (with PetClinic as its reference application) and one per client application. |
 | Proposed | **The runtime contract (A-02) is the harness's interface, versioned as runtime contract v1.** Applications conform natively or through an adapter. |
 | Proposed | **`factory.config.json` is each application's single project config**, validated by a schema the core owns. Nothing in the core names an application. |
 | Proposed | **Core packages are released as pinned versions** (GitHub Packages, npm), and each application pins exact versions. |

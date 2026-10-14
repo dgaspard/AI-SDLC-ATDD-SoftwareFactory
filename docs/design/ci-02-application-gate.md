@@ -69,7 +69,10 @@ YAML can't make a check required; the `main` ruleset does. On
 2. Confirm the check appears after one workflow run on a PR (GitHub only offers check names
    it has seen).
 3. **Bypass list:** only the repository admin role, "for pull requests only". The agent App
-   must not appear.
+   must not appear. Add it to **every** ruleset that requires approval: rules from several
+   rulesets combine, and on a solo project a pull request the maintainer opened can only be
+   merged through this bypass (GitHub never lets an author approve their own). Find which
+   ruleset holds a rule with `gh api repos/<owner>/<repo>/rules/branches/main`.
 4. Run the live tier with a token that can read rulesets:
    `npm --prefix spec/delivery run test:live`. CTL-024 passes only when every required check
    in `root-of-trust.json` is required on `main`.
