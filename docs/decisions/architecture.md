@@ -37,10 +37,13 @@ Older references to "PROJECT-PLAN A-xx" point here; the IDs are unchanged.
 | A-23 | Governance record per change (2026-10-10): each prod promotion produces a release record assembled by the pipeline (EVID-01): PR, agent and model, human approver, spec tree hash, test run records, non-prod live results, SBOM, both attestations, deploy and teardown times. It's published first as a GitHub Release with an attestation, and from ENV-02 also copied to S3 with Object Lock (write-once retention) in a log-archive account, because the repo admin can delete GitHub Releases. |
 | A-24 | *Superseded by A-25.* Talk formats for the 2026-10 and 2026-11 presentations (2026-10-11). Talk material is kept outside this repository. |
 | A-25 | The goal is a software factory; talks leave the repository (2026-10-11, supersedes A-05, A-12 and A-24). The project builds a repeatable AI-SDLC software factory with a shared core and a project layer, in four ordered phases after the reference project: governed delivery, operation, durable state, then extraction of the factory (`PROJECT-PLAN.md`). The PetClinic is the factory's reference project. Talk scripts, decks and outlines, demo-day logistics and their backlog items (DEMO-02, DEMO-03, PLAY-01) are no longer kept or tracked here. The reconstruction procedure in `tools/demo/` stays as an experiment tool. |
+| A-26 | The factory core comes before durable state (2026-10-13; reverses the 2026-10-10 ordering of START-02 after DATA-01). Extracting the core is refactoring under full gate coverage and removes the PetClinic coupling everything later depends on; brownfield adapters wait for DATA-01. Design: `docs/design/start-02-factory-core.md`. |
 
 Notes on superseded decisions:
 - A-05, A-12 and A-24 (the live and then recorded talk demonstrations, and the talk
   formats) are superseded by A-25. Talk material is kept outside this repository.
+- A-25's phase order (durable state before extracting the factory) is reversed by A-26:
+  the factory core is phase 3 and durable state phase 4.
 - A-07's protected `.github/**` is narrowed by A-20 to `.github/workflows/guard.yml` and
   `.github/CODEOWNERS`.
 - A-14 relaxed the rehearsal gate for the talks; its evidence-sufficiency reasoning

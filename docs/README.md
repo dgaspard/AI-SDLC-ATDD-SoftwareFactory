@@ -92,3 +92,4 @@ Prompt for running the pass on its own (for example, after a docs-only change):
 | MVP-02A | [Administrator role and veterinarian roster](design/mvp-02a-admin-roster.md) |
 | SPEC-07 | [Suppressing tests and retiring features](design/spec-07-suppression-and-retirement.md) |
 | SPEC-08 | [Delivery as an executable specification](design/spec-08-delivery.md) |
+| START-02 | [A factory core that many applications use](design/start-02-factory-core.md) |

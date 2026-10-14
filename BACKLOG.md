@@ -16,7 +16,7 @@ for every item. Finished items keep their full history in
 - No implementation is authorized merely by adding an item here. Proposals stay in
   "Proposed" until the maintainer moves them into a phase.
 - The reference project keeps tag `1.0` (commit `897c9e4`) as its original baseline,
-  a deterministic fake payment provider, and in-memory storage until phase 3.
+  a deterministic fake payment provider, and in-memory storage until phase 4.
 
 ## Phase 1 — Governed delivery (now)
 
@@ -114,53 +114,24 @@ Status: planned. Cloud tracing (ADOT to X-Ray) with the OBS rules asserted again
 deployed environment, structured JSON logs, SLO alarms, and the deployed load smoke
 test. All are planned catalog entries today.
 
-## Phase 3 — Durable state
+## Phase 3 — The factory core
 
-### DATA-01 — Durable state
-
-Status: planned for phase 3. Add a real database to the reference project (local, in a
-container; no cloud dependency) and specify schema change over time and how agents
-work with data. Open questions to settle before specifying:
-- Scope: only "add a real database", or also the original broader idea (pet removal,
-  historical-data preservation, archival, retrieval and reporting)?
-- Does the reconstruction protocol hold when the deleted service owns a schema and real
-  rows, or is reconstruction proven only for in-memory services?
-- Which service goes first?
-
-## Phase 4 — The factory
-
-Extract the factory core from this repository into a template, dev container,
-organization layer and versioned control package, then prove it on a second project.
+Extract a versioned factory core from this repository and prove it on a second
+application ([design](docs/design/start-02-factory-core.md)).
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: phase 4, the project's goal (A-25). Sequenced after durable state (DATA-01;
-decided 2026-10-10). Implements START-01. The factory core and project layer are
-defined in [PROJECT-PLAN.md](PROJECT-PLAN.md#objective).
+Status: **phase 3; design proposed 2026-10-13.** The project's goal (A-25), sequenced
+before durable state (A-26). Implements START-01. Architecture, packages, the
+`factory.config.json` sketch and the ordered steps (one project config, packages, a core
+repository, a second greenfield application) are in the
+[design note](docs/design/start-02-factory-core.md). START-02 closes after the second
+application passes its own gate; brownfield adapters belong to phase 4.
 
-Productize the method so a new project starts with the tools, checks and governance
-from day one. Three layers: (1) a dev container with pinned tools; (2) a template repo
-with the guard, test policy, portable `spec/delivery` controls and catalog, `AGENTS.md`,
-hooks and a hello-world service; (3) organization setup (rulesets, agent App, AWS
-accounts with SCPs, OIDC roles, central reusable workflows). A new repo starts with
-controls `@awaiting`, and failing live checks act as the onboarding checklist.
-
-Outline for when it's picked up:
-- **Prerequisite: one project config.** Move what's hardcoded into one file: the repo
-  slug in predicate-type URIs and `root-of-trust.json`, the App ID and slug in
-  `tools/github/agent.mjs`, the region and budget in the catalog, container names in DC-004.
-- **Split portable from project-specific (A-15).** Petclinic-only controls and data
-  leave the template.
-- **Ship controls as a versioned package**, not a copy: `spec/delivery` as a pinned
-  package or git ref, reusable workflows as SHA-pinned references to a central repo.
-  Projects adopt new control versions through a freeze.
+Not yet in the design note:
 - **The dev container as the agent sandbox**, holding only the App's credentials
   (closes AGENT-01). Compose and the browser container need Docker-in-Docker or the
   host's Docker socket; Codespaces is an option.
-- **The first 15 minutes, made executable:** clone the template and the red checks list
-  what's missing; `npm --prefix spec/delivery run test:awaiting` shows progress.
-- **Graduation test (ENG-02):** the hello-world repo is the second project that proves
-  the portable kit.
 - **Naming:** "software factory" is reportedly the US DoD term (Kessel Run, Platform One)
   for a secured, compliant pipeline under continuous authorization to operate; verify
   before quoting. Relatives: golden path or paved road (template layer), internal
@@ -168,7 +139,7 @@ Outline for when it's picked up:
 
 ### START-01 — The first 15 minutes
 
-Status: phase 4, with START-02. Idea captured 2026-10-07; not scoped.
+Status: phase 3, with START-02. Idea captured 2026-10-07; not scoped.
 
 Make the start of a project easy with this workflow. The audience is a remote,
 multi-role group in a large, regulated organization, not a solo developer.
@@ -206,12 +177,25 @@ Open questions:
 - Has the workflow been proven with Codex? A rehearsal build with Codex would test
   the agent-neutral claim.
 
+## Phase 4 — Durable state
+
+### DATA-01 — Durable state
+
+Status: planned for phase 4, after the factory core (A-26). Add a real database to the reference project (local, in a
+container; no cloud dependency) and specify schema change over time and how agents
+work with data. Open questions to settle before specifying:
+- Scope: only "add a real database", or also the original broader idea (pet removal,
+  historical-data preservation, archival, retrieval and reporting)?
+- Does the reconstruction protocol hold when the deleted service owns a schema and real
+  rows, or is reconstruction proven only for in-memory services?
+- Which service goes first?
+
 ## Ongoing experiments
 
 ### EXP-01 — Measure service reconstruction
 
 Status: ongoing. Recorded: r1, r2 and r4 (Checkout, both language directions, zero
-interventions); r4 is also screen-recorded. Next: a stateful service in phase 3, and
+interventions); r4 is also screen-recorded. Next: a stateful service in phase 4, and
 the delivery code in EXP-02. Follow the experiment protocol and
 run-record template in [PROJECT-PLAN.md](PROJECT-PLAN.md#reconstruction-experiment-protocol): at least three fresh Checkout
 reconstructions with frozen expectations, no access to deleted source/history,
@@ -221,7 +205,7 @@ reconstruction and a prose-versus-executable comparison are stretch experiments.
 
 ### DEMO-04 — Reconstruct the frontend from retained design assets
 
-Status: not scheduled; a candidate proof for the template in phase 4. In an isolated workspace, keep the protected design
+Status: not scheduled; a candidate proof for the template in phase 3. In an isolated workspace, keep the protected design
 instructions, CSS, fonts/license, logo, browser tests, and visual baselines plus the
 backend; delete only `frontend/` application code via a reviewed manifest; exclude
 prior frontend source/history and the static design preview; rebuild in vanilla
