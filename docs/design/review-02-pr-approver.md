@@ -100,10 +100,38 @@ Also in the patch: `review-policy.json`, `root-of-trust.json` gains `approverIde
 generated `docs/delivery/environments.md` is regenerated to match. The `@awaiting` tags and
 the A-29 wording are the maintainer's freeze decision.
 
-Still to specify before building (the next spec slice): the evaluator's behavior as
-frozen tests (classification, stale and missing checks, kill switch), and the decision
-record as a versioned contract alongside EVID-01's change evidence. The review workflow
-file is privilege-bearing and human-owned (A-21).
+## Drafted evaluator tests and contracts (second protected patch)
+
+The evaluator follows DORA-01's pattern: an agent-built tool behind protected contracts
+and tests.
+
+- **Interface:** `node tools/review-policy/evaluate.mjs --facts <file> --now <date-time>
+  --out <file> [--policy <file>] [--root-of-trust <file>]`. Policy and root of trust
+  default to the frozen files. Exit 0 writes a decision record, with the decision as the
+  first stdout line; any other exit rejects the input and writes nothing.
+- **Input contract** `review-facts.v1`: PR number, author, head SHA, base, up-to-date,
+  draft, labels, changed paths, check runs (name, SHA, status, conclusion, time) and the
+  kill-switch value. Gathered by a read-only script; never PR code. Which checks are
+  required is not an input: it comes from `root-of-trust.json`.
+- **Output contract** `review-decision.v1`: PR, head SHA, policy schema and SHA-256,
+  `approve` or `refer-to-human`, each file's class, each required check's latest
+  conclusion on the head commit, and every reason, from a fixed set of codes.
+- **Tests** (`spec/tests/review-policy/`, 45): approval of implementation and docs
+  changes; refusal for each root-of-trust and privilege path; most-restrictive class
+  whatever the policy order; unmatched and empty changes; missing, stale, failed and
+  re-run checks; up-to-date, draft, label, kill switch (off unless explicitly on) and
+  approver-authored PRs; all reasons reported; byte-identical records; rejected input.
+- **Suite:** `review-policy` in `spec/test-policy.json` with a path rule for
+  `tools/review-policy/`, **not yet in the full tier**, so the gate stays green until the
+  evaluator is built. Add it to the full tier at the freeze that lands the evaluator.
+
+Checked in a throwaway worktree: all 45 tests fail with "not built yet" before the
+evaluator exists. A throwaway reference evaluator (not in any patch) passes 45/45, and
+each of four planted bugs fails at least one test: stale checks counting, the kill switch
+failing open, first-match classification, and the earliest re-run deciding.
+
+Still to do: the read-only facts collector (`scripts/ci/`), the check publisher and the
+review workflow file, which is privilege-bearing and human-owned (A-21).
 
 ## Phases
 

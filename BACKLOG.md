@@ -330,8 +330,10 @@ START-02) and who reviews each step.
 
 Stage: proposed; **design proposed 2026-10-16** in
 [docs/design/review-02-pr-approver.md](docs/design/review-02-pr-approver.md); **spec
-amendments drafted as a protected patch** (CTL-025 and CTL-028 revised; CTL-061..063 and
-`review-policy.json` new), awaiting the maintainer's review and freeze. Nothing built.
+amendments drafted as two protected patches**: (1) CTL-025 and CTL-028 revised, CTL-061..063
+and `review-policy.json` new; (2) the evaluator's 45 frozen tests and its input and
+decision-record contracts, all red until the evaluator is built. Both await the
+maintainer's review and freeze. Nothing built.
 Owner direction (2026-10-16): the frozen tests, specs and deterministic gates are what
 give a PR its value, so the approver approves on green required checks plus the policy's
 path classes, and specialist reviewers are advisory. **Until A-29 is recorded at that
