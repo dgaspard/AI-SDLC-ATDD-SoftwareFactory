@@ -74,6 +74,19 @@ Kubernetes, message brokers, real payments, external identity providers, network
 hardening (deferred in [BACKLOG.md](BACKLOG.md#network-hardening)), and multi-team
 operation before phase 3.
 
+### Enterprise capability profiles (proposed, not approved)
+
+Proposed ENT-01..12 ([BACKLOG.md](BACKLOG.md#enterprise-capability-profiles-intake-2026-10-16))
+would add optional profiles that a project enables in its factory configuration: enterprise
+identity, restricted networks, ingestion, permission-aware retrieval, governed tools, AI
+data handling, human approval, local inference, health and value metrics, AI evaluation,
+discovery and operational handoff. They would fit inside the phases above, not as a new
+phase: discovery, telemetry and handoff extend phase 1–3 items; the identity, data-handling,
+tool and evaluation pilot runs on phase 3's second application; ingestion and durable
+approvals follow phase 4; restricted networks and local inference wait for a customer need
+and budget. Approving ENT-01 or ENT-02 also changes the out-of-scope list above (external
+identity providers, network hardening).
+
 ## Working agreements and ownership
 
 Follow [the development workflow](docs/development-workflow.md) for each capability:
@@ -173,6 +186,7 @@ The scripted procedure for Checkout is in [tools/demo/](tools/demo/README.md).
 | Governance checks prove less than they claim (text-search proxies, unscheduled live checks) | Calibrate every control with planted defects; behavioral tests for delivery scripts; live tier in CI (proposed BEH-01, LIVE-01) |
 | The human freeze becomes the bottleneck | Small protected patches and a freeze checklist (proposed REVIEW-01) |
 | The agent boundary is only a convention | Agent identity now; an isolated agent runtime holding only the App's credentials (proposed AGENT-01) |
+| Build-agent controls and AI inside a generated application get mixed (shared credentials, approvals, evaluations or telemetry) | Keep them as separate trust boundaries: AGENT-01/SUPPLY-01 for build agents, the proposed ENT profiles for application AI |
 | Durable state breaks the reconstruction thesis | Phase 4 tests it explicitly before the factory supports stateful or existing applications |
 | The core diverges across projects | Ship the core as a versioned package adopted through a freeze, not as copies |
 | Documentation drifts from the code | The docs pass in every feature's code review (proposed DOCS-01 makes it executable) |
