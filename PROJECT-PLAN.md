@@ -8,7 +8,14 @@ where [docs/README.md](docs/README.md) says.
 
 ## Objective
 
-Build a **software factory**: a repeatable way to deliver software with AI agents, where
+Build a **Software Factory** for enterprise and government organizations that
+**normalizes platform engineering**: it makes approved engineering practices repeatable
+and accessible across teams. That means reusable delivery paths, executable standards,
+consistent evidence, clear ownership and governed exceptions. An organization configures
+and extends its factory instead of rebuilding the foundation for each application
+(A-28).
+
+The factory is the product. It works because
 
 - humans decide and freeze the expectations: business examples (BDD/ATDD), API and
   domain contracts, observability rules, and delivery controls;
@@ -17,23 +24,80 @@ Build a **software factory**: a repeatable way to deliver software with AI agent
 - independent evidence (test run records, calibrated review, release records) supports
   every decision to ship.
 
-The factory has two layers:
+**Who it's for.** The initial customer is an enterprise or government technology or
+platform leader. Product owners and engineering teams use it.
 
-| Factory core (shared, versioned) | Project layer (owned by each project) |
-|---|---|
-| The delivery method and this repository's conventions | Business decisions and domain model |
-| Starter template and dev container | Domain contracts and feature scenarios |
-| Reusable checks, harness, run-record and evidence formats | Data, privacy and compliance constraints |
-| Guard and freeze, agent identity and boundaries | Integrations, environments and accounts |
-| Delivery-control patterns, review checklists, operating guidance | Risk acceptance and release decisions |
+**Target market, not a readiness claim.** Nothing here claims production readiness,
+compliance certification or an authorization to operate. The NIST mapping (A-16) makes
+controls traceable; it doesn't certify anything. AWS (A-17, A-18) is the current
+implementation choice. Portability to other environments is a product goal, not
+authorization to build a second cloud implementation.
 
-Improvements to the core arrive in projects through a reviewed, versioned release and a
-freeze, never as diverging copies (A-15).
+### Three layers, kept apart
+
+| Reusable factory mechanisms (core, versioned) | Organizational policy and configuration | Application requirements (each application) |
+|---|---|---|
+| The delivery method, harness, runner, guard and freeze | Approved practices and standards an organization adopts | Business decisions, domain model and invariants |
+| Reusable checks, run-record and evidence formats | Delivery-control adoption, risk thresholds, governed exceptions | Domain and API contracts, feature scenarios |
+| Agent identity and boundaries; starter template and dev container | Identity, accounts, environments, rulesets, approved tools | Data, privacy and compliance constraints of the application |
+| Delivery-control patterns, review checklists, operating guidance | Who approves, who owns releases, who may accept a risk | Integrations, risk acceptance and release decisions |
+
+This is a conceptual separation, not a package plan. The START-02
+[design note](docs/design/start-02-factory-core.md) and A-27 settle packages and
+repositories. A mechanism that only works for PetClinic belongs in the application
+layer until a second application proves it general. Improvements to the core arrive in
+applications through a reviewed, versioned release and a freeze, never as diverging
+copies (A-15).
+
+### The guided product experience (proposed, not approved)
+
+The intended experience guides a product owner through defining and reviewing, in order:
+
+1. product purpose, users, scope and constraints;
+2. domain contracts and business invariants;
+3. service boundaries and API contracts;
+4. features and acceptance examples;
+5. an executable project plan with traceable verification evidence.
+
+AI assists inside each step: it drafts, translates between business and technical
+language, merges contributions and flags conflicts. Humans own acceptance criteria,
+policy, risk decisions and approved changes to those definitions, through the existing
+review and freeze. An unrestricted chat box that generates code is not the product.
+Proposed as GUIDE-01 in [BACKLOG.md](BACKLOG.md#guide-01--guided-product-definition-proposed-2026-10-16); START-01 and
+ENT-11 cover its first step.
+
+### Non-goals
+
+- A general-purpose code-generation chat or an agent that decides requirements.
+- Claims of production readiness, certification or authorization to operate.
+- Several cloud implementations, or replacing the AWS choices now.
+- A new package architecture or repository migration outside START-02's steps.
+- PetClinic features for their own sake: PetClinic work serves a factory capability,
+  a regression need or an experiment.
+- Automatic merging, or agents approving or merging (A-22 stands).
+
+### How success will be observed
+
+No result here is claimed yet, and no numeric targets are set.
+
+- **A second application adopts the core** (START-02 step 4) and passes its own gate,
+  with every change it forced on the core recorded.
+- **Evidence repeats.** Each change produces the same evidence shapes (run records,
+  change-evidence report, release record) on any application, without hand assembly.
+- **Guided completion.** A product owner completes and reviews the five definition
+  artifacts above with AI assistance, and every acceptance example traces to a
+  reviewed intent.
+- **Less project-specific setup.** The setup a new application needs shrinks to its
+  configuration and its own requirements, measured against the second application's
+  recorded onboarding effort.
 
 ## The reference project
 
-This repository's PetClinic is the factory's proving ground: four services, a frontend,
-a black-box harness, and frozen specifications. It has established, within bounds:
+This repository's PetClinic is the factory's reference application and proving ground:
+four services, a frontend, a black-box harness, and frozen specifications. PetClinic work
+must serve a specific factory capability, a regression need or an experiment. Its domain
+choices (clinic rules, demo authentication, the `petclinic.*` telemetry namespace) are
+application requirements, not factory defaults. It has established, within bounds:
 
 - **Reconstruction.** A fresh agent rebuilt the deleted Checkout service from the frozen
   expectations in another language with zero human interventions, three times
@@ -67,6 +131,19 @@ The factory core comes before durable state (A-26, 2026-10-13). Extracting it is
 refactoring under full gate coverage and removes the PetClinic coupling that everything
 later depends on. This reverses the 2026-10-10 order; adapters for existing applications
 still wait for durable state.
+
+### Sequencing question raised by the product direction (proposed, not approved)
+
+The approved order above stands. The guided product experience (GUIDE-01) is the part a
+platform leader would evaluate first, but today it sits behind phases 1–2 and lands with
+START-01 in phase 3. Two options for the maintainer:
+
+| Option | What changes | Gains | Costs |
+|---|---|---|---|
+| Keep the order (current) | GUIDE-01 starts with START-01 in phase 3 | The guided steps are designed against a real extracted core and the second application; no change to approved work | The product experience waits for cloud delivery and operation |
+| Pull a specification-only GUIDE-01 slice forward | One document-and-template rehearsal runs alongside phase 1; no code, no tooling | Early evidence on the product experience; it can pick the second application's domain | Breaks "each phase finishes before the next starts"; splits one maintainer's attention; may be redone after core extraction |
+
+Either way the core still comes before durable state (A-26).
 
 ### Outside the current scope
 
@@ -186,6 +263,8 @@ The scripted procedure for Checkout is in [tools/demo/](tools/demo/README.md).
 | Governance checks prove less than they claim (text-search proxies, unscheduled live checks) | Calibrate every control with planted defects; behavioral tests for delivery scripts; live tier in CI (proposed BEH-01, LIVE-01) |
 | The human freeze becomes the bottleneck | Small protected patches and a freeze checklist (proposed REVIEW-01) |
 | The agent boundary is only a convention | Agent identity now; an isolated agent runtime holding only the App's credentials (proposed AGENT-01) |
+| PetClinic assumptions leak into reusable mechanisms | The three-layer separation above; START-02 step 1's scan for hard-coded application names; the second application as the test |
+| Several AI reviewers agreeing is mistaken for correctness | Reviews are scoped evidence for a deterministic, protected policy, never approval (proposed REVIEW-02); A-22's human merge stands |
 | Build-agent controls and AI inside a generated application get mixed (shared credentials, approvals, evaluations or telemetry) | Keep them as separate trust boundaries: AGENT-01/SUPPLY-01 for build agents, the proposed ENT profiles for application AI |
 | Durable state breaks the reconstruction thesis | Phase 4 tests it explicitly before the factory supports stateful or existing applications |
 | The core diverges across projects | Ship the core as a versioned package adopted through a freeze, not as copies |

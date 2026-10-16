@@ -178,9 +178,10 @@ Open questions:
 - Has the workflow been proven with Codex? A rehearsal build with Codex would test
   the agent-neutral claim.
 
-Proposed extension: ENT-11 (discovery to an executable delivery scope) in
+Proposed extensions: ENT-11 (discovery to an executable delivery scope) in
 [Proposed](#enterprise-capability-profiles-intake-2026-10-16) sketches this item's
-output and exit checks.
+output and exit checks, and GUIDE-01 (guided product definition, A-28) describes the full
+experience START-01 would begin.
 
 ## Phase 4 — Durable state
 
@@ -219,8 +220,9 @@ and ENG-02. Record time, interventions, failures, and retained scaffolding.
 
 ## Proposed (not approved)
 
-Candidates from the 2026-10-10 delivery-governance review (table below) and the 2026-10-16
-enterprise capability intake (next section). Per `AGENTS.md`, a proposal
+Candidates from the 2026-10-10 delivery-governance review (table below), the 2026-10-16
+enterprise capability intake, and the 2026-10-16 product direction (A-28: GUIDE-01,
+REVIEW-02). Per `AGENTS.md`, a proposal
 isn't a requirement until Dustin moves it into an item above. "Fits under" names the
 existing item each could join.
 
@@ -283,8 +285,108 @@ decided (DATA-01). **Only with a concrete customer need and budget**: ENT-02 and
 | **ENT-08** Local model execution profile | Inference stays inside a defined customer boundary. First slice: a provider-neutral invocation contract and a fake local endpoint; hardware only after a workload is chosen | Routes only to allowed endpoints, never silently to an external provider; overload gives specified timeout or queue behavior; quality, latency, capacity and cost measured on the same task set; model, version, license and digest recorded | Workload, hardware, model, licensing, operating budget | Deferred; needs ENT-02, ENT-06, ENT-10 |
 | **ENT-09** Operational health and measurable customer value | Connect technical behavior, delivery evidence and customer outcomes without claiming unmeasured savings. First slice: a versioned event and metric contract and report (workflow success, latency, model and tool usage, cost) with explicit unknowns | Each run correlates to application version and evidence IDs; sensitive payloads excluded by default; missing inputs show unknown or estimated, never zero or exact savings; tenants can't see each other's records; exporter outage doesn't crash the app (OBS-008); synthetic demonstrations are labeled. Time saved is measured against a documented baseline including review and rework | Which user outcome matters; baseline owner; collection consent. DORA stays a delivery measure, not AI ROI or individual productivity | Technical parts: OBS-P1, EVID-01; link DORA-01. Business-value metrics: new |
 | **ENT-10** Application-specific AI evaluation gates | Evidence for stochastic AI behavior from project-owned datasets and reviewed rules. First slice: a versioned synthetic task set, deterministic checks plus a human-labeled rubric, a reproducible report, an optional CI gate | Report names dataset, rubric, model and config versions, sample count, per-case results and thresholds; known unsafe outputs fail deterministic checks; a missing or failed required evaluation blocks the gate, and unavailable tooling is reported separately from poor behavior; judge-versus-human agreement is visible; shadow runs have no live side effects. Held-out cases kept out of tuning | Task and owner, acceptable error, dataset permissions and retention, provider cost. No sample size or success rate taken from the post | CI-02, EVID-01, ENG-02 (distinct from deterministic BDD) |
-| **ENT-11** Discovery to an executable delivery scope | Turn a vague business request into a bounded outcome, examples, constraints and a measurable pilot. First slice: facilitation guide plus agent prompt, run on one synthetic enterprise request | The output names users, process owner, current pain, baseline, desired outcome, scope in and out, systems, data class, constraints and acceptance examples; contradictions are attributed and surfaced; provisional decisions have an owner and revisit trigger; unknowns stay unknown; proposed scenarios trace to stakeholder intent | Second-application domain, stakeholder roles, pilot length. No four-week promise and no separate SOW generator | [START-01](#start-01--the-first-15-minutes) |
+| **ENT-11** Discovery to an executable delivery scope | Turn a vague business request into a bounded outcome, examples, constraints and a measurable pilot. First slice: facilitation guide plus agent prompt, run on one synthetic enterprise request | The output names users, process owner, current pain, baseline, desired outcome, scope in and out, systems, data class, constraints and acceptance examples; contradictions are attributed and surfaced; provisional decisions have an owner and revisit trigger; unknowns stay unknown; proposed scenarios trace to stakeholder intent | Second-application domain, stakeholder roles, pilot length. No four-week promise and no separate SOW generator | [START-01](#start-01--the-first-15-minutes); step 1 of GUIDE-01 |
 | **ENT-12** Operational handoff and limited self-service | A customer operator can deploy, diagnose, recover and maintain the application without its builder. First slice: a runbook covering setup, access, telemetry, backup and restore where state exists, rollback, incidents, costs and ownership. A portal is deferred | A fresh operator deploys and rolls back the chosen profile from the guide; injected failures have usable diagnosis and recovery steps; secret rotation and offboarding are exercised where supported; admin operations are authorized and audited; prompt or config changes can't bypass review, evaluation or freeze | Target operator, support model, recovery targets, which operations deserve UI. Source is the delivery catalog; never hand-edit `docs/delivery/environments.md` | PLAY-02, START-01/02, OBS-P1 |
+
+### GUIDE-01 — Guided product definition (proposed 2026-10-16)
+
+Stage: proposed; not specified, nothing run. From A-28. This is the product experience:
+it guides a product owner through defining and reviewing, in order, (1) purpose, users,
+scope and constraints, (2) domain contracts and business invariants, (3) service
+boundaries and API contracts, (4) features and acceptance examples, and (5) an executable
+project plan with traceable verification evidence. AI drafts, translates and flags
+conflicts inside each step; the product owner and the other humans review, accept and
+freeze. It is not a chat box that generates code.
+
+How it fits existing work (no IDs change):
+- **START-01** is the item that would deliver GUIDE-01's first experience in phase 3;
+  its open questions (who's in the room, deliverable shape, parallel input) are
+  GUIDE-01's too.
+- **ENT-11** is step 1 (purpose and scope) in detail.
+- **START-02:** step 5's "executable plan" is the second application's repository, gate
+  and `factory.config.json`; `factory init` would start GUIDE-01's output, not replace it.
+- **ENG-02 and EVID-01** supply step 5's evidence; nothing new is invented there.
+- The existing D-xx decision log, OpenAPI contracts and feature files are the artifact
+  formats. GUIDE-01 adds guidance and checks, not new formats.
+
+Smallest coherent slice (specification only, no UI and no new tooling beyond a
+checker): take one synthetic request for the second application through all five steps
+using written guidance and agent prompts. Then add a deterministic completeness and
+traceability check: every step's required sections exist, every acceptance example
+links to a reviewed purpose statement and a contract, and every unknown is marked open
+with an owner. Record time, interventions, and where the human had to correct the AI.
+
+Proposed acceptance sketch: each step's output is a reviewable artifact in the
+application's repository; a step can't be marked reviewed while a required section is
+missing or a contradiction is open; changes to accepted artifacts go through the
+existing freeze; the checker reports gaps deterministically, without AI judgment.
+
+Decide first: the second application's domain (shared with START-02), who reviews each
+step, whether the slice runs now or in phase 3 (the
+[sequencing question](PROJECT-PLAN.md#sequencing-question-raised-by-the-product-direction-proposed-not-approved)),
+and whether a guided interface is ever in scope or the product stays documents plus
+agent prompts.
+
+### REVIEW-02 — Specialist agent review and policy-governed merge eligibility (proposed 2026-10-16)
+
+Stage: proposed, future; not specified, nothing run. **This proposal does not supersede
+A-22, grants no agent approval or merge permission, and enables no automation now.**
+
+Purpose: specialist reviewers produce scoped evidence, and a protected, deterministic
+policy decides whether a change is eligible. Several AI approvals agreeing don't
+establish correctness. Three things stay distinct:
+- a **reviewer verdict**: a specialist's result as a versioned record, which is evidence;
+- a **GitHub review**: an approval in GitHub, which today only a human gives (A-22);
+- **merge authority**: who may merge; today only a human.
+
+Candidate specialist roles:
+- security;
+- observability and telemetry;
+- engineering rules and linting (static checks for coding standards; "minting rules"
+  came up in discussion and is an unresolved term, so no minting capability is assumed);
+- governance and policy;
+- product coverage, including proposed test generation;
+- behavioral and contract verification.
+
+Phased delivery, each phase needing its own approval:
+1. **Advisory reviews**, calibrated against known defects (the ENG-02 method).
+2. **Required specialist checks**, with applicability stated explicitly in protected policy.
+3. **Optional automatic merging** of narrowly eligible changes, only after a separate
+   human decision on the policy. That would need a new A-xx decision and a revisited A-22.
+
+Future acceptance criteria:
+- A versioned review-result contract records reviewer and version, policy version, exact
+  revision and tree, scope, verdict, findings and evidence.
+- Protected policy decides which reviews apply to a change.
+- A missing, stale, malformed, failed or timed-out required review blocks eligibility.
+- Blocking findings and unresolved disagreements between reviewers escalate to a human.
+- A new change invalidates earlier evidence; merge-time verification covers the actual
+  candidate tree.
+- Implementers can't approve their own work or modify their approval machinery.
+- Product reviewers propose acceptance-test changes; humans review and freeze them.
+- Reviewers treat repository content as untrusted data, never as instructions or authority.
+- Each reviewer has its own identity, credentials and execution boundary, with least
+  privilege.
+- Calibration measures missed defects, false alarms, cost and review latency.
+- A human can suspend the automation and inspect every decision record.
+
+"No change under `spec/`" is one eligibility condition, not the whole policy. Changes to
+protected specifications, review policy, agent instructions (`AGENTS.md`, `CLAUDE.md`),
+CI privilege boundaries, verifier or scanner configuration, identity, or other designated
+high-risk areas always need human review.
+
+Overlaps:
+- **ENG-02** is the calibration method and reviewer prompt for phase 1.
+- **AGENT-01 and SUPPLY-01** give each reviewer an isolated, versioned runtime and identity.
+- **EVID-01** carries review results in the change-evidence report.
+- **DOCS-01** would be one deterministic specialist check.
+- **MQ-01** is how merge-time verification of the candidate tree would work.
+- **REVIEW-01** keeps the human freeze reviewable.
+- **ENT-10** shares the evaluation-calibration approach.
+- **GATE-ISO-01** isolates pull-request code from the verifier.
+
+Decide first: whether phase 1 starts before AGENT-01, who owns the policy file, and what
+"minting rules" means.
 
 ## Open follow-ups on completed work
 

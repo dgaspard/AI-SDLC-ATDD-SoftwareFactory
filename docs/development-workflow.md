@@ -30,8 +30,13 @@ Read `AGENTS.md`, this workflow, and the relevant item in [BACKLOG.md](../BACKLO
 Inspect the current files and Git diff before making changes. Read the affected
 features, contracts, and tests; do not assume a previous conversation describes
 the current checkout. Distinguish approved expectations from proposed designs.
+Name the approved objective and backlog item the task serves; if there isn't one, ask.
 
-## Project-level sequence (user-directed)
+## Reference-application build sequence (user-directed)
+
+The order PetClinic was built in. The proposed guided product experience (GUIDE-01 in
+`BACKLOG.md`) generalizes it for any application; until that is approved, this remains
+the sequence used here.
 
 1. Lock business decisions, domain model, and schemas (specs only; no tests or code).
 2. Write **service** feature files, one folder per service (D-28).
