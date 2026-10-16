@@ -12,7 +12,8 @@ into the homes below and let git history keep the conversation.
 |---|---|---|---|
 | Orientation: what the repo is, how to run it | [`README.md`](../README.md) | No | Anyone |
 | Agent rules | [`AGENTS.md`](../AGENTS.md) | No | Human only (protected) |
-| Objective, factory shape, ordered roadmap, reference-project boundaries, experiment protocol, risks | [`PROJECT-PLAN.md`](../PROJECT-PLAN.md) | No | Agent drafts, human approves |
+| Claude Code entry point: a pointer to `AGENTS.md` and the canonical documents, no rules of its own | [`CLAUDE.md`](../CLAUDE.md) | No | Agent drafts, human approves |
+| Product direction, factory shape, ordered roadmap, non-goals, success criteria, reference-application boundaries, experiment protocol, risks | [`PROJECT-PLAN.md`](../PROJECT-PLAN.md) | No | Agent drafts, human approves |
 | Work items in roadmap order, status, open follow-ups, proposals, deferred work | [`BACKLOG.md`](../BACKLOG.md) | No | Agent drafts, human approves |
 | Product and business decisions (D-xx), domain model, schema decisions | [`docs/specs/`](specs/) | No | Human only (protected) |
 | Architecture and delivery decisions (A-xx) | [`docs/decisions/architecture.md`](decisions/architecture.md) | No: add a row | Agent drafts, human approves |

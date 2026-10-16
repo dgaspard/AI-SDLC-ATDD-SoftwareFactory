@@ -1,12 +1,29 @@
 # AI-SDLC Software Factory
 
-A repeatable way to build software with AI agents: humans decide and freeze executable
-expectations (business examples, API and domain contracts, observability rules,
-delivery controls), agents build against them inside enforced boundaries, and
-independent evidence supports every decision to ship.
+A Software Factory for enterprise and government organizations that normalizes platform
+engineering: approved engineering practices made repeatable across teams, through
+reusable delivery paths, executable standards, consistent evidence, clear ownership and
+governed exceptions. Humans decide and freeze executable expectations (business
+examples, API and domain contracts, observability rules, delivery controls), agents
+build against them inside enforced boundaries, and independent evidence supports every
+decision to ship.
 
-This repository is the factory's working prototype. Its reference project is a
-four-service veterinary clinic (PetClinic) built entirely from frozen specifications:
+**Who it's for.** The initial customer is a technology or platform leader in an
+enterprise or government organization. Product owners and engineering teams use it.
+The intended experience, still a proposal, guides a product owner through defining and
+reviewing purpose and scope, domain contracts, service boundaries and APIs, features
+and acceptance examples, and an executable plan with traceable evidence. AI assists
+inside those steps; it isn't an open-ended code-generating chat
+([PROJECT-PLAN.md](PROJECT-PLAN.md#the-guided-product-experience-proposed-not-approved)).
+
+**What it is today.** A working prototype in one repository: the method, the harness,
+the guard and freeze, the gates and the evidence tooling, proven on one reference
+application. It is not production-ready, certified or authorized to operate, and it
+has no second application yet.
+
+**PetClinic is the reference application,** not the product: a four-service veterinary
+clinic built entirely from frozen specifications, which the factory's mechanisms are
+tested against:
 
 1. Lock business decisions, the domain model, and schemas.
 2. Write feature files for each service, then derive API contracts.
@@ -14,6 +31,16 @@ four-service veterinary clinic (PetClinic) built entirely from frozen specificat
 4. Write workflow features and tests for journeys that span services.
 5. Ask an AI agent to build the application until every test passes.
 6. Delete a service and have a fresh agent rebuild it from the specifications and tests.
+
+## Start here
+
+| If you want to | Read |
+|---|---|
+| Understand the direction, roadmap and limits | [PROJECT-PLAN.md](PROJECT-PLAN.md) |
+| See what's in progress, proposed or done | [BACKLOG.md](BACKLOG.md) |
+| See why things are the way they are | [docs/decisions/architecture.md](docs/decisions/architecture.md) |
+| Work in the repository as an agent | [AGENTS.md](AGENTS.md), then [docs/development-workflow.md](docs/development-workflow.md) |
+| Find where a kind of document lives | [docs/README.md](docs/README.md) |
 
 ## Where it stands
 
@@ -46,14 +73,15 @@ frontend/                          Vanilla JavaScript clinic UI and HTTP server
 spec/                              Protected: features, contracts, seed data, tests, harness, fakes
 docs/specs/                        Protected: decisions, domain model, schema decisions
 docs/observability.md              Telemetry rules OBS-001..OBS-048 and coverage
-docs/decisions/architecture.md     Architecture and delivery decisions A-01..A-25
+docs/decisions/architecture.md     Architecture and delivery decisions A-01..A-28
 docs/design/                       One design note per backlog item
 docs/engineering-reviews/, docs/rehearsals/, docs/handoffs/   Evidence records
 docs/history/                      Completed backlog items and superseded plans
 PROJECT-PLAN.md                    Objective, factory shape, roadmap, experiment protocol, risks
 BACKLOG.md                         Work items in roadmap order, proposals, deferred work
 docs/development-workflow.md       Working sequence and handoff rules
-AGENTS.md                          Guardrails for coding agents
+AGENTS.md                          Guardrails for coding agents (protected)
+CLAUDE.md                          Claude Code entry point; points to AGENTS.md
 ```
 
 Where each kind of document belongs, and the rules for adding one:
