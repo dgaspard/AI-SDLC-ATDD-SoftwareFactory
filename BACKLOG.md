@@ -328,8 +328,14 @@ START-02) and who reviews each step.
 
 ### REVIEW-02 — Specialist agent review and policy-governed merge eligibility (proposed 2026-10-16)
 
-Stage: proposed, future; not specified, nothing run. **This proposal does not supersede
-A-22, grants no agent approval or merge permission, and enables no automation now.**
+Stage: proposed; **design proposed 2026-10-16** in
+[docs/design/review-02-pr-approver.md](docs/design/review-02-pr-approver.md); **spec
+amendments drafted as a protected patch** (CTL-025 and CTL-028 revised; CTL-061..063 and
+`review-policy.json` new), awaiting the maintainer's review and freeze. Nothing built.
+Owner direction (2026-10-16): the frozen tests, specs and deterministic gates are what
+give a PR its value, so the approver approves on green required checks plus the policy's
+path classes, and specialist reviewers are advisory. **Until A-29 is recorded at that
+freeze, A-22 stands: no agent approves or merges, and nothing is automated.**
 
 Purpose: specialist reviewers produce scoped evidence, and a protected, deterministic
 policy decides whether a change is eligible. Several AI approvals agreeing don't
@@ -346,11 +352,14 @@ Candidate specialist roles:
 - product coverage, including proposed test generation;
 - behavioral and contract verification.
 
-Phased delivery, each phase needing its own approval:
-1. **Advisory reviews**, calibrated against known defects (the ENG-02 method).
-2. **Required specialist checks**, with applicability stated explicitly in protected policy.
-3. **Optional automatic merging** of narrowly eligible changes, only after a separate
-   human decision on the policy. That would need a new A-xx decision and a revisited A-22.
+Phased delivery, each phase needing its own approval (the design note has the detail):
+1. **Shadow:** the evaluator publishes its `Review policy` verdict on every PR; nothing
+   is approved. Advisory reviewers may comment, calibrated with the ENG-02 method.
+2. **Approve:** the approver identity approves eligible Implementation and Documentation
+   changes; a human merges. A frozen policy change can make an advisory reviewer
+   required.
+3. **Optional automatic merging** of eligible changes, only after a separate human
+   decision that revisits A-22 again.
 
 Future acceptance criteria:
 - A versioned review-result contract records reviewer and version, policy version, exact
