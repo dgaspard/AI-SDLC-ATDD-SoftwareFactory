@@ -1,6 +1,6 @@
 # Backlog: building the software factory
 
-Task status lives here, in roadmap order. The objective, the factory's two layers and
+Task status lives here, in roadmap order. The objective, the factory's three layers and
 the phase exit criteria are in [PROJECT-PLAN.md](PROJECT-PLAN.md); decisions in
 [docs/decisions/architecture.md](docs/decisions/architecture.md); design notes per item
 in [docs/design/](docs/README.md#current-design-notes); where everything else goes in
@@ -291,12 +291,11 @@ decided (DATA-01). **Only with a concrete customer need and budget**: ENT-02 and
 ### GUIDE-01 — Guided product definition (proposed 2026-10-16)
 
 Stage: proposed; not specified, nothing run. From A-28. This is the product experience:
-it guides a product owner through defining and reviewing, in order, (1) purpose, users,
-scope and constraints, (2) domain contracts and business invariants, (3) service
-boundaries and API contracts, (4) features and acceptance examples, and (5) an executable
-project plan with traceable verification evidence. AI drafts, translates and flags
-conflicts inside each step; the product owner and the other humans review, accept and
-freeze. It is not a chat box that generates code.
+it guides a product owner through the five definition steps in
+[PROJECT-PLAN.md](PROJECT-PLAN.md#the-guided-product-experience-proposed-not-approved),
+from purpose and scope to an executable plan with traceable evidence. AI drafts,
+translates and flags conflicts inside each step; humans review, accept and freeze. It is
+not a chat box that generates code.
 
 How it fits existing work (no IDs change):
 - **START-01** is the item that would deliver GUIDE-01's first experience in phase 3;
@@ -321,11 +320,11 @@ application's repository; a step can't be marked reviewed while a required secti
 missing or a contradiction is open; changes to accepted artifacts go through the
 existing freeze; the checker reports gaps deterministically, without AI judgment.
 
-Decide first: the second application's domain (shared with START-02), who reviews each
-step, whether the slice runs now or in phase 3 (the
-[sequencing question](PROJECT-PLAN.md#sequencing-question-raised-by-the-product-direction-proposed-not-approved)),
-and whether a guided interface is ever in scope or the product stays documents plus
-agent prompts.
+Decided (A-28, 2026-10-16): GUIDE-01 runs in phase 3 with START-01, not earlier
+([plan](PROJECT-PLAN.md#where-the-guided-experience-fits-decided-2026-10-16-a-28)), and
+it stays the simplest workflow: documents, agent prompts and deterministic checks, no
+separate interface. Still to decide: the second application's domain (shared with
+START-02) and who reviews each step.
 
 ### REVIEW-02 — Specialist agent review and policy-governed merge eligibility (proposed 2026-10-16)
 
@@ -342,8 +341,7 @@ establish correctness. Three things stay distinct:
 Candidate specialist roles:
 - security;
 - observability and telemetry;
-- engineering rules and linting (static checks for coding standards; "minting rules"
-  came up in discussion and is an unresolved term, so no minting capability is assumed);
+- engineering rules and linting (static checks for coding standards);
 - governance and policy;
 - product coverage, including proposed test generation;
 - behavioral and contract verification.
@@ -385,8 +383,7 @@ Overlaps:
 - **ENT-10** shares the evaluation-calibration approach.
 - **GATE-ISO-01** isolates pull-request code from the verifier.
 
-Decide first: whether phase 1 starts before AGENT-01, who owns the policy file, and what
-"minting rules" means.
+Decide first: whether phase 1 starts before AGENT-01, and who owns the policy file.
 
 ## Open follow-ups on completed work
 

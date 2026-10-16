@@ -30,7 +30,6 @@ Read `AGENTS.md`, this workflow, and the relevant item in [BACKLOG.md](../BACKLO
 Inspect the current files and Git diff before making changes. Read the affected
 features, contracts, and tests; do not assume a previous conversation describes
 the current checkout. Distinguish approved expectations from proposed designs.
-Name the approved objective and backlog item the task serves; if there isn't one, ask.
 
 ## Reference-application build sequence (user-directed)
 

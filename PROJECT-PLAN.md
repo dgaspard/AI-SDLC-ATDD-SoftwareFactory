@@ -1,7 +1,8 @@
 # Project plan: building an AI-SDLC software factory
 
-What this file owns: the objective, the factory's shape, the ordered roadmap, the
-reference project's boundaries, the reconstruction protocol and the risks. Task status
+What this file owns: the product direction and objective, the factory's shape, the
+guided product experience, non-goals and success criteria, the ordered roadmap, the
+reference application's boundaries, the reconstruction protocol and the risks. Task status
 lives in [BACKLOG.md](BACKLOG.md), decisions (A-xx) in
 [docs/decisions/architecture.md](docs/decisions/architecture.md), and everything else
 where [docs/README.md](docs/README.md) says.
@@ -38,7 +39,7 @@ authorization to build a second cloud implementation.
 | Reusable factory mechanisms (core, versioned) | Organizational policy and configuration | Application requirements (each application) |
 |---|---|---|
 | The delivery method, harness, runner, guard and freeze | Approved practices and standards an organization adopts | Business decisions, domain model and invariants |
-| Reusable checks, run-record and evidence formats | Delivery-control adoption, risk thresholds, governed exceptions | Domain and API contracts, feature scenarios |
+| Reusable checks, run-record and evidence formats | Which delivery controls are required, risk thresholds, governed exceptions | Domain and API contracts, feature scenarios |
 | Agent identity and boundaries; starter template and dev container | Identity, accounts, environments, rulesets, approved tools | Data, privacy and compliance constraints of the application |
 | Delivery-control patterns, review checklists, operating guidance | Who approves, who owns releases, who may accept a risk | Integrations, risk acceptance and release decisions |
 
@@ -63,6 +64,8 @@ AI assists inside each step: it drafts, translates between business and technica
 language, merges contributions and flags conflicts. Humans own acceptance criteria,
 policy, risk decisions and approved changes to those definitions, through the existing
 review and freeze. An unrestricted chat box that generates code is not the product.
+Its form is the simplest workflow that works: reviewable documents in the application's
+repository, agent prompts, and deterministic checks, with no separate interface (A-28).
 Proposed as GUIDE-01 in [BACKLOG.md](BACKLOG.md#guide-01--guided-product-definition-proposed-2026-10-16); START-01 and
 ENT-11 cover its first step.
 
@@ -132,18 +135,12 @@ refactoring under full gate coverage and removes the PetClinic coupling that eve
 later depends on. This reverses the 2026-10-10 order; adapters for existing applications
 still wait for durable state.
 
-### Sequencing question raised by the product direction (proposed, not approved)
+### Where the guided experience fits (decided 2026-10-16, A-28)
 
-The approved order above stands. The guided product experience (GUIDE-01) is the part a
-platform leader would evaluate first, but today it sits behind phases 1–2 and lands with
-START-01 in phase 3. Two options for the maintainer:
-
-| Option | What changes | Gains | Costs |
-|---|---|---|---|
-| Keep the order (current) | GUIDE-01 starts with START-01 in phase 3 | The guided steps are designed against a real extracted core and the second application; no change to approved work | The product experience waits for cloud delivery and operation |
-| Pull a specification-only GUIDE-01 slice forward | One document-and-template rehearsal runs alongside phase 1; no code, no tooling | Early evidence on the product experience; it can pick the second application's domain | Breaks "each phase finishes before the next starts"; splits one maintainer's attention; may be redone after core extraction |
-
-Either way the core still comes before durable state (A-26).
+The order stands. GUIDE-01 starts with START-01 in phase 3, so the guided steps are
+designed against a real extracted core and the second application. The cost, accepted:
+the product experience waits for cloud delivery and operation. Pulling a
+specification-only slice forward alongside phase 1 was considered and not chosen.
 
 ### Outside the current scope
 
