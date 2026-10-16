@@ -106,7 +106,8 @@ fixed budget, and the moved root of trust. Feeds the factory core (START-02).
 ## Phase 2 — Operate it
 
 Production observability and cloud security on the deployed system. Candidate items
-for cloud security are in "Proposed" (RUNTIME-01, AGENT-01, SUPPLY-01).
+for cloud security are in "Proposed" (RUNTIME-01, AGENT-01, SUPPLY-01), and for
+application health and handoff ENT-09 and ENT-12.
 
 ### OBS-P1 — Production observability
 
@@ -177,6 +178,10 @@ Open questions:
 - Has the workflow been proven with Codex? A rehearsal build with Codex would test
   the agent-neutral claim.
 
+Proposed extension: ENT-11 (discovery to an executable delivery scope) in
+[Proposed](#enterprise-capability-profiles-intake-2026-10-16) sketches this item's
+output and exit checks.
+
 ## Phase 4 — Durable state
 
 ### DATA-01 — Durable state
@@ -214,7 +219,8 @@ and ENG-02. Record time, interventions, failures, and retained scaffolding.
 
 ## Proposed (not approved)
 
-Candidates, mostly from the 2026-10-10 delivery-governance review. Per `AGENTS.md`, a proposal
+Candidates from the 2026-10-10 delivery-governance review (table below) and the 2026-10-16
+enterprise capability intake (next section). Per `AGENTS.md`, a proposal
 isn't a requirement until Dustin moves it into an item above. "Fits under" names the
 existing item each could join.
 
@@ -237,6 +243,48 @@ Known weaknesses these address (same review): some static checks are text-search
 proxies; the live tier isn't in CI; the agent boundary is a convention; the sole
 maintainer self-merges; freezes of ~380-line patches are hard to review; template
 checks don't prove what's running.
+
+### Enterprise capability profiles (intake 2026-10-16)
+
+Optional capabilities for enterprise applications built on the factory, mapped from the
+12 stages of a forward-deployed-engineering checklist (Suraj Sharma's post). The post only
+inspired the topics. Its suggested tools, sample sizes, timelines and ROI claims are not
+adopted. Each capability is a named profile that a project enables in its factory
+configuration (START-02): the core provides the enforcement, tests and evidence, and the
+project provides the policy, data and integrations. PetClinic needn't use them; the
+second application (START-02) is where a reusable piece is proven before it moves into
+the core. No new phase. ENT-11, ENT-09 and ENT-12 extend existing items; ENT-02 extends
+deferred network hardening.
+
+Two trust boundaries stay apart: the factory's build agents (AGENT-01, SUPPLY-01) and AI
+running inside a generated application (ENT-04..08, ENT-10). Credentials, approvals,
+evaluation results and telemetry are never shared across them.
+
+Every entry is **proposed**, and nothing in it has been specified or run. Each one starts
+with BDD, API and data contracts, telemetry obligations and delivery controls, which the
+human reviews and freezes before anything is built. Feature, API and OBS IDs are
+allocated at specification time.
+
+Suggested order: **first**, ENT-11, ENT-09 and ENT-12, small document and specification
+slices on existing work. **Then an enterprise pilot on the second application**: ENT-01
+and ENT-06 before any sensitive data, ENT-05 read-only, and ENT-10 before any AI feature.
+**When a use case needs them**: ENT-03 then ENT-04, and ENT-07 once persistence is
+decided (DATA-01). **Only with a concrete customer need and budget**: ENT-02 and ENT-08.
+
+| Candidate | Outcome and first slice | Must hold (acceptance sketch) | Decide first | Fits under |
+|---|---|---|---|---|
+| **ENT-01** Enterprise identity and data authorization | Use a customer's identity provider and enforce access in services and storage; PetClinic's demo profile stays. First slice: one OIDC adapter, two organizations with distinct roles and ownership. SAML, SCIM and database RLS are later slices | Wrong issuer or audience, expired credentials and missing roles are denied; client-supplied tenant or role fields can't widen access; cross-organization reads, lists, writes and exports leak nothing; revocation within a specified delay; redacted audit of each decision. RLS, if chosen, tested through real database roles | Provider and tenancy model; immediate or bounded revocation; external IdP and persistent storage are outside the current scope | AUTH-01, START-02, DATA-01 |
+| **ENT-02** Restricted-network delivery profiles | A profile contract for connected, restricted-egress and offline operation; prototype only the profile a customer needs, on the existing CDK/ECS approach | Unapproved egress is blocked, with evidence; install, start, update and rollback use only declared artifact sources; a missing artifact fails clearly with no public-download fallback; teardown and cost controls still work. Offline means offline artifacts and operation, not just private subnets | Customer boundary, approved endpoints, offline updates, budget beyond the $25/month ceiling. Kubernetes, Helm and Terraform stay unselected | [Network hardening](#network-hardening) (deferred); ENV-02/03, RUNTIME-01, PLAY-02 |
+| **ENT-03** Governed ingestion and reconciliation | Source files or records become traceable, reconciled application data. First slice: one synthetic CSV or scanned source, one normalized schema, replayable ingestion, quarantine report | Reprocessing doesn't duplicate; counts and control totals reconcile or the batch is quarantined; every record keeps source, version and classification; malformed data is reported, never silently lost; low-confidence extraction goes to review; retention covers derived data | First source and consumer, storage owner, retention, acceptable extraction error. No Airflow, dbt or vector store mandated | After DATA-01; START-02 |
+| **ENT-04** Permission-aware retrieval and grounded answers | Answers only from what the caller may read, with citations and an explicit no-answer. First slice: a small synthetic corpus with conflicting permissions and versioned documents | Authorization filters retrieval before content reaches the model; nothing leaks through answers, citations, counts or caches; revoked access stops within the agreed window; unsupported answers abstain; retrieved text can't authorize tools. An LLM filter is not the authorization mechanism | Corpus, revocation bound, abstention threshold, search approach | Needs ENT-01, ENT-06, ENT-10 (ENT-03 if ingesting) |
+| **ENT-05** Governed tools and legacy integration | Agents get narrow, audited access to approved systems without raw credentials. First slice: read-only adapter to a simulated legacy REST/SOAP service with typed inputs, timeouts and audit; MCP only where it helps | Unknown tools, bad inputs and unauthorized operations are denied; credentials never enter prompts or logs; rate limits and timeouts bound behavior; later write tools are idempotent, scoped per operation and use ENT-07 where policy requires; tool and config versions in provenance | Build-agent tooling or runtime use case; credential broker; first system; write policy | Build agents: AGENT-01, SUPPLY-01. Runtime adapters: new |
+| **ENT-06** AI data handling and guardrails | Project data rules enforced across prompts, outputs, tools, logs, traces, caches and evaluation artifacts. First slice: classified synthetic fixtures and a boundary that redacts or rejects prohibited fields and records the decision | Selected sensitive fixtures never reach a prohibited sink; a redaction failure follows a stated deny or review policy; restoring a value is allowed only for the authorized user, session and destination; no raw values in telemetry or errors; prompt injection can't change permissions. Report detector false positives and negatives; never claim complete PII protection | Block or mask; whether restoration is needed; key ownership; approved model providers. UUID masking is pseudonymization, not anonymization | SEC-01, SUPPLY-01, EVID-01 |
+| **ENT-07** Durable human approval for consequential actions | AI proposes an application action; an authorized human controls whether it runs. First slice: a synthetic purchase request (pending, approved, rejected, expired, cancelled) with a basic approval page | No side effect before valid approval; approval is bound to the exact payload, version and approver authority; an edit needs a new approval; a replayed approval executes at most once; expired or rejected requests never run; restart keeps pending state; ambiguous downstream results have a recovery path and audit trail | First action, risk threshold, approver roles, persistence. Separate from A-22 PR approval: no second promotion click | DATA-01; ENT-01, ENT-05, ENT-06 |
+| **ENT-08** Local model execution profile | Inference stays inside a defined customer boundary. First slice: a provider-neutral invocation contract and a fake local endpoint; hardware only after a workload is chosen | Routes only to allowed endpoints, never silently to an external provider; overload gives specified timeout or queue behavior; quality, latency, capacity and cost measured on the same task set; model, version, license and digest recorded | Workload, hardware, model, licensing, operating budget | Deferred; needs ENT-02, ENT-06, ENT-10 |
+| **ENT-09** Operational health and measurable customer value | Connect technical behavior, delivery evidence and customer outcomes without claiming unmeasured savings. First slice: a versioned event and metric contract and report (workflow success, latency, model and tool usage, cost) with explicit unknowns | Each run correlates to application version and evidence IDs; sensitive payloads excluded by default; missing inputs show unknown or estimated, never zero or exact savings; tenants can't see each other's records; exporter outage doesn't crash the app (OBS-008); synthetic demonstrations are labeled. Time saved is measured against a documented baseline including review and rework | Which user outcome matters; baseline owner; collection consent. DORA stays a delivery measure, not AI ROI or individual productivity | Technical parts: OBS-P1, EVID-01; link DORA-01. Business-value metrics: new |
+| **ENT-10** Application-specific AI evaluation gates | Evidence for stochastic AI behavior from project-owned datasets and reviewed rules. First slice: a versioned synthetic task set, deterministic checks plus a human-labeled rubric, a reproducible report, an optional CI gate | Report names dataset, rubric, model and config versions, sample count, per-case results and thresholds; known unsafe outputs fail deterministic checks; a missing or failed required evaluation blocks the gate, and unavailable tooling is reported separately from poor behavior; judge-versus-human agreement is visible; shadow runs have no live side effects. Held-out cases kept out of tuning | Task and owner, acceptable error, dataset permissions and retention, provider cost. No sample size or success rate taken from the post | CI-02, EVID-01, ENG-02 (distinct from deterministic BDD) |
+| **ENT-11** Discovery to an executable delivery scope | Turn a vague business request into a bounded outcome, examples, constraints and a measurable pilot. First slice: facilitation guide plus agent prompt, run on one synthetic enterprise request | The output names users, process owner, current pain, baseline, desired outcome, scope in and out, systems, data class, constraints and acceptance examples; contradictions are attributed and surfaced; provisional decisions have an owner and revisit trigger; unknowns stay unknown; proposed scenarios trace to stakeholder intent | Second-application domain, stakeholder roles, pilot length. No four-week promise and no separate SOW generator | [START-01](#start-01--the-first-15-minutes) |
+| **ENT-12** Operational handoff and limited self-service | A customer operator can deploy, diagnose, recover and maintain the application without its builder. First slice: a runbook covering setup, access, telemetry, backup and restore where state exists, rollback, incidents, costs and ownership. A portal is deferred | A fresh operator deploys and rolls back the chosen profile from the guide; injected failures have usable diagnosis and recovery steps; secret rotation and offboarding are exercised where supported; admin operations are authorized and audited; prompt or config changes can't bypass review, evaluation or freeze | Target operator, support model, recovery targets, which operations deserve UI. Source is the delivery catalog; never hand-edit `docs/delivery/environments.md` | PLAY-02, START-01/02, OBS-P1 |
 
 ## Open follow-ups on completed work
 
@@ -355,7 +403,8 @@ exposes test endpoints. The deferred work covers private subnets for tasks, AWS 
 the load balancer, restricted ingress, VPC endpoints instead of public egress, and a
 boundary for non-prod test endpoints. Most of it also needs a NAT gateway or interface
 endpoints, which the $25/month ceiling rules out (SPEC-08 cost analysis). Tracked as the
-`network-hardening` catalog entry with status `deferred`.
+`network-hardening` catalog entry with status `deferred`. Proposed ENT-02 would extend it
+to restricted-egress and offline delivery profiles once a customer needs one.
 
 ### Optional feature candidates
 
