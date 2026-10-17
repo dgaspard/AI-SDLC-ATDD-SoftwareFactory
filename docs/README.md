@@ -91,6 +91,7 @@ Prompt for running the pass on its own (for example, after a docs-only change):
 | EVID-01 | [The change-evidence report (local slice)](design/evid-01-change-evidence.md) |
 | FE-01 | [Design preview (inert HTML)](design/fe-01-design-preview.html) |
 | MVP-02A | [Administrator role and veterinarian roster](design/mvp-02a-admin-roster.md) |
+| REVIEW-02 | [A policy-governed PR approver](design/review-02-pr-approver.md) |
 | SPEC-07 | [Suppressing tests and retiring features](design/spec-07-suppression-and-retirement.md) |
 | SPEC-08 | [Delivery as an executable specification](design/spec-08-delivery.md) |
 | START-02 | [A factory core that many applications use](design/start-02-factory-core.md) |

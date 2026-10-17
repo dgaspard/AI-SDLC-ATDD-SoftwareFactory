@@ -77,7 +77,8 @@ ENT-11 cover its first step.
 - A new package architecture or repository migration outside START-02's steps.
 - PetClinic features for their own sake: PetClinic work serves a factory capability,
   a regression need or an experiment.
-- Automatic merging, or agents approving or merging (A-22 stands).
+- Automatic merging, or build agents approving or merging (A-22). REVIEW-02 proposes a
+  separate approver identity bound by a protected policy; it needs A-29 at a freeze.
 
 ### How success will be observed
 
@@ -261,7 +262,8 @@ The scripted procedure for Checkout is in [tools/demo/](tools/demo/README.md).
 | The human freeze becomes the bottleneck | Small protected patches and a freeze checklist (proposed REVIEW-01) |
 | The agent boundary is only a convention | Agent identity now; an isolated agent runtime holding only the App's credentials (proposed AGENT-01) |
 | PetClinic assumptions leak into reusable mechanisms | The three-layer separation above; START-02 step 1's scan for hard-coded application names; the second application as the test |
-| Several AI reviewers agreeing is mistaken for correctness | Reviews are scoped evidence for a deterministic, protected policy, never approval (proposed REVIEW-02); A-22's human merge stands |
+| Several AI reviewers agreeing is mistaken for correctness | Approval rests on the required checks and a protected path policy, never on AI verdicts, which stay advisory (proposed REVIEW-02); a human merges |
+| Automated approval makes the gates the only defense | The gates' own definitions (the root of trust) always need a human code owner (CTL-062, drafted); the guard freeze matters more, not less |
 | Build-agent controls and AI inside a generated application get mixed (shared credentials, approvals, evaluations or telemetry) | Keep them as separate trust boundaries: AGENT-01/SUPPLY-01 for build agents, the proposed ENT profiles for application AI |
 | Durable state breaks the reconstruction thesis | Phase 4 tests it explicitly before the factory supports stateful or existing applications |
 | The core diverges across projects | Ship the core as a versioned package adopted through a freeze, not as copies |
