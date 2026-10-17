@@ -13,7 +13,7 @@
   "approverIdentities": ["softwarefactory-agent-pr-reviewer[bot]"],
   "approverApp": {
     "id": 5353532,
-    "clientId": "Iv23lihmZFrsximABshOWith",
+    "clientId": "Iv23lihmZFrsximABshO",
     "slug": "softwarefactory-agent-pr-reviewer"
   },
   "reviewPolicy": "spec/delivery/review-policy.json",
