@@ -80,7 +80,7 @@ PROJECT-PLAN.md                    Objective, factory shape, roadmap, experiment
 BACKLOG.md                         Work items in roadmap order, proposals, deferred work
 docs/development-workflow.md       Working sequence and handoff rules
 AGENTS.md                          Guardrails for coding agents (protected)
-CLAUDE.md                          Claude Code entry point; points to AGENTS.md
+CLAUDE.md                          Claude Code entry point; points to AGENTS.md (protected)
 ```
 
 Where each kind of document belongs, and the rules for adding one:

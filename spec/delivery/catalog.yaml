@@ -247,16 +247,16 @@ entries:
     cost: Free.
 
   - id: prod-approval
-    name: Human gate at pull request approval
+    name: Policy-governed gate at pull request approval
     kind: practice
-    tools: [GitHub rulesets, GitHub Environments, GitHub App identity]
-    purpose: "Revised 2026-10-10 (A-22): a human approves or merges the pull request, then the tested images promote to prod automatically. Agents work under their own GitHub identity and never approve, merge or bypass. Prod verifies both attestations and the tree hash before deploying."
+    tools: [GitHub rulesets, GitHub Environments, GitHub App identity, review policy]
+    purpose: "Revised 2026-10-10 (A-22) and by REVIEW-02 (A-29): a pull request is approved by a human, or by a separate approver identity when the protected review policy allows every path it changes and every required check passed on that exact commit; root-of-trust and privilege changes always need a human code owner. A human merges, then the tested images promote to prod automatically. Build agents work under their own GitHub identity and never approve, merge or bypass; the approver never merges or bypasses. Prod verifies both attestations and the tree hash before deploying."
     status: enforced
-    controls: [CTL-023, CTL-025, CTL-026, CTL-028]
+    controls: [CTL-023, CTL-025, CTL-026, CTL-028, CTL-061, CTL-062, CTL-063]
     environments:
       local: { use: not-used, why: Nothing is released from local. }
-      nonprod: { use: required, why: "Agent-authored pull requests reach non-prod, but only a human can approve or merge them." }
-      prod: { use: required, why: "Promotion is automatic only after a human decision, and only for the exact tree that was tested." }
+      nonprod: { use: required, why: "Agent-authored pull requests reach non-prod; only a human or the policy-bound approver can approve them, and only a human merges." }
+      prod: { use: required, why: "Promotion is automatic only after a human merge, and only for the exact tree that was tested." }
     cost: Free.
 
   - id: scp-guardrails

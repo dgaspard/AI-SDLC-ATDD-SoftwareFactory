@@ -52,7 +52,7 @@ The agent's fast loop and the developer's laptop. Same images as the cloud, star
 - **Release record per promotion**: Nothing is released from local.
 - **Signed build provenance (SLSA)**: Local images are never promoted.
 - **AI provenance attestation**: Local images are never promoted.
-- **Human gate at pull request approval**: Nothing is released from local.
+- **Policy-governed gate at pull request approval**: Nothing is released from local.
 - **Organization guardrails (SCPs)**: No AWS locally.
 - **Audit trail and configuration history**: No AWS locally.
 - **Hardened ECS Fargate tasks**: Docker Compose runs the images locally.
@@ -87,7 +87,7 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 | Required application suite | guard.yml, spec/run-all.js | required | Blocks the merge once the main ruleset requires it; CTL-024 (live) proves that. | CTL-029 | enforced |
 | Signed build provenance (SLSA) | GitHub artifact attestations | required | Created when the image is built. | CTL-020 | specified, awaiting CI-02 |
 | AI provenance attestation | GitHub artifact attestations, in-toto | required | Created when the image is built. | CTL-021 | specified, awaiting CI-02 |
-| Human gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity | required | Agent-authored pull requests reach non-prod, but only a human can approve or merge them. | CTL-023, CTL-025, CTL-026, CTL-028 | partly enforced, awaiting ENV-03 |
+| Policy-governed gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity, review policy | required | Agent-authored pull requests reach non-prod; only a human or the policy-bound approver can approve them, and only a human merges. | CTL-023, CTL-025, CTL-026, CTL-028, CTL-061, CTL-062, CTL-063 | partly enforced, awaiting ENV-03, REVIEW-02 |
 | Organization guardrails (SCPs) | AWS Organizations | required | Guardrails apply to every member account. | CTL-050, CTL-051, CTL-052 | specified, awaiting ENV-02 |
 | Audit trail and configuration history | AWS CloudTrail, AWS Config | required | Every cloud change is recorded. | — | planned |
 | Hardened ECS Fargate tasks | Amazon ECS on AWS Fargate | required | The same task shape as prod, with test endpoints on. | CTL-032, CTL-033 | specified, awaiting ENV-02 |
@@ -117,7 +117,7 @@ An ephemeral AWS member account environment created by CI on merge, tested with 
 - [x] Required application suite
 - [ ] Signed build provenance (SLSA) (specified, awaiting CI-02)
 - [ ] AI provenance attestation (specified, awaiting CI-02)
-- [ ] Human gate at pull request approval (partly enforced, awaiting ENV-03)
+- [ ] Policy-governed gate at pull request approval (partly enforced, awaiting ENV-03, REVIEW-02)
 - [ ] Organization guardrails (SCPs) (specified, awaiting ENV-02)
 - [ ] Audit trail and configuration history (planned)
 - [ ] Hardened ECS Fargate tasks (specified, awaiting ENV-02)
@@ -158,7 +158,7 @@ A production-shaped AWS member account environment. It runs only images already 
 | Required application suite | guard.yml, spec/run-all.js | required | Blocks the merge once the main ruleset requires it; CTL-024 (live) proves that. | CTL-029 | enforced |
 | Signed build provenance (SLSA) | GitHub artifact attestations | required | Verified before deploying. | CTL-020 | specified, awaiting CI-02 |
 | AI provenance attestation | GitHub artifact attestations, in-toto | required | Verified before deploying. | CTL-021 | specified, awaiting CI-02 |
-| Human gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity | required | Promotion is automatic only after a human decision, and only for the exact tree that was tested. | CTL-023, CTL-025, CTL-026, CTL-028 | partly enforced, awaiting ENV-03 |
+| Policy-governed gate at pull request approval | GitHub rulesets, GitHub Environments, GitHub App identity, review policy | required | Promotion is automatic only after a human merge, and only for the exact tree that was tested. | CTL-023, CTL-025, CTL-026, CTL-028, CTL-061, CTL-062, CTL-063 | partly enforced, awaiting ENV-03, REVIEW-02 |
 | Organization guardrails (SCPs) | AWS Organizations | required | Guardrails apply to every member account. | CTL-050, CTL-051, CTL-052 | specified, awaiting ENV-02 |
 | Audit trail and configuration history | AWS CloudTrail, AWS Config | required | Every cloud change is recorded. | — | planned |
 | Hardened ECS Fargate tasks | Amazon ECS on AWS Fargate | required | Test endpoints off. | CTL-032, CTL-033 | specified, awaiting ENV-02 |
@@ -187,7 +187,7 @@ A production-shaped AWS member account environment. It runs only images already 
 - [x] Required application suite
 - [ ] Signed build provenance (SLSA) (specified, awaiting CI-02)
 - [ ] AI provenance attestation (specified, awaiting CI-02)
-- [ ] Human gate at pull request approval (partly enforced, awaiting ENV-03)
+- [ ] Policy-governed gate at pull request approval (partly enforced, awaiting ENV-03, REVIEW-02)
 - [ ] Organization guardrails (SCPs) (specified, awaiting ENV-02)
 - [ ] Audit trail and configuration history (planned)
 - [ ] Hardened ECS Fargate tasks (specified, awaiting ENV-02)
@@ -231,7 +231,7 @@ A production-shaped AWS member account environment. It runs only images already 
 | Required application suite | Free. |
 | Signed build provenance (SLSA) | Free. |
 | AI provenance attestation | Free. |
-| Human gate at pull request approval | Free. |
+| Policy-governed gate at pull request approval | Free. |
 | Organization guardrails (SCPs) | Free. |
 | Audit trail and configuration history | One CloudTrail trail is free; AWS Config costs about $0.003 per recorded item. Limit recording to the resource types we use. |
 | Hardened ECS Fargate tasks | About $9 per task per month at the smallest size if always on; ephemeral environments are why the system fits the budget. |

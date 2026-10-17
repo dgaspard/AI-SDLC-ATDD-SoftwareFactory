@@ -10,5 +10,8 @@
     "slug": "ai-sdlc-bdd-agent",
     "installationId": 170027882
   },
+  "approverIdentities": [],
+  "approverApp": null,
+  "reviewPolicy": "spec/delivery/review-policy.json",
   "requiredChecks": ["Protected specs and tests unchanged", "Delivery spec", "Application suite"]
 }

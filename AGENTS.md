@@ -2,9 +2,40 @@
 
 This repository is the working prototype of an AI-SDLC software factory: humans freeze executable specifications, agents build against them, and independent evidence supports release.
 
+## Orientation
+
+- The Software Factory is the product: a factory for enterprise and government
+  organizations that normalizes platform engineering (A-28). It is a prototype, not a
+  production-ready, certified or authorized system.
+- PetClinic is the reference application and proving ground, not the product. PetClinic
+  work must serve a factory capability, a regression need or an experiment.
+- Keep three layers apart: reusable factory mechanisms, organizational policy and
+  configuration, and application requirements (`PROJECT-PLAN.md`).
+
+Before any task, read the documents the Rules below point to, plus the backlog item's
+design note if it has one.
+
+## Working on a task
+
+- Map every task to an approved objective and backlog item. If none fits, ask before
+  starting.
+- Say which of these each claim is: current capability (verified in this tree),
+  approved requirement (frozen spec or approved backlog item), proposal (`BACKLOG.md`
+  Proposed), or historical context (`docs/history/`, superseded decisions, tag `1.0`).
+- Keep PetClinic names, rules and defaults out of reusable mechanisms. A mechanism
+  takes application specifics from configuration.
+- Use a deterministic tool (script, schema, linter, test) wherever it is sufficient;
+  use AI judgment only where a deterministic check can't decide.
+- Humans own specifications, acceptance criteria, policy, risk decisions and approved
+  changes to them. Agents draft; humans review and freeze.
+- Report evidence and limitations accurately: commands run, results, run records, and
+  what was not checked.
+- Escalate a substantive conflict between instructions, documents or specifications to
+  the user instead of guessing.
+
 ## Rules
 
-- Consult `PROJECT-PLAN.md` for the objective, the ordered roadmap, reference-project boundaries, and the reconstruction experiment protocol, and `docs/decisions/architecture.md` for architecture and delivery decisions (A-xx).
+- Consult `PROJECT-PLAN.md` for the objective, the ordered roadmap, reference-application boundaries, and the reconstruction experiment protocol, and `docs/decisions/architecture.md` for architecture and delivery decisions (A-xx).
 - Follow `docs/README.md` for where each kind of document lives. Add to an existing home; don't create dated recaps, scratch plans, or other one-off documents. Every feature's code review includes the docs pass in `docs/README.md`, run by a fresh session.
 - Follow `docs/development-workflow.md` for specification-first sequencing, service/workflow feature organization, and persistent task handoffs.
 - Consult `BACKLOG.md` for status, work items in roadmap order, and unresolved business decisions.
@@ -20,7 +51,7 @@ create, modify, or delete anything under:
 
 - `spec/` (features, contracts, seed data, tests, validators, harness, fakes)
 - `docs/specs/` (decisions, domain model, schema decisions)
-- `.github/workflows/guard.yml`, `.github/CODEOWNERS`, `.claude/`, `AGENTS.md`
+- `.github/workflows/guard.yml`, `.github/CODEOWNERS`, `.claude/`, `AGENTS.md`, `CLAUDE.md`
 
 Delivery workflows (`.github/workflows/delivery-*.yml`) are agent-built outputs
 checked by `spec/delivery/`, outside the protected root of trust (A-20).
