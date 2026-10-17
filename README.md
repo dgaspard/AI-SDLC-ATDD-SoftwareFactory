@@ -10,10 +10,9 @@ decision to ship.
 
 **Who it's for.** The initial customer is a technology or platform leader in an
 enterprise or government organization. Product owners and engineering teams use it.
-The intended experience, still a proposal, guides a product owner through defining and
-reviewing purpose and scope, domain contracts, service boundaries and APIs, features
-and acceptance examples, and an executable plan with traceable evidence. AI assists
-inside those steps; it isn't an open-ended code-generating chat
+The intended experience, still a proposal, is a simple guided workflow in which a
+product owner defines and reviews each artifact, from purpose to an executable plan, with
+AI assisting; it isn't an open-ended code-generating chat
 ([PROJECT-PLAN.md](PROJECT-PLAN.md#the-guided-product-experience-proposed-not-approved)).
 
 **What it is today.** A working prototype in one repository: the method, the harness,
