@@ -153,9 +153,9 @@ Seed IDs are fixed so tests and every service share them.
 
 ## Runtime versions
 
-Reference versions for the demo: Node.js 22 or newer (24.21.0 in use) and Python 3.12.
-A generated service may use a different version if its `setup` and `start` work on the
-presenter's machine.
+Reference versions: Node.js 22 or newer (24.21.0 in use) and Python 3.12.
+A generated service may use a different version if its `setup` and `start` work in the
+local development environment and in CI.
 
 ## Not in this contract
 

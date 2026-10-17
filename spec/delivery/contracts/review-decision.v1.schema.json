@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/review-decision/v1",
+  "title": "Review decision record (REVIEW-02)",
+  "description": "The evaluator's decision for one pull request at one head commit: whether the approver identity may approve it under the protected review policy, and every reason it may not. It is evidence for the `Review policy` check and for CTL-063, not an approval. It never claims a human judged the change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "generatedAt", "repository", "pullRequest", "headSha", "policy", "decision", "eligible", "changeClass", "files", "requiredChecks", "reasons"],
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "review-decision" },
+    "generatedAt": { "type": "string", "format": "date-time", "description": "An input (--now), so the record is reproducible" },
+    "repository": { "type": "string" },
+    "pullRequest": { "type": "integer", "minimum": 1 },
+    "headSha": { "$ref": "#/$defs/sha1" },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "sha256"],
+      "properties": {
+        "schema": { "const": "review-policy/1" },
+        "sha256": { "$ref": "#/$defs/sha256", "description": "SHA-256 of the policy file's bytes" }
+      }
+    },
+    "decision": { "enum": ["approve", "refer-to-human"] },
+    "eligible": { "type": "boolean", "description": "True exactly when decision is approve and reasons is empty" },
+    "changeClass": { "type": ["string", "null"], "description": "The most restrictive class among the changed paths; null when no path changed" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "class", "approverMayApprove"],
+        "properties": {
+          "path": { "type": "string" },
+          "class": { "type": "string" },
+          "approverMayApprove": { "type": "boolean" }
+        }
+      }
+    },
+    "requiredChecks": {
+      "type": "array",
+      "description": "One entry per check named in root-of-trust.json, in that order",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "conclusion"],
+        "properties": {
+          "name": { "type": "string" },
+          "conclusion": { "type": ["string", "null"], "description": "The latest completed run's conclusion on the head commit; null when there is none" }
+        }
+      }
+    },
+    "reasons": {
+      "type": "array",
+      "description": "Every reason the change can't be approved; empty when eligible",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "detail"],
+        "properties": {
+          "code": {
+            "enum": [
+              "approver-disabled",
+              "needs-human-label",
+              "draft",
+              "author-is-approver",
+              "no-changed-files",
+              "class-not-approvable",
+              "branch-not-up-to-date",
+              "check-missing",
+              "check-not-successful"
+            ]
+          },
+          "detail": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "decision": { "const": "approve" } } }, "then": { "properties": { "eligible": { "const": true }, "reasons": { "maxItems": 0 } } } },
+    { "if": { "properties": { "decision": { "const": "refer-to-human" } } }, "then": { "properties": { "eligible": { "const": false }, "reasons": { "minItems": 1 } } } }
+  ]
+}

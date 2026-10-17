@@ -328,16 +328,20 @@ START-02) and who reviews each step.
 
 ### REVIEW-02 — Specialist agent review and policy-governed merge eligibility (proposed 2026-10-16)
 
-Stage: proposed; **design proposed 2026-10-16** in
-[docs/design/review-02-pr-approver.md](docs/design/review-02-pr-approver.md); **spec
-amendments drafted as two protected patches**: (1) CTL-025 and CTL-028 revised, CTL-061..063
-and `review-policy.json` new; (2) the evaluator's 45 frozen tests and its input and
-decision-record contracts, all red until the evaluator is built. Both await the
-maintainer's review and freeze. Nothing built.
-Owner direction (2026-10-16): the frozen tests, specs and deterministic gates are what
-give a PR its value, so the approver approves on green required checks plus the policy's
-path classes, and specialist reviewers are advisory. **Until A-29 is recorded at that
-freeze, A-22 stands: no agent approves or merges, and nothing is automated.**
+Stage: **specifications reviewed; frozen 2026-10-16 (`a21997b`), decision
+[A-29](docs/decisions/architecture.md)**; tests red. Design:
+[docs/design/review-02-pr-approver.md](docs/design/review-02-pr-approver.md). Frozen:
+CTL-025 and CTL-028 revised; CTL-062 (the policy never lets the approver approve the root
+of trust) required and green; CTL-061 and CTL-063 `@awaiting:REVIEW-02`;
+`spec/delivery/review-policy.json`; the review-facts and review-decision contracts; the
+evaluator's 45 tests in the `review-policy` suite, red and outside the full tier until the
+evaluator is built. Owner direction: the frozen tests, specs and deterministic gates give a
+PR its value, so the approver approves on green required checks plus the policy's path
+classes, and specialist reviewers are advisory.
+**Nothing approves automatically yet:** the approver App doesn't exist and nothing is
+built. Next action: build `tools/review-policy/evaluate.mjs` against the frozen tests,
+then add the suite to the full tier at that freeze; then the facts collector, check
+publisher and review workflow. Still in Proposed until the maintainer places it in a phase.
 
 Purpose: specialist reviewers produce scoped evidence, and a protected, deterministic
 policy decides whether a change is eligible. Several AI approvals agreeing don't

@@ -6,7 +6,8 @@
       "Edit(./.claude/**)",
       "Edit(./.github/workflows/guard.yml)",
       "Edit(./.github/CODEOWNERS)",
-      "Edit(./AGENTS.md)"
+      "Edit(./AGENTS.md)",
+      "Edit(./CLAUDE.md)"
     ]
   },
   "hooks": {

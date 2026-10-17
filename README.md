@@ -72,7 +72,7 @@ frontend/                          Vanilla JavaScript clinic UI and HTTP server
 spec/                              Protected: features, contracts, seed data, tests, harness, fakes
 docs/specs/                        Protected: decisions, domain model, schema decisions
 docs/observability.md              Telemetry rules OBS-001..OBS-048 and coverage
-docs/decisions/architecture.md     Architecture and delivery decisions A-01..A-28
+docs/decisions/architecture.md     Architecture and delivery decisions A-01..A-29
 docs/design/                       One design note per backlog item
 docs/engineering-reviews/, docs/rehearsals/, docs/handoffs/   Evidence records
 docs/history/                      Completed backlog items and superseded plans
@@ -80,7 +80,7 @@ PROJECT-PLAN.md                    Objective, factory shape, roadmap, experiment
 BACKLOG.md                         Work items in roadmap order, proposals, deferred work
 docs/development-workflow.md       Working sequence and handoff rules
 AGENTS.md                          Guardrails for coding agents (protected)
-CLAUDE.md                          Claude Code entry point; points to AGENTS.md
+CLAUDE.md                          Claude Code entry point; points to AGENTS.md (protected)
 ```
 
 Where each kind of document belongs, and the rules for adding one:

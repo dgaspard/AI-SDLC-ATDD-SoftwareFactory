@@ -1,9 +1,10 @@
-# GUARD-01: protected specifications and tests require the presenter's review.
+# GUARD-01: protected specifications, tests and agent instructions require the maintainer's review.
 /spec/        @dgaspard
 /docs/specs/  @dgaspard
 /.claude/     @dgaspard
 /.github/     @dgaspard
 /AGENTS.md    @dgaspard
+/CLAUDE.md    @dgaspard
 
 # ENG-02: portable review/security engines require review before they change —
 # mandatory review, not an immutable hash freeze (lighter than GUARD-01 above,

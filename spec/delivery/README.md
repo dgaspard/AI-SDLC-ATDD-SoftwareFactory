@@ -39,6 +39,7 @@ A missing tool fails with `tooling: …`, never as a product failure.
 | `steps/` | Step definitions; `steps/support/` reads the repository and templates |
 | `tools/` | Catalog loader and renderer |
 | `contracts/` | AI provenance predicate schema (DC-007) |
+| `review-policy.json` | REVIEW-02: which changes the approver identity may approve (CTL-062) |
 
 ## Tags
 

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/review-facts/v1",
+  "title": "Review facts (REVIEW-02)",
+  "description": "What the review workflow read from GitHub about one pull request, the only input the evaluator decides from besides the protected review policy and root of trust. Collected by an agent-built script through read-only API calls; it never contains code from the pull request. Which checks are required is not an input: the evaluator takes them from root-of-trust.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "collectedAt", "repository", "pullRequest", "changedFiles", "checkRuns", "approverEnabled"],
+  "$defs": {
+    "sha1": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "path": { "type": "string", "minLength": 1, "pattern": "^[^/]" }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "review-facts" },
+    "collectedAt": { "type": "string", "format": "date-time" },
+    "repository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+    "pullRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "author", "headSha", "baseRef", "upToDate", "draft", "labels"],
+      "properties": {
+        "number": { "type": "integer", "minimum": 1 },
+        "author": { "type": "string", "minLength": 1, "description": "Login of the pull request's author, e.g. ai-sdlc-bdd-agent[bot]" },
+        "headSha": { "$ref": "#/$defs/sha1" },
+        "baseRef": { "type": "string", "minLength": 1 },
+        "upToDate": { "type": "boolean", "description": "The head contains the current tip of the base branch" },
+        "draft": { "type": "boolean" },
+        "labels": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "changedFiles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/path" },
+      "description": "Every path the pull request adds, modifies, deletes or renames (both names for a rename), relative to the repository root"
+    },
+    "checkRuns": {
+      "type": "array",
+      "description": "Check runs reported for the pull request; may include runs for older commits",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "headSha", "status", "conclusion", "completedAt"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "headSha": { "$ref": "#/$defs/sha1" },
+          "status": { "enum": ["queued", "in_progress", "completed"] },
+          "conclusion": { "enum": [null, "success", "failure", "neutral", "cancelled", "skipped", "timed_out", "action_required", "stale"] },
+          "completedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      }
+    },
+    "approverEnabled": {
+      "type": ["boolean", "null"],
+      "description": "The kill switch: the policy's repository variable read as true or false; null when it is unset"
+    }
+  }
+}

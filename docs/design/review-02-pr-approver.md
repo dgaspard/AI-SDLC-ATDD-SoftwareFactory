@@ -1,9 +1,9 @@
 # REVIEW-02 design: a policy-governed PR approver
 
 Status and scope: [REVIEW-02 in BACKLOG](../../BACKLOG.md#review-02--specialist-agent-review-and-policy-governed-merge-eligibility-proposed-2026-10-16).
-Design proposed 2026-10-16. The spec amendments are drafted as a protected patch for
-the maintainer to review and freeze; nothing here is built. It revises A-22, so it takes
-effect only with the decision drafted below as A-29.
+Design 2026-10-16. The spec amendments below were frozen by the maintainer on
+2026-10-16 (`a21997b`), with decision [A-29](../decisions/architecture.md) revising A-22.
+Nothing is built yet, so nothing approves automatically.
 
 ## Why now
 
@@ -85,7 +85,7 @@ To verify on a throwaway PR before phase 2 (like CI-02's #11): GitHub counts the
 approval toward the required approval, and code-owner review still blocks a
 root-of-trust change the App approved. Apps can't be code owners, so it should.
 
-## Drafted spec amendments (protected patch)
+## Spec amendments (frozen 2026-10-16)
 
 | Control | Change | Tag |
 |---|---|---|
@@ -97,10 +97,9 @@ root-of-trust change the App approved. Apps can't be code owners, so it should.
 
 Also in the patch: `review-policy.json`, `root-of-trust.json` gains `approverIdentities`,
 `approverApp` and `reviewPolicy`, the `prod-approval` catalog entry is revised, and the
-generated `docs/delivery/environments.md` is regenerated to match. The `@awaiting` tags and
-the A-29 wording are the maintainer's freeze decision.
+generated `docs/delivery/environments.md` is regenerated to match.
 
-## Drafted evaluator tests and contracts (second protected patch)
+## Evaluator tests and contracts (frozen 2026-10-16)
 
 The evaluator follows DORA-01's pattern: an agent-built tool behind protected contracts
 and tests.
@@ -144,16 +143,9 @@ review workflow file, which is privilege-bearing and human-owned (A-21).
 Kill switch: the `REVIEW_APPROVER_ENABLED` repository variable and the `needs-human`
 label stop approvals at once. Decision records show why each approval happened.
 
-## Draft decision A-29 (proposed; recorded when the patch is frozen)
+## Decision
 
-> A-29 — Policy-governed approval (revises A-22's "agents never approve"). A dedicated
-> approver identity, separate from build agents, approves a pull request when every
-> required check passed on its exact head commit, the branch is up to date, and the
-> protected review policy allows every path it changes. The frozen tests, specifications
-> and deterministic gates are the review for those changes. Root-of-trust and privilege
-> changes always need a human code owner. Build agents never approve, merge or bypass;
-> the approver never merges or bypasses; humans merge, own the policy and hold the kill
-> switch. Automatic merging needs a further decision.
+Recorded as [A-29](../decisions/architecture.md) at the freeze.
 
 ## Limits
 
