@@ -39,7 +39,7 @@ if (["Edit", "Write", "MultiEdit", "NotebookEdit"].includes(tool)) {
 
 if (tool === "Bash") {
   const cmd = String(args.command ?? "");
-  if (/guard:freeze|guard\/freeze\.js/.test(cmd)) {
+  if (/guard:freeze|guard\/freeze\.(?:mjs|js)/.test(cmd)) {
     deny("Blocked by GUARD-01: only a human may run guard:freeze, after reviewing a specification change.");
   }
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

@@ -31,6 +31,9 @@ const denied = [
   ["Bash", { command: "echo x > spec/tests/a.test.js" }],
   ["Bash", { command: "git checkout -- spec/" }],
   ["Bash", { command: "npm --prefix spec run guard:freeze" }],
+  ["Bash", { command: "node -e \"import('./tools/guard/freeze.mjs').then(m => m.freeze(process.cwd()))\"" }],
+  ["Edit", { file_path: "tools/guard/guard.mjs" }],
+  ["Bash", { command: "echo x > tools/guard/check.mjs" }],
 ];
 const allowed = [
   ["Write", { file_path: "services/checkout/server.js" }],

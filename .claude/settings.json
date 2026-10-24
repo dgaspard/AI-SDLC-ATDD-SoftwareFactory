@@ -8,7 +8,8 @@
       "Edit(./.github/CODEOWNERS)",
       "Edit(./AGENTS.md)",
       "Edit(./CLAUDE.md)",
-      "Edit(./tools/petclinic/suite.mjs)"
+      "Edit(./tools/petclinic/suite.mjs)",
+      "Edit(./tools/guard/**)"
     ]
   },
   "hooks": {
@@ -16,7 +17,10 @@
       {
         "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-paths.mjs\"" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/protect-paths.mjs\""
+          }
         ]
       }
     ]

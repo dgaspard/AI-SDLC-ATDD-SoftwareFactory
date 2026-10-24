@@ -7,10 +7,12 @@ import { spawnSync, execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 
 const SPEC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const fixtureRunner = "import path from 'node:path';\nimport {fileURLToPath} from 'node:url';\nimport {runLegacy} from FACTORY_INDEX;\nconst suiteRoot=path.dirname(fileURLToPath(import.meta.url));\nconst root=path.resolve(suiteRoot,'..');\nawait runLegacy({root,suiteRoot,results:path.join(root,'test-results/runs'),policyFile:path.join(suiteRoot,'test-policy.json'),services:[],argv:process.argv.slice(2),invocation:'node spec/run-all.js',treeEnvironmentVariable:'FACTORY_TREE'});\n" .replace("FACTORY_INDEX", JSON.stringify(pathToFileURL(path.join(SPEC,"../tools/factory/index.mjs")).href));
+
 const ROOT = path.resolve(SPEC, "..");
 const GENERATOR = "tools/evidence/change-evidence.mjs";
 const SCHEMA = JSON.parse(fs.readFileSync(path.join(SPEC, "delivery/contracts/change-evidence.v1.schema.json"), "utf8"));
@@ -83,9 +85,7 @@ const tree = () => JSON.parse(runAll("--verify", "--json").out).tree;
 describe("change evidence (EVID-01)", () => {
   beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), "evidence-"));
-    fs.cpSync(path.join(ROOT, "tools/factory"), path.join(root, "tools/factory"), { recursive: true });
-    write("spec/run-all.js", fs.readFileSync(path.join(SPEC, "run-all.js"), "utf8"));
-    write("spec/harness/config.js", fs.readFileSync(path.join(SPEC, "harness/config.js"), "utf8"));
+    write("spec/run-all.js", fixtureRunner);
     write("spec/test-policy.json", JSON.stringify(policy, null, 2));
     write("spec/protected.sha256", "0000  fixture\n");
     write("spec/delivery/features/fixture/controls.feature", controlsFeature);
@@ -292,7 +292,7 @@ describe("change evidence (EVID-01)", () => {
     assert.notEqual(g.code, 0);
     assert.deepEqual(reports(), [first], "a failed generation left a partial report");
     assert.equal(fs.readFileSync(path.join(evidenceDir(), first, "change-evidence.json"), "utf8"), saved);
-    write("spec/run-all.js", fs.readFileSync(path.join(SPEC, "run-all.js"), "utf8"));
+    write("spec/run-all.js", fixtureRunner);
     assert.notEqual(node([GENERATOR, "--now", "not-a-date"]).code, 0, "an invalid clock was accepted");
     assert.deepEqual(reports(), [first]);
   });

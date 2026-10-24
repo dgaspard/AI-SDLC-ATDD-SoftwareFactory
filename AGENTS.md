@@ -66,6 +66,7 @@ create, modify, or delete anything under:
 - `docs/specs/` (decisions, domain model, schema decisions)
 - `.github/workflows/guard.yml`, `.github/CODEOWNERS`, `.claude/`, `AGENTS.md`, `CLAUDE.md`
 - `tools/petclinic/suite.mjs` (consumer-owned evidence authority adapter)
+- `tools/guard/` (shared guard and human-only freeze mechanisms)
 
 Delivery workflows (`.github/workflows/delivery-*.yml`) are agent-built outputs
 checked by `spec/delivery/`, outside the protected root of trust (A-20).

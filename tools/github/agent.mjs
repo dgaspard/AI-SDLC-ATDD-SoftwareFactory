@@ -8,12 +8,24 @@ import { sign } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const slug = 'dgaspard/AI-SDLC-ATDD-SoftwareFactory';
+const permittedRepositories = new Set([
+  'dgaspard/AI-SDLC-ATDD-SoftwareFactory',
+  'dgaspard/ai-sdlc-petclinic',
+]);
+const argv = process.argv.slice(2);
+let slug = 'dgaspard/AI-SDLC-ATDD-SoftwareFactory';
+if (argv[0] === '--repository') {
+  argv.shift();
+  slug = argv.shift();
+}
+if (!permittedRepositories.has(slug)) {
+  console.error('Refused: repository must be an explicitly permitted factory or PetClinic repository');
+  process.exit(2);
+}
 const expectedApp = 5265528;
-const env = { ...parseEnv(fs.readFileSync(path.join(root, '.env'), 'utf8')), ...process.env };
-const [command, ...args] = process.argv.slice(2);
+const [command, ...args] = argv;
 if (!['check', 'gh', 'git'].includes(command)) {
-  console.error('Usage: node tools/github/agent.mjs check | gh <args> | git <args>');
+  console.error('Usage: node tools/github/agent.mjs [--repository OWNER/REPO] check | gh <args> | git <args>');
   process.exit(2);
 }
 // A-22: agents never approve, merge or bypass. Refuse those operations before any token is
@@ -51,6 +63,7 @@ async function api(endpoint, auth, method = 'GET', body) {
   return response.status === 204 ? null : response.json();
 }
 try {
+  const env = { ...parseEnv(fs.readFileSync(path.join(root, '.env'), 'utf8')), ...process.env };
   if (Number(env.GITHUB_APP_ID) !== expectedApp || !env.GITHUB_CLIENT_ID || !env.GITHUB_APP_PRIVATE_KEY_PATH) throw new Error('Missing or incorrect GitHub App configuration');
   const key = fs.readFileSync(env.GITHUB_APP_PRIVATE_KEY_PATH);
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');

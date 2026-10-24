@@ -236,3 +236,26 @@ freeze. The public implementation accompanies the adapter; a protected adapter a
 is not a runnable migration.
 Harness, guard and evidence splits require their own exact proposals; this first
 slice does not authorize them or a bulk `spec/` move.
+
+## Migration application order
+
+The final consumer pin depends on a human-frozen factory commit. Prepare the shared
+mechanisms additively while retaining the working application; review and freeze
+that exact patch, verify its full application gate, and commit the reviewed factory
+release. The consumer pin must use that actual commit, never a predicted SHA or
+floating reference. This preparatory release may still contain the old active
+application until the consumer has passed its independent gate.
+
+Next, review the exact consumer import manifest, application adapters and independent
+trust controls against the reviewed migration commit. The new consumer contains thin
+factory calls, not copied factory implementations. Freeze and commit its reviewed
+inputs, materialize external trust from that explicit commit, and prove clean install,
+full gate, failure propagation and both evidence identities. Only after that proof
+and a recoverable checkpoint may the separately reviewed factory-removal patch be
+applied and human-frozen. Source history and tags remain intact throughout.
+
+The additive guard extraction keeps configuration in each repository and shares
+only the implementation. Its human-only freeze entry point must remain blocked by
+the agent hook, including the extracted `.mjs` module; test command strings against
+the hook without executing freeze. Reviewable patch/results and current status live
+in [BACKLOG.md](../../BACKLOG.md), not in this design.

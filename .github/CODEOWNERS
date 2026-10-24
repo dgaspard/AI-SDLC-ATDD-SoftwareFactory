@@ -12,3 +12,5 @@
 # since these are meant to evolve as new defect classes get discovered).
 /tools/security/portable/  @dgaspard
 /tools/review/portable/    @dgaspard
+
+/tools/guard/  @dgaspard

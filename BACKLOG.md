@@ -22,18 +22,77 @@ for every item. Finished items keep their full history in
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **local extraction and operational consumer proof verified; human boundary-review closure outstanding** (A-30).
+Status: **local extraction approved; repository separation blocked on exact protected migration review** (A-30).
 Canonical ID START-02 and its ordered slices are retained.
 Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
 | Slice | Status | Acceptance / next action |
 |---|---|---|
 | Consumer-contract specification | Human-frozen in `0fca4ef`; original 14-case red baseline retained historically | Preserve frozen interface and assertions; separately review any amendments |
-| Local extraction | Technical acceptance verified on reviewed consumer commit; human boundary sign-off outstanding | Seven-project combined CLI COMPLETE, preserved v1 evidence, independent review; close human review before repository separation |
-| Repository separation and immutable consumption | Planned after local extraction | Existing repository stays factory; PetClinic clean import records source repository and exact migration commit; independent roots of trust and full immutable factory pin; no registry required |
+| Local extraction | Verified and owner-approved | Reviewed consumer `508e8e947323ca1723966344a90d1036a077a93e`; combined proof and approval recorded below |
+| Repository separation and immutable consumption | Blocked at migration preflight | Exact protected split/baseline review required; App access verified; no consumer import or factory removal performed |
 | Lifecycle specification | Planned after repository separation | Define create/update/delete/deploy scope and recovery; no deployment authorization |
 | Local lifecycle proof | Planned after lifecycle freeze | Disposable local copies, retained hashes and bounded recovery; no cloud activity |
 | Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
+
+**Repository-separation preflight (2026-10-24).** The owner supplied reviewed commit
+`508e8e947323ca1723966344a90d1036a077a93e` and explicitly approved the fixes.
+This closes the prior local security/boundary sign-off condition. The existing
+`test-results/rev002/upgraded/proof.json` records the combined exit-0 proof against
+factory pin `e17f55e17403075cdb9434e69bbd0da03a865496`, 17 verified artifact hashes,
+and passing legacy verification. This is local adoption evidence, not repository separation.
+
+Read-only hash comparison confirms all 200 current protected entries match the
+human freeze. `test-results/start02-separation/preflight.json` records the current
+inventory audit: 89 split-review-required rows and eight historical source hashes
+that differ from the current reviewed tree. The inventory remains an audit input,
+not an executable move authorization (see the design's baseline-transition procedure).
+A verified self-contained migration checkpoint bundle preserves all current local
+refs/history under `test-results/start02-separation/`; no shared history was rewritten.
+
+Exact blockers:
+- App access to both repositories now passes using App `5265528`, installation
+  `170027882`, separately scoped tokens. Authenticated metadata and `ls-remote`
+  confirm `dgaspard/ai-sdlc-petclinic` is public and empty (no advertised refs).
+  The existing local folder with that name is an older factory checkout and must
+  not be overwritten. Remote access is no longer a blocker; CI enforcement is
+  still unverified and no remote writes have occurred.
+- `spec/factory/extraction-inventory.csv` has no approved executable split manifest.
+  In particular, `spec/run-all.js`, `spec/tests/harness/run-all.test.js` and
+  `spec/tests/evidence/change-evidence.test.js` still assume/copy local factory code;
+  `tools/petclinic/suite.mjs` invokes local `tools/evidence/change-evidence.mjs`.
+  Their separation changes require exact review, preserving assertions and v1 semantics.
+- Both roots of trust need reviewed changes to `spec/guard/protected-paths.json`,
+  `spec/protected.sha256`, `AGENTS.md`, `CLAUDE.md`, `.claude/`,
+  `.github/CODEOWNERS`, `.github/workflows/guard.yml` and the delivery trust/policy
+  bindings. `spec/delivery/root-of-trust.json` still names the factory and its
+  installation; copying it does not authorize the consumer. The App lacks workflow
+  write permission by design, so a human must bootstrap approved workflow changes.
+- The frozen factory pin above is a local candidate; remote fetchability has not
+  been established. Independent clean-checkout gates and CI enforcement have not
+  been verified. No protected move, baseline refresh, destination creation or removal
+  of the active PetClinic tree occurred during this preflight.
+
+**Additive migration preparation patch.** The exact unapplied patch is
+`test-results/start02-separation/protected-factory-preparation.patch` (SHA256
+`017c665ec510d5fd0740e76030d8ea2a4a4f3ad634c53444e7c26b5b8f846673`).
+It extracts the existing guard algorithms into protected `tools/guard/`, keeps
+per-repository config and human-only freeze wrappers, and removes application
+configuration/copied factory runtime from the protected runner/evidence fixtures.
+Every existing assertion is retained. The evidence fixture still copies the evidence
+generator into its synthetic test workspace; this is not a maintained consumer fork.
+Independent review found the new freeze-module entry point needed a hook deny rule;
+the corrected patch includes that rule and three new protection tests. The exact
+isolated preparation tree passes 62/62 focused tests, including 28 hook tests.
+No guard entry point or freeze was run. Patch source/target hashes and results are
+in `test-results/start02-separation/preparation-review.json`.
+
+Human review/application/freeze of this additive patch precedes the full application
+gate and reviewed factory release commit. That immutable commit is then available
+for the exact consumer pin patch; it cannot be predicted before the human freeze.
+Consumer import/trust review and independent proof precede factory deletion. The
+current preparation patch contains no application removals, consumer import or new
+factory pin, and does not constitute separation acceptance.
 
 **Approved integration and freeze.** The owner reviewed patch SHA256
 `977add698aa110ad7044da963bb87792580e060cdcd9de167d8f0e0eff7298e2`.
@@ -67,8 +126,7 @@ Independent ENG-02 review and fresh-session docs pass:
 [review record](docs/engineering-reviews/eng-02-start-02-local-2026-10-24.md).
 Review found and independently reproduced output symlink alias overlap and evidence
 mutation during shutdown. Both are fixed in unprotected factory code with regressions;
-reviewer probes now reject them. Human security/boundary sign-off remains required by
-ENG-02. Engineering checks pass 10/10 in the cached pinned browser container with
+reviewer probes now reject them. ENG-02 required human security/boundary sign-off at that review; the owner subsequently approved the fixes as recorded in the preflight above. Engineering checks pass 10/10 in the cached pinned browser container with
 networking disabled; host-only run lacked a browser binary. Connected payment trace
 passes. Offline dependency audit is cached evidence only. Remote advisory/scanner
 operations were not performed; unavailable Semgrep/jscpd are recorded limitations.
@@ -95,15 +153,15 @@ REV-003 documentation correction is resolved. The README describes the integrate
 
 REV-001 follow-up: `tools/factory/core.mjs` re-resolves output destinations at authority validation and rejects retargeting before creation/startup. Five deterministic regressions cover results/evidence through direct/chained symlinks into protected folders with nonexistent suffixes and retargeting between validation steps. CLI assertions require exit 2 / CONFIG_INVALID, zero suites/evidence, and no runtime/test markers or output writes. All 54 focused checks pass from candidate `69567e6557d32ddf05cab51c4ecf8feacc3e0842`; intentionally restoring lexical-path resolution in a disposable mutation makes all five regressions fail. The existing approved pin independently passes the four direct/chained CLI cases; its pin is unchanged. No protected amendment is needed for these unprotected implementation/regression changes. Final application-gate output is designated `test-results/rev001/final-results.json`.
 
-REV-002 follow-up: cleanup is an explicit barrier before final factory/input/trust/evidence validation and fingerprints. Process-group disappearance is confirmed after the leader exits; failed cleanup cannot produce COMPLETE. Required evidence is parsed and hashed from the same post-cleanup byte buffer. Six deterministic shutdown regressions cover corruption, deletion, stale/null evidence, a valid rewrite and surviving descendants. All 60 focused checks pass on candidate `e17f55e17403075cdb9434e69bbd0da03a865496`; moving cleanup after evidence in a disposable mutation makes all five evidence tests fail. Independent review confirms invalid shutdown evidence fails and valid rewritten bytes get the correct hash. Logs and final application gate location: `test-results/rev002/` (`final-results.json`). The candidate includes the REV-001 hardening. The owner applied `protected-factory-pin.patch` and human-froze the new pin `e17f55e17403075cdb9434e69bbd0da03a865496`. Reverse patch verification and guard pass; the pinned factory checkout is clean. Upgraded consumer acceptance awaits a reviewed consumer commit, renewed external trust, and combined verification. The agent did not edit or freeze the protected inputs.
+REV-002 follow-up: cleanup is an explicit barrier before final factory/input/trust/evidence validation and fingerprints. Process-group disappearance is confirmed after the leader exits; failed cleanup cannot produce COMPLETE. Required evidence is parsed and hashed from the same post-cleanup byte buffer. Six deterministic shutdown regressions cover corruption, deletion, stale/null evidence, a valid rewrite and surviving descendants. All 60 focused checks pass on candidate `e17f55e17403075cdb9434e69bbd0da03a865496`; moving cleanup after evidence in a disposable mutation makes all five evidence tests fail. Independent review confirms invalid shutdown evidence fails and valid rewritten bytes get the correct hash. Logs and final application gate location: `test-results/rev002/` (`final-results.json`). The candidate includes the REV-001 hardening. The owner applied `protected-factory-pin.patch` and human-froze the new pin `e17f55e17403075cdb9434e69bbd0da03a865496`. Reverse patch verification and guard pass; the pinned factory checkout is clean. At that stage upgraded acceptance awaited a reviewed consumer commit, renewed external trust, and combined verification; the later `508e8e947323ca1723966344a90d1036a077a93e` proof above satisfies those local prerequisites. The agent did not edit or freeze the protected inputs.
 
-Independent engineering review marks REV-004 technically resolved. No implementation or missing-config blocker remains for local adoption. Human security/boundary sign-off remains required before milestone review closure; successful execution is not that sign-off. This is local proof with separate checkout paths, not an independently provisioned consumer repository. The clean reviewed-commit proof above remains distinct from subsequent documentation changes; final documentation-tree legacy gate evidence is designated `test-results/start02-adoption/closure-results.json`. See [consumer adapter instructions](tools/petclinic/README.md).
+Independent engineering review marks REV-004 technically resolved. No implementation or missing-config blocker remains for local adoption. The owner subsequently supplied the required human security/boundary sign-off; it is distinct from successful execution and is recorded above. This is local proof with separate checkout paths, not an independently provisioned consumer repository. The clean reviewed-commit proof above remains distinct from subsequent documentation changes; final documentation-tree legacy gate evidence is designated `test-results/start02-adoption/closure-results.json`. See [consumer adapter instructions](tools/petclinic/README.md).
 
 Repository creation/visibility/access, clean import and its source commit provenance,
 independent repository protection, adoption of an approved immutable factory revision
 and clean independent-checkout proof belong to repository separation. Lifecycle
 examples/recovery beyond extraction and second-consumer validation remain later.
-Shared factory Git history is preserved. No remote operations or independent
+Shared factory Git history is preserved. No remote writes or independent
 PetClinic repository-consumption claim are made. Keep the compatibility adapter until
 consumer-CLI adoption, full gate and v1/accepted-risk provenance are verified.
 START-02 remains open.

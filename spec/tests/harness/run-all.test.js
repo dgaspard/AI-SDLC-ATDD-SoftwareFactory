@@ -6,9 +6,11 @@ import { spawnSync, execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const SPEC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const fixtureRunner = "import path from 'node:path';\nimport {fileURLToPath} from 'node:url';\nimport {runLegacy} from FACTORY_INDEX;\nconst suiteRoot=path.dirname(fileURLToPath(import.meta.url));\nconst root=path.resolve(suiteRoot,'..');\nawait runLegacy({root,suiteRoot,results:path.join(root,'test-results/runs'),policyFile:path.join(suiteRoot,'test-policy.json'),services:[],argv:process.argv.slice(2),invocation:'node spec/run-all.js',treeEnvironmentVariable:'FACTORY_TREE'});\n" .replace("FACTORY_INDEX", JSON.stringify(pathToFileURL(path.join(SPEC,"../tools/factory/index.mjs")).href));
+
 const ok = (n) => ["-e", `console.log("ℹ tests ${n}\\nℹ pass ${n}\\nℹ fail 0")`];
 const policy = {
   description: "fixture policy",
@@ -37,9 +39,7 @@ const records = () => {
 describe("run-all gate and verifier (CI-02)", () => {
   beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), "run-all-"));
-    write("spec/run-all.js", fs.readFileSync(path.join(SPEC, "run-all.js"), "utf8"));
-    fs.cpSync(path.join(SPEC, "../tools/factory"), path.join(root, "tools/factory"), {recursive:true});
-    write("spec/harness/config.js", fs.readFileSync(path.join(SPEC, "harness/config.js"), "utf8"));
+    write("spec/run-all.js", fixtureRunner);
     write("spec/test-policy.json", JSON.stringify(policy, null, 2));
     write(".gitignore", "test-results/\n");
     write("services/app.txt", "application v1\n");
