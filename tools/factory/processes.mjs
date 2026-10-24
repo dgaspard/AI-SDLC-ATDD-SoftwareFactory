@@ -52,6 +52,20 @@ export async function stop(s, timeout = 5000) {
   }
   signal(s, "SIGKILL");
   await s.done;
+  // A reaped leader does not prove its descendants have stopped. Do not allow
+  // evidence validation until the owned process group is gone as well.
+  const deadline = Date.now() + timeout;
+  while (s.child.pid) {
+    try {
+      process.kill(-s.child.pid, 0);
+    } catch (e) {
+      if (e.code === "ESRCH") return;
+      throw e;
+    }
+    if (Date.now() >= deadline)
+      fail("FACTORY_ERROR", "Owned process group did not finish cleanup");
+    await delay(10);
+  }
 }
 export async function startRuntime(root, runtime, logDir, owned) {
   for (const group of runtime.startupGroups) {

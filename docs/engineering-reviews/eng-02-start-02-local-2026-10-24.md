@@ -1,8 +1,14 @@
 # ENG-02: START-02 local extraction review — 2026-10-24
 
+**REV-003 documentation resolution:** resolved, low severity, no separate human security sign-off required. The factory README now describes the integrated PetClinic adapter and verified local consumer-CLI proof accurately. Independent repository separation remains a later milestone. This resolution does not approve security/boundary findings or the pending factory-pin upgrade.
+
+The original findings and dated follow-ups below are preserved as review history; earlier statements that REV-003 is open describe their reviewed snapshots, not its current disposition. Milestone status remains in BACKLOG.md.
+
+## Initial review (historical)
+
 Reviewed isolated snapshot `/private/tmp/start02-integrated-review-0tj2wswm` against frozen baseline `0fca4ef`, with no memory of implementation. Read the working agreement, ENG-02 design and reviewer checklist, frozen consumer contract, ownership/roadmap decisions and documentation checklist. No implementation or protected files were edited; no remote operations were performed.
 
-Verdict: changes need correction before local-extraction acceptance. Two concrete defects in the new consumer boundary remain despite passing ordinary boundary examples. They are local implementation blockers, not reasons to defer the already-approved architecture or await repository separation. Security/boundary findings require human sign-off under ENG-02.
+Initial verdict (historical): changes need correction before local-extraction acceptance. Two concrete defects in the new consumer boundary remain despite passing ordinary boundary examples. They are local implementation blockers, not reasons to defer the already-approved architecture or await repository separation. Security/boundary findings require human sign-off under ENG-02.
 
 ## Code findings
 
@@ -24,7 +30,7 @@ Verdict: changes need correction before local-extraction acceptance. Two concret
 
 ## Documentation finding
 
-### REV-003 — Documentation still describes an unintegrated adapter
+### REV-003 — Original documentation finding (resolved)
 
 - Category: documentation; severity: low; human sign-off: no.
 - Location: `tools/factory/README.md:19–21`, `BACKLOG.md:25–27` and its local-extraction row.
@@ -135,3 +141,43 @@ Post-freeze full run `2026-10-24T20-41-03-679Z-full` passed 13 full-tier suites;
 ## REV-006 repair verified
 
 The owner applied the exact three-file enforcement patch and froze 200 protected files. Reverse patch verification and guard pass; all 25 unchanged hook tests pass in the actual checkout. The protection-mirror defect is corrected. Final application verification is designated `test-results/start02-adoption/enforcement-final-results.json`. A reviewed consumer commit for external trust, combined operational verification, and human boundary sign-off remain separate outstanding requirements.
+
+# ENG-02 combined operational adoption assessment — 2026-10-24
+
+**REV-004 is technically resolved for local operational adoption.** The previously missing seven-project configuration and combined consumer-CLI proof now exist on the human-supplied reviewed consumer commit. This conclusion closes the implementation/evidence gap; it does not grant human security/boundary sign-off or establish independent-repository consumption.
+
+Read-only inspection covered `test-results/start02-adoption/combined-result.json`, `combined-proof.json`, the resulting envelope, operational configuration, current-invocation receipts and binding. No source changes or test reruns were performed.
+
+Verified evidence:
+
+- Consumer commit: `f420dc56750846c0d34289f009d2ab7d7fa3186f`; envelope reports `dirty: false` and input SHA256 `ff1d668f32ccb186f18cb17dee29267c35bbdf047ce6fb5f53373cd4d5696991`.
+- Factory pin: `045e2ceef53ca97f1137085fca678617ea38c8b6`, interface version 1.
+- Actual combined command: recorded exit 0, full-mode COMPLETE; all 14 required suites have exit code 0.
+- Run ID: `11e49db5-3869-4cae-a5de-e4b6cdf66e33`; envelope: `factory-evidence/11e49db5-3869-4cae-a5de-e4b6cdf66e33/consumer-evidence.v1.json`.
+- Configuration enumerates customer, reservation, veterinarian-services, checkout, frontend, payment and collector in the approved three startup groups. All seven runtime logs exist for this combined invocation. The reviewed orchestration executes this startup/owned cleanup before suite-owned lifecycle execution.
+- Independently recomputed **all 17 attached artifact SHA256 hashes** from the files: every value matches the envelope. Checked that the binding's run ID, consumer tree and factory revision match the envelope, and all 14 receipts name this invocation.
+- Original v1 report: `test-results/evidence/2026-10-24T21-09-58-994Z-83d0a32c8ea0/change-evidence.json`; `combined-proof.json` records its unchanged verifier exiting 0. It remains an original v1 report attached through the separate binding, not relabelled dual-repository evidence.
+- Negative integrated trust probe: mismatched external config hash returns exit 4 / TRUST_INVALID, with no suite results and no evidence. This is genuine fail-closed behavior alongside the passing combined run.
+
+The external policy was materialized from the explicit human-reviewed commit using the reviewed snapshot mechanism, as reported by the coordinating agent. The envelope records configuration/policy/manifest hashes. Human review and freeze establish authority; snapshot generation alone does not.
+
+Remaining distinctions:
+
+1. **Human security/boundary sign-off remains required.** Earlier boundary fixes and this successful operational proof are technical evidence, not human risk acceptance.
+2. This proves local execution with a separate clean pinned factory checkout and reviewed consumer authority. It does **not** prove that the consumer is an independently provisioned repository with its own established remote origin, ownership, CI root of trust or release process. The configured consumer repository string is identity metadata, not evidence that remote separation happened.
+3. Released immutable cross-repository consumption, second-consumer reuse and lifecycle milestones retain their separate scope. Local unsigned evidence is not CI authority or production certification.
+4. Previously disclosed offline dependency-advisory and unavailable scanner limitations remain unchanged.
+
+The canonical review may now mark REV-004 technically resolved by this exact combined run, while retaining the human sign-off and later repository-separation limitations above.
+
+## REV-001 deterministic no-execution proof
+
+The existing canonical-path fix is strengthened with output re-resolution at trust validation, rejecting changed destinations before consumer execution. Four real CLI regressions cover direct/chained shortcuts for both results and evidence into a protected folder, including nonexistent nested suffixes. They assert CONFIG_INVALID exit 2, no suite/evidence result, no runtime/suite execution markers and no output creation. A fifth regression retargets a shortcut between validation and trust checks. The fixture canonicalizes its root, matching the CLI on macOS. All 54 focused boundary/runner tests pass in clean candidate `69567e6557d32ddf05cab51c4ecf8feacc3e0842`; restoring unsafe lexical-path resolution in an isolated mutation makes all five regressions fail. The existing approved factory pin passes the four shortcut CLI cases too. Logs are in `test-results/rev001/`. The approved consumer pin and protected inputs were not changed. This verifies preflight checks, not OS-level protection against a hostile concurrent filesystem actor; human boundary sign-off remains separate.
+
+## REV-002 confirmed-cleanup evidence barrier
+
+Factory cleanup now confirms the owned process group is gone, not merely that its leader exited. Final trust/input/factory checks and all evidence validation/fingerprints occur after cleanup. Evidence parsing and hashing share one post-cleanup buffer. Corrupt, deleted, stale and null evidence produce EVIDENCE_MISSING, not COMPLETE; a valid shutdown rewrite uses its final hash. Six deterministic shutdown/descendant regressions pass, with all 60 focused checks passing. Deliberately moving cleanup after evidence in a disposable mutation makes all five evidence regressions fail. Independent review found no definite implementation blocker and independently confirmed failure/success hash behavior. Candidate `e17f55e17403075cdb9434e69bbd0da03a865496` includes REV-001 hardening; its consumer-pin upgrade remains an unapplied protected patch. Human boundary sign-off and pin adoption are separate from this tested implementation. Evidence lives in `test-results/rev002/`.
+
+## Human-frozen REV-001/REV-002 pin upgrade
+
+The owner applied the reviewed one-line consumer-pin patch and human-froze the manifest. Reverse patch verification and guard pass. The configured factory revision is `e17f55e17403075cdb9434e69bbd0da03a865496`; its local checkout is clean and matches that commit. This supersedes the earlier unapplied-pin state. A reviewed consumer commit and renewed external trust are still needed for combined upgraded verification. No independent repository separation or human boundary sign-off is inferred.

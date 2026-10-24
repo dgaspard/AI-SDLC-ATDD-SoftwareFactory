@@ -136,9 +136,7 @@ try {
       await stop(child);
     }
     if (failure) fail(failure.category, failure.message);
-    if (tree(root, outputs) !== identity)
-      fail("EVIDENCE_MISSING", "Consumer inputs changed during verification");
-    verifyTrust(root, c, configPath, trustPath, outputs);
+    // Shutdown is a barrier: final validation and all fingerprints follow it.
     for (const { s, timeout } of owned) await stop(s, timeout);
     owned.length = 0;
     if (
@@ -149,20 +147,30 @@ try {
     if (tree(root, outputs) !== identity)
       fail("EVIDENCE_MISSING", "Consumer inputs changed during cleanup");
     verifyTrust(root, c, configPath, trustPath, outputs);
+    const evidenceDocuments = new Map();
     const artifacts = trust.requiredEvidence.map((rel) => {
       const p = resolve(root, rel, false);
-      const data = json(p, "EVIDENCE_MISSING");
+      let bytes, data;
+      try {
+        bytes = fs.readFileSync(p);
+        data = JSON.parse(bytes);
+      } catch {
+        fail("EVIDENCE_MISSING", `Missing or malformed evidence: ${rel}`);
+      }
+      if (!data || typeof data !== "object" || Array.isArray(data))
+        fail("EVIDENCE_MISSING", `Invalid evidence document: ${rel}`);
+      evidenceDocuments.set(rel, data);
       if (
         data.runId !== runId ||
         data.consumerTree !== identity ||
         data.factoryRevision !== c.factory.revision
       )
         fail("EVIDENCE_MISSING", `Stale evidence: ${rel}`);
-      return { path: rel, sha256: hash(fs.readFileSync(p)) };
+      return { path: rel, sha256: hash(bytes) };
     });
     // Reviewed legacy adapters may bind unchanged reports through a hash sidecar.
     for (const artifact of [...artifacts]) {
-      const binding = json(resolve(root, artifact.path), "EVIDENCE_MISSING");
+      const binding = evidenceDocuments.get(artifact.path);
       if (binding.artifacts === undefined) continue;
       if (!Array.isArray(binding.artifacts))
         fail("EVIDENCE_MISSING", "Invalid bound artifact list");

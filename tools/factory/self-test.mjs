@@ -6,7 +6,11 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { spawnSync, execFileSync } from "node:child_process";
-const factory = fileURLToPath(new URL("../../", import.meta.url));
+import { validate, verifyTrust } from "./core.mjs";
+const factory = fs.realpathSync(
+  process.env.FACTORY_TEST_CHECKOUT ??
+    fileURLToPath(new URL("../../", import.meta.url)),
+);
 const cli = path.join(factory, "tools/factory/consumer.mjs");
 const hash = (x) => crypto.createHash("sha256").update(x).digest("hex");
 
@@ -299,14 +303,42 @@ test("extra: test facility cannot redirect to another host", (t) => {
   expectFailure(f, 2, "CONFIG_INVALID");
 });
 
-test("extra: symlink output alias cannot write into protected inputs", (t) => {
-  const f = fixture(t);
-  fs.symlinkSync("spec", path.join(f.root, "alias"));
-  f.config.testing.results = "alias/results";
-  f.seal();
-  expectFailure(f, 2, "CONFIG_INVALID");
-  assert.ok(!fs.existsSync(path.join(f.root, "spec/results")));
-});
+for (const output of ["results", "evidence"]) {
+  for (const chained of [false, true]) {
+    test(`REV-001: ${output} through ${chained ? "chained" : "direct"} shortcut into protected folder rejects before execution`, (t) => {
+      const f = fixture(t);
+      // These markers would reveal even an attempted runtime/suite launch.
+      runtime(
+        f,
+        "require('node:fs').writeFileSync('runtime-started','yes');process.exit(99);",
+      );
+      f.write(
+        "spec/test.cjs",
+        "require('node:fs').writeFileSync('suite-started','yes');process.exit(99);",
+      );
+      fs.symlinkSync("spec", path.join(f.root, "alias"));
+      if (chained) fs.symlinkSync("alias", path.join(f.root, "shortcut"));
+      f.config.testing[output] =
+        `${chained ? "shortcut" : "alias"}/new/nested/${output}`;
+      f.seal();
+      const before = fs.readdirSync(path.join(f.root, "spec")).sort();
+      const r = run(f);
+      assert.equal(r.code, 2);
+      assert.equal(r.report.category, "CONFIG_INVALID");
+      assert.match(r.report.message, /Output overlaps protected paths/);
+      assert.deepEqual(r.report.suites, []);
+      assert.equal(r.report.evidence, null);
+      assert.ok(!fs.existsSync(path.join(f.root, "runtime-started")));
+      assert.ok(!fs.existsSync(path.join(f.root, "suite-started")));
+      assert.ok(!fs.existsSync(path.join(f.root, "spec/new")));
+      assert.ok(!fs.existsSync(path.join(f.root, "out/results")));
+      assert.deepEqual(
+        fs.readdirSync(path.join(f.root, "spec")).sort(),
+        before,
+      );
+    });
+  }
+}
 test("extra: symlink aliases cannot conceal output collisions", (t) => {
   const f = fixture(t);
   fs.mkdirSync(path.join(f.root, "out"));
@@ -379,3 +411,127 @@ fs.writeFileSync('out/evidence/application.json',JSON.stringify({runId:process.e
       );
     }
   });
+
+test("REV-001: retargeted shortcut is rejected when authority is checked", (t) => {
+  const f = fixture(t);
+  fs.mkdirSync(path.join(f.root, "out"));
+  fs.symlinkSync("out", path.join(f.root, "alias"));
+  f.config.testing.results = "alias/results";
+  f.seal();
+  const canonicalRoot = fs.realpathSync(f.root);
+  const { outputs } = validate(f.config, canonicalRoot, factory);
+  fs.unlinkSync(path.join(f.root, "alias"));
+  fs.symlinkSync("spec", path.join(f.root, "alias"));
+  assert.throws(
+    () =>
+      verifyTrust(
+        canonicalRoot,
+        f.config,
+        path.join(f.root, "factory.config.json"),
+        f.trustPath,
+        outputs,
+      ),
+    (e) =>
+      e.category === "CONFIG_INVALID" &&
+      /Output destination changed/.test(e.message),
+  );
+  assert.ok(!fs.existsSync(path.join(f.root, "spec/results")));
+});
+
+for (const mutation of [
+  "corrupt",
+  "delete",
+  "stale",
+  "null",
+  "valid-rewrite",
+]) {
+  test(`REV-002: waits for shutdown ${mutation} before evidence validation and hashing`, (t) => {
+    const f = fixture(t);
+    const actions = {
+      corrupt: "fs.writeFileSync(evidence, '{broken');",
+      delete: "fs.unlinkSync(evidence);",
+      stale: "fs.writeFileSync(evidence, '{}');",
+      null: "fs.writeFileSync(evidence, 'null');",
+      "valid-rewrite":
+        "const data=JSON.parse(fs.readFileSync(evidence));data.shutdownComplete=true;fs.writeFileSync(evidence,JSON.stringify(data));",
+    };
+    runtime(
+      f,
+      `const fs=require('node:fs');
+fs.mkdirSync('out/evidence',{recursive:true});
+fs.writeFileSync('out/evidence/runtime-pid',String(process.pid));
+process.once('SIGTERM',()=>setTimeout(()=>{
+ const evidence='out/evidence/application.json';
+ ${actions[mutation]}
+ fs.writeFileSync('out/evidence/cleanup-finished','yes');
+ process.exit(0);
+},30));
+require('node:http').createServer((q,r)=>r.end(JSON.stringify({status:'ok'}))).listen(49874,'127.0.0.1');`,
+    );
+    const result = run(f);
+    assert.equal(
+      fs.readFileSync(
+        path.join(f.root, "out/evidence/cleanup-finished"),
+        "utf8",
+      ),
+      "yes",
+    );
+    const pid = Number(
+      fs.readFileSync(path.join(f.root, "out/evidence/runtime-pid")),
+    );
+    assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
+    if (mutation === "valid-rewrite") {
+      assert.equal(result.code, 0);
+      assert.equal(result.report.status, "COMPLETE");
+      const envelope = JSON.parse(
+        fs.readFileSync(path.join(f.root, result.report.evidence)),
+      );
+      const evidence = fs.readFileSync(
+        path.join(f.root, "out/evidence/application.json"),
+      );
+      assert.equal(JSON.parse(evidence).shutdownComplete, true);
+      assert.equal(
+        envelope.artifacts.find(
+          (a) => a.path === "out/evidence/application.json",
+        ).sha256,
+        hash(evidence),
+      );
+    } else {
+      assert.equal(result.code, 8);
+      assert.equal(result.report.status, "FAILED");
+      assert.equal(result.report.category, "EVIDENCE_MISSING");
+      assert.equal(result.report.evidence, null);
+      assert.equal(
+        fs
+          .readdirSync(path.join(f.root, "out/evidence"))
+          .some((p) =>
+            fs.statSync(path.join(f.root, "out/evidence", p)).isDirectory(),
+          ),
+        false,
+        "no COMPLETE envelope directory",
+      );
+    }
+  });
+}
+
+test("REV-002: cleanup waits for descendants after the runtime leader exits", (t) => {
+  const f = fixture(t);
+  const childScript =
+    "const fs=require('node:fs');process.on('SIGTERM',()=>{});fs.writeFileSync('out/evidence/descendant-pid',String(process.pid));setInterval(()=>{},1000);";
+  runtime(
+    f,
+    `const fs=require('node:fs');
+fs.mkdirSync('out/evidence',{recursive:true});
+require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(childScript)}],{stdio:'ignore'});
+process.once('SIGTERM',()=>process.exit(0));
+require('node:http').createServer((q,r)=>{r.end(JSON.stringify({status:fs.existsSync('out/evidence/descendant-pid')?'ok':'starting'}));}).listen(49874,'127.0.0.1');`,
+  );
+  f.config.runtime.projects[0].stop.timeoutMs = 2000;
+  f.seal();
+  const result = run(f);
+  assert.equal(result.code, 0, JSON.stringify(result.report));
+  const pid = Number(
+    fs.readFileSync(path.join(f.root, "out/evidence/descendant-pid")),
+  );
+  assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
+});

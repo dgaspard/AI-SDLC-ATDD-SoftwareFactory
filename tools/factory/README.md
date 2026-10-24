@@ -18,9 +18,10 @@ from the reviewed consumer configuration and external trusted policy.
 
 PetClinic’s `spec/run-all.js` is the thin compatibility adapter for `runLegacy`.
 Consumer requirements, assertions, runtime bindings and evidence-v1 meanings stay
-application-owned. See [BACKLOG START-02](../../BACKLOG.md) for integration evidence
-and remaining consumer-CLI adoption work. This is not lifecycle tooling or repository
-separation.
+application-owned. See [BACKLOG START-02](../../BACKLOG.md) for integration evidence,
+the verified local consumer-CLI proof, pending pin upgrades and later separation
+milestones. Local verification does not establish independent repository separation
+or lifecycle delivery capabilities.
 
 Verification commands (boundary cases require a clean committed factory snapshot):
 

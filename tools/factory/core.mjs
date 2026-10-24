@@ -328,6 +328,15 @@ export function localURL(s) {
   }
 }
 export function verifyTrust(root, c, configPath, trustPath, outputs) {
+  // Never approve a lexical alias or reuse a destination after a link was retargeted.
+  // This check runs before output creation, runtime startup, and suite execution.
+  const destinations = [
+    resolve(root, c.testing.results, false),
+    resolve(root, c.testing.evidence, false),
+  ];
+  if (destinations.some((destination, i) => destination !== outputs[i]))
+    fail("CONFIG_INVALID", "Output destination changed during validation");
+  outputs = destinations;
   const t = json(trustPath, "TRUST_INVALID");
   try {
     object(t, [
