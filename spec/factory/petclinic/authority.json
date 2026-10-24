@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "requiredSuites": [
+    "guard",
+    "harness",
+    "schema",
+    "runtime",
+    "auth",
+    "observability",
+    "features",
+    "workflows",
+    "browser",
+    "performance",
+    "accepted-risks",
+    "delivery",
+    "evidence",
+    "dora"
+  ],
+  "requiredEvidence": [
+    "test-results/factory-adoption/change-evidence-binding.json"
+  ]
+}

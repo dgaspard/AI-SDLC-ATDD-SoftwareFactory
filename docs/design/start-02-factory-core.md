@@ -1,8 +1,8 @@
 # START-02 design: factory repository and independent consumers
 
 Milestone status lives only in [BACKLOG.md](../../BACKLOG.md#start-02--software-factory-template-repo-dev-container-and-organization-layer).
-Direction: [A-30](../decisions/architecture.md). This is a specification draft, not a
-claim that extraction or a lifecycle command exists. No code moves are part of this diff.
+Direction: [A-30](../decisions/architecture.md). This design defines ownership and
+acceptance; verified capabilities and freeze evidence are recorded in BACKLOG.md.
 
 ## Repository and ownership contract
 
@@ -12,7 +12,6 @@ authenticated repository lookup could not resolve that name; this is not a reser
 or proof of absence under every identity. Recheck existence and access using the
 approved GitHub App immediately before creation. If a project exists, stop creation
 and choose an unused destination with the owner; never replace its contents/history.
-No repository was created by this specification task.
 
 Consumers own their domain and API contracts, BDD requirements and tests, performance
 requirements/workloads, application code, policies, fixtures, fakes and data. The
@@ -69,7 +68,8 @@ checks in [consumer-boundary.test.js](../../spec/tests/factory/consumer-boundary
 This replaces the earlier interface sketch. One config contains the immutable Git pin;
 a separate lock file is unnecessary in v1. The trusted human/CI policy binds that pin
 and config hash independently. The config schema is a closed vocabulary specified in
-the contract; no production validator or command is implemented in this milestone.
+the contract; its implementation entry point is `tools/factory/consumer.mjs`.
+Implementation presence alone does not establish PetClinic adoption or verification.
 
 Compatibility choices for review: interface/schema v1; factory version is the full Git
 SHA; a separate evidence envelope preserves change-evidence.v1 semantics; explicit
@@ -125,21 +125,20 @@ These are START-02 slices, not new canonical backlog IDs. Status is only in BACK
 | Delete/rebuild | Explicit allowlisted disposable implementation manifest, dry-run, path containment, retained-spec/data hashes, recovery copy; refuse repository root, specs and data | Checkout rehearsal scripts and historical r1/r2/r4; not a general safe-delete API, nor permission to run deletion now |
 | Deploy | Eventually build immutable artifacts and prove non-prod/prod promotion, rollback, approvals and release evidence | Local Compose/application gate history; cloud delivery controls include awaiting work. A-22/A-29 are designs, not authorization or proof of deploy/automatic approval |
 
-Current evidence means the existing records referenced by BACKLOG, not a fresh run on
-this documentation tree. No guard, freeze, application suite, cloud operation, approval,
-merge or deletion is run in this phase. Local proof never licenses production data
+Use the exact-tree records referenced by BACKLOG for actual commands and results;
+cloud operation, approval automation, merge and deletion remain outside this phase. Local proof never licenses production data
 deletion; durable-data lifecycle belongs to DATA-01 and separate explicit decisions.
 
 ## Human review and freeze boundaries
 
-**This diff — human architectural/document review:** `BACKLOG.md`, `PROJECT-PLAN.md`,
+**Architecture/document review set:** `BACKLOG.md`, `PROJECT-PLAN.md`,
 `docs/decisions/architecture.md`, `docs/design/start-02-factory-core.md`,
 `docs/README.md`, `docs/development-workflow.md`.
-**This diff — protected instruction review and human freeze:** `AGENTS.md`, `CLAUDE.md`.
-The human freeze will update `spec/protected.sha256`; this draft deliberately leaves
-that manifest unchanged. No guard or bypass is part of preparing the draft.
+**Protected instruction review and human freeze:** `AGENTS.md`, `CLAUDE.md`.
+The human freeze owns updates to `spec/protected.sha256`; agents must not update
+that manifest themselves. See BACKLOG.md for the recorded freeze.
 
-**Later extraction — separate review/freeze, not authorized edits in this diff:** all
+**Additional extraction — separate exact review/freeze beyond the runner seam:** all
 moved/changed files under `spec/` and `docs/specs/` enumerated in the map; specifically
 `spec/guard/protected-paths.json`, `spec/test-policy.json`,
 `spec/delivery/root-of-trust.json`, `spec/delivery/review-policy.json`,
@@ -151,38 +150,33 @@ this table is not a blanket freeze approval. Human review also covers factory po
 security/review machinery and any changes to App installations, rulesets or privileges.
 No existing protection is weakened to make moves convenient.
 
-## Material decisions to resolve before dependent implementation
+## Decisions and remaining review boundaries
 
-- **Consumer authority and provenance:** owner confirms consumer visibility, reviewers,
-  App installation/access and whether history is imported or an attributed snapshot is
-  used. Preserve the original `1.0` tag in the factory either way; never fabricate consumer
-  verification from old records. Repository name is provisional, not a blocker to docs.
-- **Interface and evidence compatibility:** owner reviews the complete schema, supported
-  runtime/tool versions and how dual-repository identity extends evidence v1 without
-  silently changing its meaning. This blocks the consumer-contract freeze.
-- **Protection during transition:** owner approves exact move manifests and independent
-  freeze/check definitions, including factory self-test versus consumer gate selection.
-  Existing per-repository rulesets do not automatically protect a new consumer.
-- **Local lifecycle scope:** owner chooses the first create/update example and bounded
-  implementation deletion manifest, retained data paths and recovery semantics before
-  lifecycle proof. Planning a deletion is not authorization to execute one.
+Shared Git history remains in the factory. PetClinic starts with a clean import that
+records the source repository and exact migration commit. Its visibility, reviewers
+and App access belong to repository separation. Preserve the original `1.0` tag.
+The frozen consumer contract specifies immutable Git consumption, unchanged runtime
+and performance semantics, and a separate evidence envelope preserving evidence-v1.
+Changes to that contract require separate human review/freeze.
 
-Registry selection and second-consumer domain/release ownership remain later decisions;
-they do not block the initial Git-pinned separation. Cloud and automatic approval
-activation require separate scope decisions and are not implicit follow-ons.
+Exact harness, policy, evidence and configuration adoption patches still need review;
+the inventory is not a blanket move authorization. Local create/update examples and
+bounded deletion/recovery semantics belong to lifecycle specification, apart from
+recovery needed to protect extraction. Cloud and automatic approval activation are
+not authorized follow-ons. Registry selection and second-domain reuse remain later.
 
 ## Consumer-interface milestone: exact review and baseline transition
 
-Review/freeze these new protected files together:
+The initial consumer-interface review/freeze set is:
 
 - `spec/factory/consumer-contract.v1.md`
 - `spec/factory/extraction-inventory.csv`
 - `spec/tests/factory/consumer-boundary.test.js`
 
 Review the accompanying changes to `BACKLOG.md`, this design, `docs/README.md` and
-`docs/development-workflow.md`. The prior milestone's uncommitted `AGENTS.md` and
-`CLAUDE.md` drafts also need human review/freeze, with its other six documentation
-files reviewed. This task does not silently treat those drafts as a frozen baseline.
+`docs/development-workflow.md`. Include the prior milestone's `AGENTS.md` and `CLAUDE.md` changes in human
+review/freeze, with its other six documentation files reviewed. Verify the actual
+manifest rather than inferring a freeze from a specification commit.
 
 The inventory lists every existing tracked protected file with its source SHA256 and
 consumer destination or explicit split disposition. It is an audit input, not an
@@ -191,15 +185,15 @@ Rows marked split-review-required cannot authorize wholesale moves: the extracti
 implementation must present the exact new factory path and retained consumer binding
 for each row before its move is approved. Until then retain the original protected file.
 
-Human procedure after reviewing this specification diff (not commands for the agent
-in this task):
+Standing human baseline-transition procedure:
 
 1. Accept or amend the interface, tests, inventory and prior instruction drafts. Review
-   the 14 expected missing-command failures; do not delete/skip them to obtain green.
+   the recorded initial 14-case missing-command baseline and subsequent behavioral
+   results; do not delete/skip checks to obtain green.
 2. Human runs the existing `npm --prefix spec run guard:freeze` when satisfied and
    reviews `spec/protected.sha256` for precisely the accepted additions/changes.
-   No guard/check/freeze command has been run by this task. Commit the reviewed
-   specifications and baseline together. Do not mark extraction or START-02 complete.
+   Commit the reviewed specifications and baseline together. A freeze alone does not
+   establish extraction or START-02 completion.
 3. Before future extraction, record a clean pre-move gate and exact source hashes.
    For each inventory row approve preserve/move/split destinations. Both repositories
    need independent protected-path lists, manifests, agent instructions, CODEOWNERS,
@@ -217,3 +211,28 @@ in this task):
 
 The exact future split destinations and operational pin depend on the extracted code;
 this phase specifies their review gate, not fabricated implementation paths or SHAs.
+
+## First protected seam: PetClinic compatibility adapter
+
+This exact seam has its own owner-approved patch and human freeze, recorded in
+BACKLOG.md. The initial interface freeze alone did not authorize the split:
+
+| Existing protected path | Exact retained binding / new factory destination |
+|---|---|
+| `spec/run-all.js` | Replace executable runner body with a thin PetClinic adapter importing public `runLegacy` from `tools/factory/index.mjs`. Pass application root, suite root, policy path, results path, service IDs, invocation text, argv and `treeEnvironmentVariable: "PETCLINIC_TREE"` explicitly. Keep existing CLI flags and v1 records; do not alias legacy evidence to the new envelope. |
+| `spec/tests/harness/run-all.test.js` | In its isolated-fixture setup, copy `tools/factory/` alongside the existing runner/config/policy fixture. Preserve every test assertion and failure probe. |
+
+The public compatibility entry point is `tools/factory/index.mjs`; the
+parameterized runner is `tools/factory/legacy-runner.mjs`. Preserve the algorithm, including cache failure
+revocation, selection, logs and accepted-risk state reporting; parameterize paths,
+project IDs and environment binding rather than renaming PetClinic assumptions.
+Derive v1 policy/log/cwd record paths relative to the supplied application root.
+The new consumer command is a distinct public interface, not permission to change
+legacy verification semantics. Copying the package in the test fixture does not prove
+independent repository consumption. Track adapter removal in BACKLOG.md.
+
+Any further change to this protected seam requires another reviewed patch and human
+freeze. The public implementation accompanies the adapter; a protected adapter alone
+is not a runnable migration.
+Harness, guard and evidence splits require their own exact proposals; this first
+slice does not authorize them or a bulk `spec/` move.

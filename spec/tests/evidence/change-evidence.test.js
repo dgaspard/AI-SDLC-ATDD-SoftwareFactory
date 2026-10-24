@@ -83,6 +83,7 @@ const tree = () => JSON.parse(runAll("--verify", "--json").out).tree;
 describe("change evidence (EVID-01)", () => {
   beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), "evidence-"));
+    fs.cpSync(path.join(ROOT, "tools/factory"), path.join(root, "tools/factory"), { recursive: true });
     write("spec/run-all.js", fs.readFileSync(path.join(SPEC, "run-all.js"), "utf8"));
     write("spec/harness/config.js", fs.readFileSync(path.join(SPEC, "harness/config.js"), "utf8"));
     write("spec/test-policy.json", JSON.stringify(policy, null, 2));

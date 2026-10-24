@@ -1,5 +1,19 @@
 {
   "description": "Paths humans edit and agents may only read (GUARD-01, AGENTS.md). Used by the guard check and the Claude Code hook.",
-  "protected": ["spec/", "docs/specs/", ".claude/", ".github/workflows/guard.yml", ".github/CODEOWNERS", "AGENTS.md", "CLAUDE.md"],
-  "ignored": ["node_modules/", ".DS_Store", "spec/protected.sha256", ".claude/worktrees/"]
+  "protected": [
+    "spec/",
+    "docs/specs/",
+    ".claude/",
+    ".github/workflows/guard.yml",
+    ".github/CODEOWNERS",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "tools/petclinic/suite.mjs"
+  ],
+  "ignored": [
+    "node_modules/",
+    ".DS_Store",
+    "spec/protected.sha256",
+    ".claude/worktrees/"
+  ]
 }

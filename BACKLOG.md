@@ -22,34 +22,83 @@ for every item. Finished items keep their full history in
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **direction approved 2026-10-24; specification draft for human review** (A-30).
-Consumer-interface specification and boundary tests are drafted; no extraction or
-lifecycle implementation has run. Canonical ID START-02 is retained across early and later slices.
-Design, ownership/migration table and review/freeze checklist:
-[START-02 design](docs/design/start-02-factory-core.md).
-
-The following are ordered slices of START-02, not replacement backlog IDs. Each build
-requires reviewed/frozen specifications and intentional red checks first.
+Status: **approved runner adapter human-frozen and integrated; broader local extraction remains incomplete** (A-30).
+Canonical ID START-02 and its ordered slices are retained.
+Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
 | Slice | Status | Acceptance / next action |
 |---|---|---|
-| Consumer-contract specification | Contract drafted; 14 boundary tests red; human review/freeze next | Freeze inputs, outputs, ownership, runtime adapters, path resolution, immutable dependency identity and evidence compatibility; enumerate every protected move before implementation |
-| Local extraction | Planned; after consumer-contract freeze | Separate mechanisms from PetClinic bindings locally; preserve all consumer assertions and risk tags; factory self-tests and unchanged PetClinic obligations pass before and after; no hidden sibling imports |
-| Repository separation and immutable consumption | Planned; after local extraction | Recheck destination existence/access; create only an unused repository; preserve baseline provenance; consumer pins a full factory commit and runs from independent clean checkouts without a registry; reject missing/mismatched pins; independently review/freeze both roots of trust |
-| Lifecycle specification | Planned; after repository separation | Human reviews create/update/delete/deploy scope, retained assets, failure recovery, permissions and evidence; local delete is only an explicit disposable implementation manifest, never consumer specs or data; deploy remains future |
-| Local lifecycle proof | Planned; after lifecycle freeze | Demonstrate local create, reviewed update and bounded delete/rebuild in disposable copies; preserve retained hashes, exercise refusal/failure recovery, record both repository identities and evidence; no cloud activity |
-| Second consumer / reuse validation | Later phase 3; not pulled forward | Different domain passes its own gate against a pinned factory commit; record onboarding effort and all factory changes it requires |
+| Consumer-contract specification | Human-frozen in `0fca4ef`; original 14-case red baseline retained historically | Preserve frozen interface and assertions; separately review any amendments |
+| Local extraction | Runner compatibility integration implemented and human-frozen; remaining adoption requirements below | Factory self-tests and unchanged PetClinic gate; operational consumer runtime/config/evidence bindings still required by the frozen contract |
+| Repository separation and immutable consumption | Planned after local extraction | Existing repository stays factory; PetClinic clean import records source repository and exact migration commit; independent roots of trust and full immutable factory pin; no registry required |
+| Lifecycle specification | Planned after repository separation | Define create/update/delete/deploy scope and recovery; no deployment authorization |
+| Local lifecycle proof | Planned after lifecycle freeze | Disposable local copies, retained hashes and bounded recovery; no cloud activity |
+| Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
 
-Consumer-interface evidence (2026-10-24): previous A-30 milestone is present in the
-working tree as eight uncommitted documentation changes, not a recorded freeze.
-`node --test spec/tests/factory/consumer-boundary.test.js` exited 1: 14 tests,
-0 pass, 14 fail, all at the explicit missing `tools/factory/consumer.mjs` assertion.
-Synthetic fixture setup succeeded; no requested boundary behavior has executed yet.
-No guard or full application gate ran. The new tests are not added to the full policy
-before implementation/review; existing application assertions are unchanged.
-Contract: `spec/factory/consumer-contract.v1.md`; per-file transition inventory:
-`spec/factory/extraction-inventory.csv`. Next: human review/freeze, then separately
-authorized local extraction. START-02 remains open.
+**Approved integration and freeze.** The owner reviewed patch SHA256
+`977add698aa110ad7044da963bb87792580e060cdcd9de167d8f0e0eff7298e2`.
+Before application it matched the prepared original and both target files matched
+`0fca4ef` and the then-current manifest. Only `spec/run-all.js` and fixture setup in
+`spec/tests/harness/run-all.test.js` changed; assertions stayed intact. The owner then
+froze 196 protected files. The agent verified that manifest without modifying it.
+Normal root npm test/fast/gate/suite/plan/verify entry points now delegate through
+`spec/run-all.js` → `tools/factory/index.mjs` → `legacy-runner.mjs`.
+
+**Evidence and review.** The historical tooling-failed fast baseline remains
+`test-results/runs/2026-10-24T17-57-06-866Z-fast.json`; it was not a passing gate.
+The later pre-adapter full gate passed on tree `17f1fa0a9870` in
+`test-results/runs/2026-10-24T19-45-20-705Z-full.json`. That is before/after evidence,
+not proof of the current integrated tree. The 14 original boundary tests previously
+failed at missing CLI; all now reach their behavioral assertions.
+
+Integrated focused checks pass 46/46 in the corrected committed local snapshot:
+14 frozen boundary cases, 10 additional boundary/runtime checks, 11 protected
+integrated-runner cases, and 11 compatibility regressions. Normal npm entry-point
+probes on disposable synthetic inputs exercise full pass/fail, selected-suite failure,
+selection, stale verification and v1 record semantics. Source hashes, snapshot commit,
+commands and logs are retained in `test-results/start02-integration/`. The historical integration-stage
+location for application `npm test`, `test:gate`, `test:verify` and evidence-v1
+results is that folder's generated `final-results.json` and referenced run records;
+use those exact-tree results,
+not focused tests or prior runs, for full-gate claims. No review-policy suite is silently
+added to the frozen full tier. Boundary tests remain explicitly run outside that tier.
+
+Independent ENG-02 review and fresh-session docs pass:
+[review record](docs/engineering-reviews/eng-02-start-02-local-2026-10-24.md).
+Review found and independently reproduced output symlink alias overlap and evidence
+mutation during shutdown. Both are fixed in unprotected factory code with regressions;
+reviewer probes now reject them. Human security/boundary sign-off remains required by
+ENG-02. Engineering checks pass 10/10 in the cached pinned browser container with
+networking disabled; host-only run lacked a browser binary. Connected payment trace
+passes. Offline dependency audit is cached evidence only. Remote advisory/scanner
+operations were not performed; unavailable Semgrep/jscpd are recorded limitations.
+
+**Evidence fixture repair.** The initial integrated full gate passed every full-tier suite except EVID-01 (17 fixture failures): its temporary repository omitted the extracted factory dependency. The owner applied the exact one-line copy in `spec/tests/evidence/change-evidence.test.js` and froze 196 protected files. Reverse patch verification and guard checks pass; the repaired frozen EVID-01 tests pass 17/17 (`test-results/start02-integration/post-freeze-evidence-tests.log`). No assertions changed. The final post-freeze application results are recorded separately in `test-results/start02-integration/post-freeze-results.json`; earlier failed records remain historical. This fixture blocker is repaired; the operational consumer-configuration gap below remains.
+
+**Remaining coupling and precise local blockers.** The compatibility runner receives
+PetClinic's paths, roster and `PETCLINIC_TREE` from its consumer-owned adapter. Its
+production modules import no application implementation. Harness runtime bindings,
+fixtures, fakes, performance workloads/thresholds and suite policy stay PetClinic-owned.
+The legacy regression driver deliberately uses consumer configuration; it is not
+independent cross-domain reuse proof. Existing evidence-v1 still uses the same runner
+verifier and meanings; it is never relabeled as a dual-repository envelope.
+
+The frozen `spec/factory/consumer-contract.v1.md` section “PetClinic adoption bindings” requires an operational configuration enumerating all seven projects during extraction. The owner applied the exact operational adoption patch (SHA256 `229a073a3ffa8a9b04b5e2537a7503d17b75e92a938acde0f496ccdd76e21b1c`) and human-froze it. Reverse patch verification and guard pass. The operational config, suite policy, authority source and evidence adapter are now protected. Unprotected implementation is in `tools/petclinic/` with generic runtime-ownership and artifact-hash support in `tools/factory/`. The applied patch amends the contract for suite-owned runtime handoff, explicit pinned factory checkout provenance, and legacy hash binding; updates the runner to use that explicit checkout; and protects the evidence adapter. Existing harness, application assertions, original policy, performance semantics and v1 meanings remain intact.
+
+Candidate proof: all 50 frozen/supplementary boundary and runner tests pass from clean local factory revision `045e2ceef53ca97f1137085fca678617ea38c8b6`; seven-project environment parity and immutable trust-source tests pass 2/2; real legacy adapter pass/failure/replay tests pass 2/2. A direct runtime probe starts, health-checks, resets/clocks and cleans up all seven actual projects using the drafted config. These are component checks, **not** authenticated full consumer-CLI adoption. Logs and the exact patch baseline are under `test-results/start02-adoption/`; the designated output for final current-tree application checks is `current-tree-results.json` there for the pre-application candidate; post-adoption-freeze legacy-gate results are designated `frozen-tree-results.json`. This local candidate pin is not a released factory version or independent consumer proof.
+
+**Protection consistency repair.** The owner applied enforcement patch SHA256 `3e67f7894542a49cc38d32f2642a8c659dbbc3004685176ed954c9af6872e90b` and human-froze 200 protected files. Reverse patch verification and guard pass; all 25 unchanged protection-hook tests now pass in the real checkout. The prior 70/71 harness failure remains historical. Post-repair final application results are designated `test-results/start02-adoption/enforcement-final-results.json`.
+
+Remaining local acceptance: an explicit reviewed consumer commit for the external trust snapshot, then real full-suite consumer-CLI verification against the pinned clean factory and unchanged v1 verification. Required human boundary/security sign-off remains open. Do not claim milestone completion from component checks or materialize authority from an unapproved working tree. See [consumer adapter instructions](tools/petclinic/README.md).
+
+Repository creation/visibility/access, clean import and its source commit provenance,
+independent repository protection, adoption of an approved immutable factory revision
+and clean independent-checkout proof belong to repository separation. Lifecycle
+examples/recovery beyond extraction and second-consumer validation remain later.
+Shared factory Git history is preserved. No remote operations or independent
+PetClinic repository-consumption claim are made. Keep the compatibility adapter until
+consumer-CLI adoption, full gate and v1/accepted-risk provenance are verified.
+START-02 remains open.
 
 Remaining CI-02 resumes after the five early slices. Its existing local and remote
 verification history remains below; no delivery-control tags are changed by this plan.

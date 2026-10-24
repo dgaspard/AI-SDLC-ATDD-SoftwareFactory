@@ -8,3 +8,5 @@ tools/security/.spike-output/
 __pycache__/
 .env
 .env.local
+
+factory-evidence/

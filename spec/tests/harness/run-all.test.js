@@ -38,6 +38,7 @@ describe("run-all gate and verifier (CI-02)", () => {
   beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), "run-all-"));
     write("spec/run-all.js", fs.readFileSync(path.join(SPEC, "run-all.js"), "utf8"));
+    fs.cpSync(path.join(SPEC, "../tools/factory"), path.join(root, "tools/factory"), {recursive:true});
     write("spec/harness/config.js", fs.readFileSync(path.join(SPEC, "harness/config.js"), "utf8"));
     write("spec/test-policy.json", JSON.stringify(policy, null, 2));
     write(".gitignore", "test-results/\n");

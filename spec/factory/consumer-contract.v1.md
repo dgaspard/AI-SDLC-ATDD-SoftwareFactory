@@ -70,7 +70,14 @@ once. Start all members of a group before waiting for their health; all must bec
 healthy before the next group. Runtime `dependsOn` validates known endpoints but may
 cycle; it is NOT a topological startup constraint. Reject unknown/missing/duplicate
 members. Stop all processes started by this invocation on failure, including process
-groups; report cleanup failure. Setup is explicitly separate and never implicit in
+groups; report cleanup failure. Protected test policy may declare `runtimeOwnership: "suite"` (default `"factory"`).
+In suite-owned mode, validate all configured startup groups and test facilities,
+then stop and await all factory-owned runtime processes before executing suites.
+Existing lifecycle tests own subsequent processes; no unrelated process is stopped.
+PetClinic uses this mode to preserve its port, disabled-endpoint and performance tests.
+Unknown ownership values fail TRUST_INVALID before startup.
+
+Setup is explicitly separate and never implicit in
 verify; missing tooling does not trigger installation/network fallback.
 
 Telemetry: `{endpoint, protocol, tracesExporter, metricsExporter, logsExporter,
@@ -169,7 +176,10 @@ claims by wrapping it. Local evidence is unsigned; CI remains authoritative.
 
 Suite commands receive `FACTORY_APPLICATION_ROOT` (canonical absolute root),
 `FACTORY_RUN_ID` (unique per invocation), `FACTORY_CONSUMER_TREE` and
-`FACTORY_REVISION`. These override same-named consumer environment values and are
+`FACTORY_REVISION` and `FACTORY_CHECKOUT` (canonical executing factory root).
+The reviewed PetClinic runner adapter imports its mechanism from that explicit root
+during consumer verification; ordinary legacy invocation retains its local binding.
+These override same-named consumer environment values and are
 provenance context, not authentication. Suites emit required JSON artifacts with
 `runId`, `consumerTree` and `factoryRevision`. Legacy reports need a reviewed adapter
 that binds their hashes to this context without changing their meaning. The factory
@@ -187,3 +197,11 @@ Additional extraction checks must cover group health timeout/cleanup, disabled t
 facilities, symlink escape, fast-mode INCOMPLETE, and protected membership changes;
 the current tests do not claim full runtime-contract coverage. Existing RT tests
 remain authoritative for application HTTP behavior.
+
+## PetClinic local adoption authority and legacy binding
+
+`spec/factory/petclinic/config.json`, `policy.json` and `authority.json` are protected consumer inputs. The authority source declares required suites/evidence; the caller materializes config/manifest hashes from an explicit human-reviewed commit into an external trusted-policy snapshot. This avoids a self-referential manifest hash: the generated external snapshot is not its own protected source. Materialization does not constitute approval or freeze.
+
+The reviewed `tools/petclinic/suite.mjs` adapter is protected. It executes each unchanged legacy full-tier suite without cache, records its v1 run ID against FACTORY_RUN_ID, and requires every selected passing record to belong to this invocation before producing the binding. The protected suite order preserves finalization after the last legacy suite. The original v1 generator/verifier remain authoritative for v1 meaning.
+
+The required binding JSON carries runId, consumerTree, factoryRevision and `artifacts` (relative output paths and SHA256 hashes). After runtime cleanup the factory verifies each bound file hash and includes those paths/hashes in the separate envelope. It neither rewrites the legacy report nor adds two-repository claims to it. PetClinic outputs are test-results/ and factory-evidence/. Local snapshot pins are review candidates, not released revisions or independent-repository proof.
