@@ -18,14 +18,55 @@ for every item. Finished items keep their full history in
 - The reference project keeps tag `1.0` (commit `897c9e4`) as its original baseline,
   a deterministic fake payment provider, and in-memory storage until phase 4.
 
-## Phase 1 — Governed delivery (now)
+## START-02 early separation — before remaining CI-02
+
+### START-02 — Software factory: template repo, dev container and organization layer
+
+Status: **direction approved 2026-10-24; specification draft for human review** (A-30).
+Consumer-interface specification and boundary tests are drafted; no extraction or
+lifecycle implementation has run. Canonical ID START-02 is retained across early and later slices.
+Design, ownership/migration table and review/freeze checklist:
+[START-02 design](docs/design/start-02-factory-core.md).
+
+The following are ordered slices of START-02, not replacement backlog IDs. Each build
+requires reviewed/frozen specifications and intentional red checks first.
+
+| Slice | Status | Acceptance / next action |
+|---|---|---|
+| Consumer-contract specification | Contract drafted; 14 boundary tests red; human review/freeze next | Freeze inputs, outputs, ownership, runtime adapters, path resolution, immutable dependency identity and evidence compatibility; enumerate every protected move before implementation |
+| Local extraction | Planned; after consumer-contract freeze | Separate mechanisms from PetClinic bindings locally; preserve all consumer assertions and risk tags; factory self-tests and unchanged PetClinic obligations pass before and after; no hidden sibling imports |
+| Repository separation and immutable consumption | Planned; after local extraction | Recheck destination existence/access; create only an unused repository; preserve baseline provenance; consumer pins a full factory commit and runs from independent clean checkouts without a registry; reject missing/mismatched pins; independently review/freeze both roots of trust |
+| Lifecycle specification | Planned; after repository separation | Human reviews create/update/delete/deploy scope, retained assets, failure recovery, permissions and evidence; local delete is only an explicit disposable implementation manifest, never consumer specs or data; deploy remains future |
+| Local lifecycle proof | Planned; after lifecycle freeze | Demonstrate local create, reviewed update and bounded delete/rebuild in disposable copies; preserve retained hashes, exercise refusal/failure recovery, record both repository identities and evidence; no cloud activity |
+| Second consumer / reuse validation | Later phase 3; not pulled forward | Different domain passes its own gate against a pinned factory commit; record onboarding effort and all factory changes it requires |
+
+Consumer-interface evidence (2026-10-24): previous A-30 milestone is present in the
+working tree as eight uncommitted documentation changes, not a recorded freeze.
+`node --test spec/tests/factory/consumer-boundary.test.js` exited 1: 14 tests,
+0 pass, 14 fail, all at the explicit missing `tools/factory/consumer.mjs` assertion.
+Synthetic fixture setup succeeded; no requested boundary behavior has executed yet.
+No guard or full application gate ran. The new tests are not added to the full policy
+before implementation/review; existing application assertions are unchanged.
+Contract: `spec/factory/consumer-contract.v1.md`; per-file transition inventory:
+`spec/factory/extraction-inventory.csv`. Next: human review/freeze, then separately
+authorized local extraction. START-02 remains open.
+
+Remaining CI-02 resumes after the five early slices. Its existing local and remote
+verification history remains below; no delivery-control tags are changed by this plan.
+START-02 closes only after later reuse validation, not merely the PetClinic split.
+START-01, GUIDE-01, organization-wide rulesets, reusable hosted workflows, registry
+publishing and a dev-container agent sandbox are not prerequisites for local separation.
+The sandbox remains a later AGENT-01-related design concern, not an isolation claim.
+
+## Phase 1 — Governed delivery (after early START-02 slices)
 
 CI/CD with local, cloud non-prod and cloud prod environments, governed the same way as
 application behavior. Delivery code is an agent-built by-product of the frozen,
 executable spec in `spec/delivery/`, and evidence is a by-product of delivery. Decisions
 A-16..A-23. Stack: AWS CDK synthesized to CloudFormation, ECS on Fargate, AWS
-Organizations with SCPs, a $25/month ceiling that makes environments ephemeral. Deploy
-the whole system, but only into ephemeral environments. Items are in order; each follows
+Organizations with SCPs, a $25/month ceiling that makes environments ephemeral.
+Future delivery targets the whole system in ephemeral environments; A-30 does not
+authorize provisioning or deployment. Items are in order; each follows
 spec, red checks, build, ENG-02 review (including the docs pass), freeze.
 
 ### CI-02 — Delivery pipeline as a by-product
@@ -33,7 +74,7 @@ spec, red checks, build, ENG-02 review (including the docs pass), freeze.
 Status: **local slice verified 2026-10-13** (the required `Application suite` gate, CTL-029;
 [design note](docs/design/ci-02-application-gate.md)). Remote enforcement verified 2026-10-13: the
 `main` ruleset requires `Application suite`, CTL-024 passes live, and a deliberately failing
-PR (#11) was blocked. The rest of CI-02 is planned. Done when every
+PR (#11) was blocked. The rest of CI-02 is planned, after the five early START-02 slices (A-30). Done when every
 `@awaiting:CI-02` tag is removed at a freeze. Thin
 workflows (A-21): Dustin owns the small `.github/workflows/delivery-*.yml` files, which
 grant privileges; an agent builds the `scripts/ci/` and `infra/` scripts they call,
@@ -117,26 +158,7 @@ test. All are planned catalog entries today.
 
 ## Phase 3 — The factory core
 
-Extract a versioned factory core from this repository and prove it on a second
-application ([design](docs/design/start-02-factory-core.md)).
-
-### START-02 — Software factory: template repo, dev container and organization layer
-
-Status: **phase 3; design proposed 2026-10-13.** The project's goal (A-25), sequenced
-before durable state (A-26). Implements START-01. Architecture, packages, the
-`factory.config.json` sketch and the ordered steps (one project config, packages, a core
-repository, a second greenfield application) are in the
-[design note](docs/design/start-02-factory-core.md). START-02 closes after the second
-application passes its own gate; brownfield adapters belong to phase 4.
-
-Not yet in the design note:
-- **The dev container as the agent sandbox**, holding only the App's credentials
-  (closes AGENT-01). Compose and the browser container need Docker-in-Docker or the
-  host's Docker socket; Codespaces is an option.
-- **Naming:** "software factory" is reportedly the US DoD term (Kessel Run, Platform One)
-  for a secured, compliant pipeline under continuous authorization to operate; verify
-  before quoting. Relatives: golden path or paved road (template layer), internal
-  developer platform (organization layer), platform engineering (the discipline).
+Validate the separated factory on a second independent consumer ([design](docs/design/start-02-factory-core.md)).
 
 ### START-01 — The first 15 minutes
 

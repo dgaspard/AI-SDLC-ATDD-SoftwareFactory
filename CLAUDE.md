@@ -6,6 +6,10 @@ wins. It is imported below so Claude Code loads it.
 
 @AGENTS.md
 
+For factory/consumer separation, read A-30 and the
+[START-02 ownership and migration design](docs/design/start-02-factory-core.md).
+This pointer adds no permissions or exceptions to AGENTS.md.
+
 Canonical documents: [PROJECT-PLAN.md](PROJECT-PLAN.md) (direction, roadmap, limits),
 [BACKLOG.md](BACKLOG.md) (status and proposals),
 [docs/decisions/architecture.md](docs/decisions/architecture.md) (A-xx decisions),

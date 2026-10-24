@@ -10,6 +10,22 @@ The method uses BDD, API contracts, observability contracts and delivery control
 guide implementation and reconstruction. Keep in-memory storage and the fake payment
 boundary unless the user intentionally changes scope. Preserve the `1.0` baseline.
 
+## Factory and consumer ownership (A-30)
+
+Use the [START-02 migration table](design/start-02-factory-core.md) to assign each
+artifact before a move. The existing layout below describes the co-located PetClinic
+checkout, not the future ownership boundary. Consumer contracts, tests, fixtures,
+fakes, performance workloads and application policies remain consumer-owned even
+when they invoke factory machinery. Specify the consumer/factory interface first;
+then review/freeze each repository's protected changes independently. Factory upgrades
+pin a full Git commit and rerun the consumer gate; evidence must bind both revisions.
+The factory must not infer consumer requirements from its own source tree.
+
+The early START-02 slices precede remaining CI-02; status lives only in BACKLOG.md.
+For START-02 specification work, inspect diffs/links and run only explicitly authorized
+isolated boundary tests. Do not run guard, freeze, or test entry points that invoke guard. This is not application gate
+verification. Build-phase verification remains required after a human freeze.
+
 ## Domain contract testing
 
 Domain objects exposed across service boundaries are contract surfaces. Test their

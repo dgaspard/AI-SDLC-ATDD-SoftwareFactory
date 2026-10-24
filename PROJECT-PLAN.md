@@ -44,11 +44,12 @@ authorization to build a second cloud implementation.
 | Delivery-control patterns, review checklists, operating guidance | Who approves, who owns releases, who may accept a risk | Integrations, risk acceptance and release decisions |
 
 This is a conceptual separation, not a package plan. The START-02
-[design note](docs/design/start-02-factory-core.md) and A-27 settle packages and
-repositories. A mechanism that only works for PetClinic belongs in the application
-layer until a second application proves it general. Improvements to the core arrive in
-applications through a reviewed, versioned release and a freeze, never as diverging
-copies (A-15).
+[design note](docs/design/start-02-factory-core.md) and A-30 define the separation
+and initial immutable Git consumption; A-27 is retained as superseded history. PetClinic-specific logic belongs in the application
+layer. Extracted mechanisms remain reuse candidates until a second application
+validates them. Improvements to the core arrive in
+applications through a reviewed immutable Git commit and a consumer freeze, never as
+diverging copies (A-30). A second consumer later validates reuse (A-15).
 
 ### The guided product experience (proposed, not approved)
 
@@ -84,7 +85,7 @@ ENT-11 cover its first step.
 
 No result here is claimed yet, and no numeric targets are set.
 
-- **A second application adopts the core** (START-02 step 4) and passes its own gate,
+- **A second application adopts the core** (START-02 later reuse validation) and passes its own gate,
   with every change it forced on the core recorded.
 - **Evidence repeats.** Each change produces the same evidence shapes (run records,
   change-evidence report, release record) on any application, without hand assembly.
@@ -97,7 +98,8 @@ No result here is claimed yet, and no numeric targets are set.
 
 ## The reference project
 
-This repository's PetClinic is the factory's reference application and proving ground:
+PetClinic is the factory's reference consumer and proving ground (A-30); its files
+remain in this checkout until extraction:
 four services, a frontend, a black-box harness, and frozen specifications. PetClinic work
 must serve a specific factory capability, a regression need or an experiment. Its domain
 choices (clinic rules, demo authentication, the `petclinic.*` telemetry namespace) are
@@ -120,28 +122,40 @@ second project. The roadmap removes them in order.
 
 ## Roadmap
 
-Ordered. Each phase finishes before the next starts, and items are in
+Ordered with A-30's early START-02 slices before remaining CI-02; later phases retain
+their relative order. Work items and all milestone status are in
 [BACKLOG.md](BACKLOG.md).
 
 | Phase | Goal | Done when |
 |---|---|---|
-| 0. Reference project | A small, real, multi-service system built from frozen expectations | Complete (see BACKLOG § Done) |
+| 0. Reference project | A small, real, multi-service system built from frozen expectations | Reconstruction and gate evidence recorded in BACKLOG § Done |
+| Early START-02 | Consumer contract → local extraction → repository separation and immutable consumption → lifecycle specification → local lifecycle proof | Independent clean consumer checkout passes against a full factory commit; bounded local lifecycle evidence preserves consumer specs/data |
 | 1. Governed delivery | Local, non-prod and prod environments delivered from `spec/delivery`, with evidence produced by delivery itself | Every `@awaiting` delivery control is required and green; a release record exists for a prod promotion; EXP-02 rebuilds the delivery code from the spec |
 | 2. Operate it | Production observability and cloud security on the deployed system | OBS rules asserted against the deployed environment; runtime compliance and drift checks in place |
-| 3. The factory core | A versioned core that several application repositories consume, configured by one file per application ([design](docs/design/start-02-factory-core.md)) | A second, independent application built on the published core passes its own gate (the ENG-02 graduation test) |
+| 3. Factory reuse validation | Validate the separated core on a second independent consumer ([design](docs/design/start-02-factory-core.md)) | The second consumer passes its own gate on a pinned core commit; forced changes and onboarding effort are recorded |
 | 4. Durable state | A real database, schema change over time, and reconstruction of a service that owns data; then brownfield adapters for the harness | A stateful service survives the reconstruction protocol, or the limit is documented |
 
-The factory core comes before durable state (A-26, 2026-10-13). Extracting it is
-refactoring under full gate coverage and removes the PetClinic coupling that everything
-later depends on. This reverses the 2026-10-10 order; adapters for existing applications
-still wait for durable state.
+A-30 advances the first START-02 slices ahead of remaining CI-02. The existing
+repository stays the factory and PetClinic leaves it; the core is not moved to a new
+repository. Lifecycle proof is local only. Non-prod/prod delivery remains future work,
+and durable state/brownfield adapters remain after reuse validation.
+
+### Lifecycle vision and evidence limits
+
+The intended factory supports creating an implementation from consumer-owned frozen
+expectations, updating it through reviewed changes, deleting/rebuilding explicitly
+selected disposable implementation, and eventually delivering to non-prod and prod.
+These are separate operations, not permission to erase a consumer repository or data.
+A general `factory init`, update/delete API and deployment service are not verified
+capabilities. Existing local runner/evidence tools and Checkout rehearsals are bounded
+examples; they do not establish an independent-consumer lifecycle. The START-02 design
+specifies the proof needed. This documentation change runs no application verification.
 
 ### Where the guided experience fits (decided 2026-10-16, A-28)
 
-The order stands. GUIDE-01 starts with START-01 in phase 3, so the guided steps are
-designed against a real extracted core and the second application. The cost, accepted:
-the product experience waits for cloud delivery and operation. Pulling a
-specification-only slice forward alongside phase 1 was considered and not chosen.
+A-30 advances separation only. GUIDE-01 starts with START-01 in phase 3, so the guided steps are
+designed against a real extracted core and the second application. The guided product experience remains later; the early consumer-contract specification
+is an integration boundary, not approval of GUIDE-01.
 
 ### Outside the current scope
 
@@ -170,7 +184,8 @@ failing checks → implementation → independent verification → docs pass.
 
 The maintainer owns business decisions, acceptance and freezing of specifications, and
 release decisions. Agents draft artifacts, identify gaps, build authorized checks and
-implementation, and record evidence. Agents never approve, merge or bypass (A-22).
+implementation, and record evidence. Build agents never approve, merge or bypass. A-29 does not authorize automatic
+approval in this effort (A-30).
 Every feature's code review includes the fresh-session docs pass
 ([docs/README.md](docs/README.md#the-docs-pass-after-every-feature-commit)).
 
@@ -266,6 +281,6 @@ The scripted procedure for Checkout is in [tools/demo/](tools/demo/README.md).
 | Automated approval makes the gates the only defense | The gates' own definitions (the root of trust) always need a human code owner (CTL-062); the guard freeze matters more, not less |
 | Build-agent controls and AI inside a generated application get mixed (shared credentials, approvals, evaluations or telemetry) | Keep them as separate trust boundaries: AGENT-01/SUPPLY-01 for build agents, the proposed ENT profiles for application AI |
 | Durable state breaks the reconstruction thesis | Phase 4 tests it explicitly before the factory supports stateful or existing applications |
-| The core diverges across projects | Ship the core as a versioned package adopted through a freeze, not as copies |
+| The core diverges across projects | Pin the core to an immutable Git commit adopted through a consumer freeze |
 | Documentation drifts from the code | The docs pass in every feature's code review (proposed DOCS-01 makes it executable) |
 | Cloud cost grows | $25/month ceiling; ephemeral environments with TTLs (SPEC-08) |
