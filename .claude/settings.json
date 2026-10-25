@@ -8,7 +8,6 @@
       "Edit(./.github/CODEOWNERS)",
       "Edit(./AGENTS.md)",
       "Edit(./CLAUDE.md)",
-      "Edit(./tools/petclinic/suite.mjs)",
       "Edit(./tools/guard/**)"
     ]
   },

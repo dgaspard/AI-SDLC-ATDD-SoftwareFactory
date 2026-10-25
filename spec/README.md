@@ -1,16 +1,3 @@
-# Spec project (protected)
+# Factory specifications
 
-Everything that defines and verifies correct behavior. During the build phase, agents
-may read this folder but must not create, modify, or delete anything in it
-(PROJECT-PLAN A-07, BACKLOG GUARD-01). Humans change it deliberately.
-
-```text
-features/<service>/  features/workflows/   Gherkin behavior
-contracts/                                 Runtime contract, domain and per-service OpenAPI contracts
-seed-data/                                 Veterinarians, service catalog, customers and pets, demo users
-tests/                                     Step definitions and validators
-harness/                                   Starts services, resets state, sets the clock
-fakes/payment/                             Fake payment provider (port 4010)
-```
-
-Run from the repo root with `npm test`, or here with `npm test`.
+This tree owns the consumer interface and neutral mechanism assertions. Application requirements, fixtures, harnesses and workloads live in the PetClinic consumer repository. `test-policy.json` defines the factory-only gate. `protected.sha256` must be human-frozen after reviewing the migration patch.

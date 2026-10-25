@@ -1,7 +1,0 @@
-[
-  { "id": "10000000-0000-4000-8000-000000000901", "username": "avery.taylor", "password": "petclinic-demo", "role": "veterinarian", "roles": ["veterinarian", "administrator"], "veterinarianId": "10000000-0000-4000-8000-000000000001", "displayName": "Dr Avery Taylor" },
-  { "id": "10000000-0000-4000-8000-000000000902", "username": "morgan.reed", "password": "petclinic-demo", "role": "veterinarian", "veterinarianId": "10000000-0000-4000-8000-000000000002", "displayName": "Dr Morgan Reed" },
-  { "id": "10000000-0000-4000-8000-000000000903", "username": "jordan.rivera", "password": "petclinic-demo", "role": "customer", "customerId": "10000000-0000-4000-8000-000000000201", "displayName": "Jordan Rivera" },
-  { "id": "10000000-0000-4000-8000-000000000904", "username": "sam.lee", "password": "petclinic-demo", "role": "customer", "customerId": "10000000-0000-4000-8000-000000000202", "displayName": "Sam Lee" },
-  { "id": "10000000-0000-4000-8000-000000000905", "username": "riley.chen", "password": "petclinic-demo", "role": "administrator", "displayName": "Riley Chen" }
-]

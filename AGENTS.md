@@ -8,7 +8,7 @@ This repository is the working prototype of an AI-SDLC software factory: humans 
   organizations that normalizes platform engineering (A-28). It is a prototype, not a
   production-ready, certified or authorized system.
 - This repository remains the factory (A-30). PetClinic is an independently owned
-  consumer and proving ground; its code is still co-located until reviewed extraction.
+  consumer and proving ground; its active code belongs in the separate consumer repository.
   PetClinic work must serve a factory capability, regression need or experiment.
 - Consumers own domain/API contracts, BDD requirements and tests, performance
   requirements/workloads, application code, application-specific policies, fixtures,
@@ -54,7 +54,7 @@ design note if it has one.
 - Consult `BACKLOG.md` for status, work items in roadmap order, and unresolved business decisions.
 - Design and review API contracts, observability contracts, and BDD features before new implementation; proposed backlog items are not approved requirements.
 - Follow `docs/observability.md`, preserving its distinction between binding contracts and proposed standards.
-- Follow `docs/specs/observability-traceability.md`: retain stable OBS IDs, include asserted IDs in test titles, and update the coverage table with test changes.
+- PetClinic OBS requirements and coverage are consumer-owned. Consult its frozen observability traceability document when changing consumer behavior; preserve stable IDs.
 - Treat domain objects exposed across service boundaries as contract surfaces. Test their serialized schemas, references, state transitions, and invariants. Do not add tests whose only purpose is to exercise trivial getters, setters, constructors, or private storage.
 
 ## Protected paths
@@ -65,11 +65,9 @@ create, modify, or delete anything under:
 - `spec/` (features, contracts, seed data, tests, validators, harness, fakes)
 - `docs/specs/` (decisions, domain model, schema decisions)
 - `.github/workflows/guard.yml`, `.github/CODEOWNERS`, `.claude/`, `AGENTS.md`, `CLAUDE.md`
-- `tools/petclinic/suite.mjs` (consumer-owned evidence authority adapter)
 - `tools/guard/` (shared guard and human-only freeze mechanisms)
 
-Delivery workflows (`.github/workflows/delivery-*.yml`) are agent-built outputs
-checked by `spec/delivery/`, outside the protected root of trust (A-20).
+Application delivery workflows and control catalogues live in consumers. Factory `spec/delivery/contracts/` retains reusable evidence schemas; it does not implement cloud delivery.
 
 Enforcement is GUARD-01, not this file alone:
 
@@ -126,7 +124,7 @@ npm run test:gate      # before declaring work complete
 npm run test:verify    # proof: every full-tier suite passed on this tree
 ```
 
-The browser suite runs in the pinned Playwright container (spec/tests/browser/run-in-container.sh), so Docker must be running for test:gate; if Docker is missing it fails with tooling:, never as a product failure.
+Factory tests use neutral fixtures. PetClinic browser, runtime and performance gates run in the consumer repository; do not copy its harness back into the factory.
 
 `spec/test-policy.json` (protected) defines the suites, the tiers, and which changed paths
 select which suites. `spec/run-all.js` runs them and writes a run record to

@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# Installs the spec project's dependencies (protobufjs) used by this collector.
-set -euo pipefail
-cd "$(dirname "$0")/../.."
-npm ci --no-audit --no-fund

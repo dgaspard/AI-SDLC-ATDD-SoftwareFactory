@@ -1,6 +1,6 @@
 # ENG-02 calibration — round 1 (2026-10-05)
 
-ENG-02 item 5. Answer key: [`tools/review/project-specific/calibration-manifest.md`](../../tools/review/project-specific/calibration-manifest.md)
+ENG-02 item 5. Answer key: [`tools/review/project-specific/calibration-manifest.md`](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/tools/review/project-specific/calibration-manifest.md)
 (committed in `3a13746`, before any review ran). Plant script:
 `plant-calibration-defects.mjs` (same folder). Raw reviewer output:
 [eng-02-calibration-review-round1-2026-10-05.md](eng-02-calibration-review-round1-2026-10-05.md).

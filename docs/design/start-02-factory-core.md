@@ -7,11 +7,10 @@ acceptance; verified capabilities and freeze evidence are recorded in BACKLOG.md
 ## Repository and ownership contract
 
 `dgaspard/AI-SDLC-ATDD-SoftwareFactory` remains the factory. PetClinic becomes an
-independent consumer, provisionally `dgaspard/ai-sdlc-petclinic`. On 2026-10-24 an
-authenticated repository lookup could not resolve that name; this is not a reservation
-or proof of absence under every identity. Recheck existence and access using the
-approved GitHub App immediately before creation. If a project exists, stop creation
-and choose an unused destination with the owner; never replace its contents/history.
+independent consumer at the approved destination `dgaspard/ai-sdlc-petclinic`. The approved destination now exists;
+never overwrite unrelated contents or rewrite shared history. The earlier unsuccessful
+lookup was historical preflight, not evidence of current absence. Verify App access and
+remote refs before publication; preserve existing history.
 
 Consumers own their domain and API contracts, BDD requirements and tests, performance
 requirements/workloads, application code, policies, fixtures, fakes and data. The
@@ -23,7 +22,7 @@ Non-prod and production delivery are future factory capabilities.
 ## Inspected ownership and migration map
 
 Based on tracked files at `a08fe0d866c699c99999ccaf0c6ec5fa3700a378`.
-Paths below are current source paths, not instructions to move entire directories.
+Paths below describe the pre-separation source inventory, not the post-cleanup layout or instructions to move entire directories.
 “Split” means specify an interface, retain consumer semantics, then review the exact
 file manifest before moving anything. Candidate reusable code is not yet proven portable.
 

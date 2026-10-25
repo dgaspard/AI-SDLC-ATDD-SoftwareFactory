@@ -1,6 +1,0 @@
-#!/bin/sh
-set -eu
-cd "$(dirname "$0")"
-for source_file in ./*.js; do
-  node --check "$source_file"
-done
