@@ -40,7 +40,9 @@ into the homes below and let git history keep the conversation.
   approved)` until Dustin moves them into an item.
 - **Evidence is append-only.** Reviews, rehearsals and handoffs record what happened on
   a date; correct them with a dated note, don't rewrite them.
-- **Protected paths are read-only for agents** (`AGENTS.md`). If a protected file links
+- **Protected paths are read-only in the build phase** (`AGENTS.md`). Explicitly requested
+  specification drafts may edit the named protected files for human review/freeze;
+  drafting does not authorize guard execution or bypass. If a protected file links
   to a document, moving that document needs a human-approved spec change.
 
 ## The docs pass, after every feature commit
@@ -79,6 +81,10 @@ Prompt for running the pass on its own (for example, after a docs-only change):
 > Run the docs pass in `docs/README.md` for the change just merged (`<commit or PR>`).
 > Read `AGENTS.md`, `docs/README.md` and `BACKLOG.md` first. Propose a diff, don't touch
 > protected paths, and list anything that needs a human decision or a protected patch.
+
+Factory consumer interface contracts live in `spec/factory/`; their protected boundary
+tests live in `spec/tests/factory/`. These are factory specifications, distinct from
+PetClinic domain/API contracts under `spec/contracts/`.
 
 ## Current design notes
 

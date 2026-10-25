@@ -7,8 +7,21 @@ This repository is the working prototype of an AI-SDLC software factory: humans 
 - The Software Factory is the product: a factory for enterprise and government
   organizations that normalizes platform engineering (A-28). It is a prototype, not a
   production-ready, certified or authorized system.
-- PetClinic is the reference application and proving ground, not the product. PetClinic
-  work must serve a factory capability, a regression need or an experiment.
+- This repository remains the factory (A-30). PetClinic is an independently owned
+  consumer and proving ground; its code is still co-located until reviewed extraction.
+  PetClinic work must serve a factory capability, regression need or experiment.
+- Consumers own domain/API contracts, BDD requirements and tests, performance
+  requirements/workloads, application code, application-specific policies, fixtures,
+  fakes and data. Factory ownership covers reusable orchestration, verification and
+  evidence mechanisms. A `spec/` path does not establish factory ownership.
+- Follow the START-02 ownership/migration table before extraction. Separate generic
+  machinery from consumer bindings; never move clinic rules into factory helpers.
+  Pin consumption to a full factory Git commit; upgrades require consumer review and
+  freeze. Each repository retains its own root of trust and evidence identity.
+- Complete START-02's five early slices before remaining CI-02. Second-consumer reuse
+  validation stays later. Check destination existence/access before creation; never
+  overwrite an existing repository. No cloud provisioning, production deployment,
+  automatic approval/merge or production data deletion is authorized by this effort.
 - Keep three layers apart: reusable factory mechanisms, organizational policy and
   configuration, and application requirements (`PROJECT-PLAN.md`).
 
@@ -52,6 +65,8 @@ create, modify, or delete anything under:
 - `spec/` (features, contracts, seed data, tests, validators, harness, fakes)
 - `docs/specs/` (decisions, domain model, schema decisions)
 - `.github/workflows/guard.yml`, `.github/CODEOWNERS`, `.claude/`, `AGENTS.md`, `CLAUDE.md`
+- `tools/petclinic/suite.mjs` (consumer-owned evidence authority adapter)
+- `tools/guard/` (shared guard and human-only freeze mechanisms)
 
 Delivery workflows (`.github/workflows/delivery-*.yml`) are agent-built outputs
 checked by `spec/delivery/`, outside the protected root of trust (A-20).

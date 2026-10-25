@@ -33,3 +33,22 @@ without the maintainer's keychain, personal tokens, SSH keys, or personal-accoun
 CTL-025 remains awaiting CI-02: its frozen live check currently queries user collaborator
 permissions and must be adapted to verify GitHub App installation permissions and bypass
 settings before a human removes the awaiting tag and freezes activation.
+
+## Explicit consumer targeting
+
+The default target remains `dgaspard/AI-SDLC-ATDD-SoftwareFactory`. The only other
+permitted target is `dgaspard/ai-sdlc-petclinic`:
+
+```sh
+node tools/github/agent.mjs --repository dgaspard/ai-sdlc-petclinic check
+node tools/github/agent.mjs --repository dgaspard/ai-sdlc-petclinic gh api repos/dgaspard/ai-sdlc-petclinic
+```
+
+Selection precedes the command. Each invocation still verifies the configured App
+and installation, issues a token for exactly one repository, verifies that scope,
+and revokes the token afterward. Both repositories must belong to the configured
+installation. Selection does not change Git remotes or the working directory; use
+explicit HTTPS URLs and explicit `gh --repo` or API paths for destination operations.
+A 404 installation lookup means absent or inaccessible, not proof that a name is free.
+Repository creation, workflow bootstrapping and access grants are not provided by this
+wrapper. It retains the existing no-approval/no-merge checks and permission ceiling.

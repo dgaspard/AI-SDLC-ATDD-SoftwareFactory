@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "application": {
+    "id": "petclinic",
+    "repository": "dgaspard/ai-sdlc-petclinic",
+    "root": "."
+  },
+  "factory": {
+    "repository": "https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory.git",
+    "revision": "e17f55e17403075cdb9434e69bbd0da03a865496",
+    "interfaceVersion": 1
+  },
+  "locations": {
+    "domainContracts": [
+      "spec/contracts/domain.openapi.json"
+    ],
+    "apiContracts": [
+      "spec/contracts/"
+    ],
+    "bdd": [
+      "spec/features/",
+      "spec/tests/"
+    ],
+    "performanceScenarios": [
+      "spec/features/performance/"
+    ],
+    "performanceWorkloads": [
+      "spec/tests/performance/"
+    ],
+    "applicationPolicies": [
+      "spec/test-policy.json",
+      "spec/delivery/",
+      "tools/review/project-specific/",
+      "tools/security/project-specific/"
+    ],
+    "fixtures": [
+      "spec/seed-data/",
+      "spec/fakes/payment/",
+      "spec/tests/support/",
+      "spec/frontend/"
+    ]
+  },
+  "runtime": {
+    "contract": "spec/contracts/runtime-contract.md",
+    "projects": [
+      {
+        "id": "customer",
+        "kind": "service",
+        "cwd": "services/customer",
+        "setup": {
+          "argv": [
+            "./setup"
+          ],
+          "cwd": "services/customer"
+        },
+        "start": {
+          "argv": [
+            "./start"
+          ],
+          "cwd": "services/customer"
+        },
+        "dependsOn": [
+          "reservation"
+        ],
+        "environment": {
+          "PORT": "4001",
+          "FRONTEND_ORIGIN": "http://localhost:3000",
+          "PETCLINIC_TEST_ENDPOINTS": "enabled",
+          "RESERVATION_URL": "http://localhost:4002",
+          "CLINIC_NOW": "2026-10-05T09:00:00-05:00",
+          "AUTH_TOKEN_SECRET": "demo-only-not-a-secret",
+          "SEED_DATA_DIR": {
+            "path": "spec/seed-data"
+          },
+          "OTEL_SERVICE_NAME": "petclinic-customer",
+          "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+          "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+          "OTEL_TRACES_EXPORTER": "otlp",
+          "OTEL_METRICS_EXPORTER": "none",
+          "OTEL_LOGS_EXPORTER": "none",
+          "OTEL_BSP_SCHEDULE_DELAY": "100"
+        },
+        "health": {
+          "url": "http://localhost:4001/health",
+          "status": 200,
+          "json": {
+            "status": "ok"
+          },
+          "timeoutMs": 10000
+        },
+        "stop": {
+          "signal": "SIGTERM",
+          "timeoutMs": 5000
+        },
+        "testFacilities": {
+          "enable": {
+            "variable": "PETCLINIC_TEST_ENDPOINTS",
+            "enabledValue": "enabled",
+            "disabledValue": "disabled"
+          },
+          "reset": {
+            "method": "POST",
+            "path": "/test/reset",
+            "status": 204
+          },
+          "clock": {
+            "method": "POST",
+            "path": "/test/clock",
+            "status": 204,
+            "bodyField": "now",
+            "initialEnvironmentVariable": "CLINIC_NOW"
+          }
+        }
+      },
+      {
+        "id": "reservation",
+        "kind": "service",
+        "cwd": "services/reservation",
+        "setup": {
+          "argv": [
+            "./setup"
+          ],
+          "cwd": "services/reservation"
+        },
+        "start": {
+          "argv": [
+            "./start"
+          ],
+          "cwd": "services/reservation"
+        },
+        "dependsOn": [
+          "customer",
+          "checkout"
+        ],
+        "environment": {
+          "PORT": "4002",
+          "FRONTEND_ORIGIN": "http://localhost:3000",
+          "PETCLINIC_TEST_ENDPOINTS": "enabled",
+          "CUSTOMER_URL": "http://localhost:4001",
+          "CHECKOUT_URL": "http://localhost:4004",
+          "CLINIC_NOW": "2026-10-05T09:00:00-05:00",
+          "AUTH_TOKEN_SECRET": "demo-only-not-a-secret",
+          "SEED_DATA_DIR": {
+            "path": "spec/seed-data"
+          },
+          "OTEL_SERVICE_NAME": "petclinic-reservation",
+          "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+          "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+          "OTEL_TRACES_EXPORTER": "otlp",
+          "OTEL_METRICS_EXPORTER": "none",
+          "OTEL_LOGS_EXPORTER": "none",
+          "OTEL_BSP_SCHEDULE_DELAY": "100"
+        },
+        "health": {
+          "url": "http://localhost:4002/health",
+          "status": 200,
+          "json": {
+            "status": "ok"
+          },
+          "timeoutMs": 10000
+        },
+        "stop": {
+          "signal": "SIGTERM",
+          "timeoutMs": 5000
+        },
+        "testFacilities": {
+          "enable": {
+            "variable": "PETCLINIC_TEST_ENDPOINTS",
+            "enabledValue": "enabled",
+            "disabledValue": "disabled"
+          },
+          "reset": {
+            "method": "POST",
+            "path": "/test/reset",
+            "status": 204
+          },
+          "clock": {
+            "method": "POST",
+            "path": "/test/clock",
+            "status": 204,
+            "bodyField": "now",
+            "initialEnvironmentVariable": "CLINIC_NOW"
+          }
+        }
+      },
+      {
+        "id": "veterinarian-services",
+        "kind": "service",
+        "cwd": "services/veterinarian-services",
+        "setup": {
+          "argv": [
+            "./setup"
+          ],
+          "cwd": "services/veterinarian-services"
+        },
+        "start": {
+          "argv": [
+            "./start"
+          ],
+          "cwd": "services/veterinarian-services"
+        },
+        "dependsOn": [],
+        "environment": {
+          "PORT": "4003",
+          "FRONTEND_ORIGIN": "http://localhost:3000",
+          "PETCLINIC_TEST_ENDPOINTS": "enabled",
+          "CLINIC_NOW": "2026-10-05T09:00:00-05:00",
+          "AUTH_TOKEN_SECRET": "demo-only-not-a-secret",
+          "SEED_DATA_DIR": {
+            "path": "spec/seed-data"
+          },
+          "OTEL_SERVICE_NAME": "petclinic-veterinarian-services",
+          "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+          "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+          "OTEL_TRACES_EXPORTER": "otlp",
+          "OTEL_METRICS_EXPORTER": "none",
+          "OTEL_LOGS_EXPORTER": "none",
+          "OTEL_BSP_SCHEDULE_DELAY": "100"
+        },
+        "health": {
+          "url": "http://localhost:4003/health",
+          "status": 200,
+          "json": {
+            "status": "ok"
+          },
+          "timeoutMs": 10000
+        },
+        "stop": {
+          "signal": "SIGTERM",
+          "timeoutMs": 5000
+        },
+        "testFacilities": {
+          "enable": {
+            "variable": "PETCLINIC_TEST_ENDPOINTS",
+            "enabledValue": "enabled",
+            "disabledValue": "disabled"
+          },
+          "reset": {
+            "method": "POST",
+            "path": "/test/reset",
+            "status": 204
+          },
+          "clock": {
+            "method": "POST",
+            "path": "/test/clock",
+            "status": 204,
+            "bodyField": "now",
+            "initialEnvironmentVariable": "CLINIC_NOW"
+          }
+        }
+      },
+      {
+        "id": "checkout",
+        "kind": "service",
+        "cwd": "services/checkout",
+        "setup": {
+          "argv": [
+            "./setup"
+          ],
+          "cwd": "services/checkout"
+        },
+        "start": {
+          "argv": [
+            "./start"
+          ],
+          "cwd": "services/checkout"
+        },
+        "dependsOn": [
+          "customer",
+          "reservation",
+          "veterinarian-services",
+          "payment"
+        ],
+        "environment": {
+          "PORT": "4004",
+          "FRONTEND_ORIGIN": "http://localhost:3000",
+          "PETCLINIC_TEST_ENDPOINTS": "enabled",
+          "CUSTOMER_URL": "http://localhost:4001",
+          "RESERVATION_URL": "http://localhost:4002",
+          "VETERINARIAN_SERVICES_URL": "http://localhost:4003",
+          "PAYMENT_PROVIDER_URL": "http://localhost:4010",
+          "CLINIC_NOW": "2026-10-05T09:00:00-05:00",
+          "AUTH_TOKEN_SECRET": "demo-only-not-a-secret",
+          "SEED_DATA_DIR": {
+            "path": "spec/seed-data"
+          },
+          "OTEL_SERVICE_NAME": "petclinic-checkout",
+          "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318",
+          "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+          "OTEL_TRACES_EXPORTER": "otlp",
+          "OTEL_METRICS_EXPORTER": "none",
+          "OTEL_LOGS_EXPORTER": "none",
+          "OTEL_BSP_SCHEDULE_DELAY": "100"
+        },
+        "health": {
+          "url": "http://localhost:4004/health",
+          "status": 200,
+          "json": {
+            "status": "ok"
+          },
+          "timeoutMs": 10000
+        },
+        "stop": {
+          "signal": "SIGTERM",
+          "timeoutMs": 5000
+        },
+        "testFacilities": {
+          "enable": {
+            "variable": "PETCLINIC_TEST_ENDPOINTS",
+            "enabledValue": "enabled",
+            "disabledValue": "disabled"
+          },
+          "reset": {
+            "method": "POST",
+            "path": "/test/reset",
+            "status": 204
+          },
+          "clock": {
+            "method": "POST",
+            "path": "/test/clock",
+            "status": 204,
+            "bodyField": "now",
+            "initialEnvironmentVariable": "CLINIC_NOW"
+          }
+        }
+      },
+      {
+        "id": "frontend",
+        "kind": "frontend",
+        "cwd": "frontend",
+        "setup": {
+          "argv": [
+            "./setup"
+          ],
+          "cwd": "frontend"
+        },
+        "start": {
+          "argv": [
+            "./start"
+          ],
+          "cwd": "frontend"
+        },
+        "dependsOn": [
+          "customer",
+          "reservation",
+          "veterinarian-services",
+          "checkout"
+        ],
+        "environment": {
+          "PORT": "3000",
+          "FRONTEND_ORIGIN": "http://localhost:3000",
+          "PETCLINIC_TEST_ENDPOINTS": "enabled",
+          "CUSTOMER_URL": "http://localhost:4001",
+          "RESERVATION_URL": "http://localhost:4002",
+          "VETERINARIAN_SERVICES_URL": "http://localhost:4003",
+          "CHECKOUT_URL": "http://localhost:4004"
+        },
+        "health": {
+          "url": "http://localhost:3000/health",
+          "status": 200,
+          "json": {
+            "status": "ok"
+          },
+          "timeoutMs": 10000
+        },
+        "stop": {
+          "signal": "SIGTERM",
+          "timeoutMs": 5000
+        }
+      },
+      {
+        "id": "payment",
+        "kind": "fake",
+        "cwd": "spec/fakes/payment",
+        "setup": {
+          "argv": [
+            "./setup"
+          ],
+          "cwd": "spec/fakes/payment"
+        },
+        "start": {
+          "argv": [
+            "./start"
+          ],
+          "cwd": "spec/fakes/payment"
+        },
+        "dependsOn": [],
+        "environment": {
+          "PORT": "4010",
+          "FRONTEND_ORIGIN": "http://localhost:3000",
+          "PETCLINIC_TEST_ENDPOINTS": "enabled"
+        },
+        "health": {
+          "url": "http://localhost:4010/health",
+          "status": 200,
+          "json": {
+            "status": "ok"
+          },
+          "timeoutMs": 10000
+        },
+        "stop": {
+          "signal": "SIGTERM",
+          "timeoutMs": 5000
+        },
+        "testFacilities": {
+          "enable": {
+            "variable": "PETCLINIC_TEST_ENDPOINTS",
+            "enabledValue": "enabled",
+            "disabledValue": "disabled"
+          },
+          "reset": {
+            "method": "POST",
+            "path": "/test/reset",
+            "status": 204
+          }
+        }
+      },
+      {
+        "id": "collector",
+        "kind": "collector",
+        "cwd": "spec/harness/collector",
+        "setup": {
+          "argv": [
+            "./setup"
+          ],
+          "cwd": "spec/harness/collector"
+        },
+        "start": {
+          "argv": [
+            "./start"
+          ],
+          "cwd": "spec/harness/collector"
+        },
+        "dependsOn": [],
+        "environment": {
+          "PORT": "4318",
+          "FRONTEND_ORIGIN": "http://localhost:3000",
+          "PETCLINIC_TEST_ENDPOINTS": "enabled"
+        },
+        "health": {
+          "url": "http://localhost:4318/health",
+          "status": 200,
+          "json": {
+            "status": "ok"
+          },
+          "timeoutMs": 10000
+        },
+        "stop": {
+          "signal": "SIGTERM",
+          "timeoutMs": 5000
+        },
+        "testFacilities": {
+          "enable": {
+            "variable": "PETCLINIC_TEST_ENDPOINTS",
+            "enabledValue": "enabled",
+            "disabledValue": "disabled"
+          },
+          "reset": {
+            "method": "POST",
+            "path": "/test/reset",
+            "status": 204
+          }
+        }
+      }
+    ],
+    "startupGroups": [
+      [
+        "collector",
+        "payment"
+      ],
+      [
+        "customer",
+        "reservation",
+        "veterinarian-services",
+        "checkout"
+      ],
+      [
+        "frontend"
+      ]
+    ],
+    "telemetry": {
+      "endpoint": "http://localhost:4318",
+      "protocol": "http/protobuf",
+      "tracesExporter": "otlp",
+      "metricsExporter": "none",
+      "logsExporter": "none",
+      "batchDelayMs": 100,
+      "waitMs": 5000
+    }
+  },
+  "testing": {
+    "policy": "spec/factory/petclinic/policy.json",
+    "cwd": ".",
+    "results": "test-results",
+    "evidence": "factory-evidence"
+  },
+  "trust": {
+    "protectedPaths": "spec/guard/protected-paths.json",
+    "manifest": "spec/protected.sha256",
+    "configuration": "spec/factory/petclinic/authority.json"
+  },
+  "contractVersions": [
+    {
+      "id": "domain",
+      "version": "current-frozen",
+      "path": "spec/contracts/domain.openapi.json"
+    },
+    {
+      "id": "runtime",
+      "version": "RT-001..009",
+      "path": "spec/contracts/runtime-contract.md"
+    },
+    {
+      "id": "customer",
+      "version": "current-frozen",
+      "path": "spec/contracts/customer.openapi.json"
+    },
+    {
+      "id": "reservation",
+      "version": "current-frozen",
+      "path": "spec/contracts/reservation.openapi.json"
+    },
+    {
+      "id": "veterinarian-services",
+      "version": "current-frozen",
+      "path": "spec/contracts/veterinarian-services.openapi.json"
+    },
+    {
+      "id": "checkout",
+      "version": "current-frozen",
+      "path": "spec/contracts/checkout.openapi.json"
+    },
+    {
+      "id": "payment",
+      "version": "current-frozen",
+      "path": "spec/contracts/payment-provider.openapi.json"
+    }
+  ]
+}
