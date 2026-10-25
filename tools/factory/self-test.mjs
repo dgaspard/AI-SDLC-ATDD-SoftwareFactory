@@ -1,3 +1,5 @@
+// Additional governed-change regressions participate in the frozen boundary suite.
+import "./change.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";

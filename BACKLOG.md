@@ -22,7 +22,7 @@ for every item. Finished items keep their full history in
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **repository separation and immutable consumption complete; lifecycle specification is next** (A-30).
+Status: **repository separation complete; frozen local workflow implementation under verification** (A-30).
 Canonical ID START-02 and its ordered slices are retained.
 Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
@@ -31,11 +31,11 @@ Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md
 | Consumer-contract specification | Human-frozen in `0fca4ef`; original 14-case red baseline retained historically | Preserve frozen interface and assertions; separately review any amendments |
 | Local extraction | Verified and owner-approved | Reviewed consumer `508e8e947323ca1723966344a90d1036a077a93e`; combined proof and approval recorded below |
 | Repository separation and immutable consumption | Complete | Independent consumer CI/evidence verified; factory cleanup merged; owner confirms branch protection |
-| Lifecycle specification | Governed local update draft awaiting human review/freeze | Review governed-change contract/tests and PetClinic D-67 acceptance; no implementation or deployment authorization |
-| Local lifecycle proof | Planned after lifecycle freeze | Disposable local copies, retained hashes and bounded recovery; no cloud activity |
+| Lifecycle specification | Governed local update frozen | Factory `aac1de392cdbd180dab722ddbd689b6aacd4e829`, fixture correction `a3134b5`; consumer acceptance `5bd4c8415a9a6a01f41973f1df01aaa075463af5` |
+| Local lifecycle proof | Fixture coordinator implemented; real proof blocked | Qualify real isolated runner and verifier, then review consumer pin upgrade before PetClinic implementation |
 | Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
 
-**Next proof: governed local PetClinic update (specification phase).**
+**Next proof: governed local PetClinic update.**
 The owner authorized drafting [governed-change.v1](spec/factory/governed-change.v1.md)
 and its neutral executable contract tests. Reuse the existing consumer verifier,
 process cleanup, canonical path/trust checks and evidence mechanisms. The new boundary
@@ -50,10 +50,16 @@ Customer -> Reservation's existing live roster with both service BDD and a real-
 journey. Factory mechanisms contain no clinic rule. The task grants only update of
 services/customer/server.js; create/delete grants are empty.
 
-The workflow CLI is not implemented. The new neutral tests are an intentional red
-specification baseline; fixture launcher results can only be SIMULATED_VERIFIED and
-cannot satisfy the real demonstration. A real constrained coding-agent launcher and
-its OS/credential conformance remain an explicit implementation prerequisite. PetClinic
+The workflow CLI now implements the fixture protocol with isolated clones, permission
+checks, independent consumer verification, retained recovery records and stale-evidence
+checking. All 18 frozen workflow assertions and eight additional engineering regressions
+have passed on a disposable committed factory snapshot. Required full-tier run
+records are retained under `test-results/start02-governed-implementation/`; these
+are local implementation evidence, not a published or human-approved release pin. Fixture results can only
+be SIMULATED_VERIFIED and cannot satisfy the real demonstration. Real launchers fail
+closed with TOOLING_UNAVAILABLE; an OS-enforced runner, credential boundary and
+independent verifier profile remain unimplemented. Host-loss process recovery is also
+unqualified because PID journaling follows process launch. PetClinic
 still pins 9809c120cafd0ad867be6568621fac3ef54f1780, which has no change coordinator;
 a later released implementation pin, separately reviewed consumer pin/freeze/commit,
 and renewed external trust are required for real proof. Neither frozen manifest has
@@ -85,9 +91,9 @@ The owner confirmed PetClinic branch protection is set after being asked to requ
 all three named checks, pull requests with human CODEOWNERS approval and no GitHub
 App bypass. This is human-attested enforcement: the mandated App wrapper blocks
 independent ruleset/protection inspection, so no API verification is claimed.
-Repository separation is complete; Prompt 5 is lifecycle specification only.
-No lifecycle implementation, cloud deployment, automatic approval or second-consumer
-completion is claimed. START-02 overall remains open for the later slices.
+Repository separation is complete. The frozen governed workflow has an authorized
+fixture implementation; real PetClinic lifecycle proof, cloud deployment, automatic
+approval and second-consumer completion are not claimed. START-02 overall remains open for the later slices.
 
 The following preflight and preparation paragraphs are historical observations;
 the current verification above supersedes their empty-destination and pending-import statements.
