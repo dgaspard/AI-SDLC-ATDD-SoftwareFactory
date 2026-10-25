@@ -1,7 +1,0 @@
-[
-  { "id": "10000000-0000-4000-8000-000000000401", "name": "Wellness", "feeAmount": 5000, "currency": "USD" },
-  { "id": "10000000-0000-4000-8000-000000000402", "name": "Sick", "feeAmount": 7500, "currency": "USD" },
-  { "id": "10000000-0000-4000-8000-000000000403", "name": "Vaccination", "feeAmount": 10000, "currency": "USD" },
-  { "id": "10000000-0000-4000-8000-000000000404", "name": "Spay or Neuter", "feeAmount": 25000, "currency": "USD" },
-  { "id": "10000000-0000-4000-8000-000000000405", "name": "Surgery", "feeAmount": 200000, "currency": "USD" }
-]

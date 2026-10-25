@@ -16,12 +16,12 @@ from the reviewed consumer configuration and external trusted policy.
   protected runner. All application paths, service IDs and tree environment variable
   are explicit arguments. Existing evidence-v1 semantics remain distinct.
 
-PetClinic’s `spec/run-all.js` is the thin compatibility adapter for `runLegacy`.
+The separate PetClinic consumer’s `spec/run-all.js` is the thin compatibility adapter for `runLegacy`.
 Consumer requirements, assertions, runtime bindings and evidence-v1 meanings stay
 application-owned. See [BACKLOG START-02](../../BACKLOG.md) for integration evidence,
-the verified local consumer-CLI proof, pending pin upgrades and later separation
-milestones. Local verification does not establish independent repository separation
-or lifecycle delivery capabilities.
+independent consumer proof and remaining separation milestones. Lifecycle delivery
+is not implemented. Evidence-v1 retains spec/run-all.js, protected manifest and feature-directory
+conventions; these are compatibility constraints, not application imports.
 
 Verification commands (boundary cases require a clean committed factory snapshot):
 
@@ -32,6 +32,6 @@ node --test tools/factory/legacy-runner.test.mjs
 
 The additional tests use disposable synthetic consumers. The legacy regression driver
 preserves the frozen CI-02 assertions with an isolated fixture using the extracted
-runner. Neither driver replaces the protected application gate. Temporary local test
+runner. Neither driver replaces a consumer-owned application gate. Temporary local test
 commits are not human-reviewed release pins. The external trust snapshot is the
 caller's responsibility; local hashes do not isolate hostile code or certify evidence.

@@ -7,7 +7,7 @@ work. Status lines reflect each item's final recorded state; links are rebased.
 
 Status: core business decisions recorded and carried into the frozen service
 specifications. Decisions D-01–D-38 are in
-[SPEC-01](../specs/business-decisions.md); later contract clarifications GAP-01–07
+[SPEC-01](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/docs/specs/business-decisions.md); later contract clarifications GAP-01–07
 are recorded in the [TEST-01 review](test-slices-5-6.md).
 
 | Service | Owns | Calls |
@@ -32,9 +32,9 @@ requirements; consult the current domain model and API contracts first.
 Status: service features, domain schemas, and API contracts complete; cross-service
 workflow features and browser tests remain under TEST-02.
 
-The [domain model](../specs/domain-model.md),
-[schema decisions](../specs/schema-decisions.md), and
-[contract index](../../spec/contracts/README.md) define the reviewed service surfaces.
+The [domain model](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/docs/specs/domain-model.md),
+[schema decisions](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/docs/specs/schema-decisions.md), and
+[contract index](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/contracts/README.md) define the reviewed service surfaces.
 Schema questions Q-01–Q-05 are approved. Customer and Pet expose profiles/account
 data; Reservation owns and serves clinical records (D-38). Integer USD cents,
 price snapshots, payment limits (revised for partial payments by SPEC-05), promotion limits, and state transitions
@@ -52,7 +52,7 @@ the frontend, or the application exist.
 Status: stable-ID registry and coverage mapping established; scoped business-trace
 checks validated in TEST-01. Broader rule coverage remains incomplete.
 
-Follow the [traceability specification](../specs/observability-traceability.md)
+Follow the [traceability specification](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/docs/specs/observability-traceability.md)
 and maintain the rule → test → implementation table in
 [observability.md](../observability.md). Existing checks cover service identity,
 HTTP/resource conventions, W3C propagation, business outcomes OBS-023–035, and
@@ -84,7 +84,7 @@ Root `npm test` runs the spec project. `npm --prefix spec ci` verified locally
 
 Status: done. Decision A-02. Phase: spec.
 
-Result: [`spec/contracts/runtime-contract.md`](../../spec/contracts/runtime-contract.md) defines
+Result: [`spec/contracts/runtime-contract.md`](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/contracts/runtime-contract.md) defines
 `setup`/`start` scripts, static ports, environment variables (OpenTelemetry standard names
 where they exist), frozen `CLINIC_NOW` clock, `GET /health`, `POST /test/reset` behind
 `PETCLINIC_TEST_ENDPOINTS=enabled`, and seed files read from `SEED_DATA_DIR`. Added
@@ -146,7 +146,7 @@ tests move to TEST-01, after SPEC-04 defines endpoints.
 
 Status: done (specification and failing tests). Decision A-09. Phase: spec.
 
-Result: [`spec/contracts/auth-contract.md`](../../spec/contracts/auth-contract.md) and
+Result: [`spec/contracts/auth-contract.md`](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/contracts/auth-contract.md) and
 `auth.openapi.json`: JWT HS256 with the shared demo secret, 8-hour user tokens on the clinic
 clock, identical 401 for unknown user or wrong password, `service` role tokens (5 minutes)
 for internal operations, 401/403/404 rules, open endpoints. Seed data: `customers.json`
@@ -180,7 +180,7 @@ Protected paths (`spec/guard/protected-paths.json`): `spec/`, `docs/specs/`, `.c
 
 ### SPEC-04 — Per-service API contracts
 
-Status: done. Phase: spec. Index: [`spec/contracts/README.md`](../../spec/contracts/README.md).
+Status: done. Phase: spec. Index: [`spec/contracts/README.md`](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/contracts/README.md).
 
 Decisions: plain REST paths, no version prefix or pagination; RFC 9457 problem details
 with a stable `code`; 400 malformed, 401/403/404 per auth contract, 409 state conflicts,
@@ -433,9 +433,9 @@ source. Retain approved CSS, local fonts/license, logo/images, design instructio
 tests, and approved visual references under `spec/`. Delete only frontend application
 code in a later authorized experiment after Checkout reconstruction (DEMO-04).
 
-Approved and frozen: [design contract](../../spec/frontend/design.md), [screen contract](../../spec/frontend/screens.md),
-[browser coverage plan](../../spec/tests/browser/README.md), and
-[visual-reference policy](../../spec/frontend/visual-baselines/README.md).
+Approved and frozen: [design contract](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/frontend/design.md), [screen contract](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/frontend/screens.md),
+[browser coverage plan](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/tests/browser/README.md), and
+[visual-reference policy](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/frontend/visual-baselines/README.md).
 Approved identity: Cedar & Paw Veterinary; evergreen/ivory, local Inter, original
 SVG paw mark, minimal imagery. [Static review preview](../design/fe-01-design-preview.html)
 supports `#login`, `#appointments`, and `#bill`; it is not the application.
@@ -470,7 +470,7 @@ capacity study; the 200 ms budget is intentionally generous.
   real services and fake payments, telemetry enabled, no browser.
 - `npm --prefix spec run test:performance`; included in `npm test`.
 
-Specification and workload details: [PERF-01 contract](../../spec/tests/performance/README.md).
+Specification and workload details: [PERF-01 contract](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/tests/performance/README.md).
 Initial baseline: 100 samples per operation, p95 6.5–16.9 ms; full performance command
 17.4 seconds. Deliberate slow HTTP responses and incorrect financial outcomes were
 rejected. See [PERF-01 handoff](../handoffs/perf-01.md) for evidence and next steps.
@@ -780,7 +780,7 @@ on 2026-10-11.
 
 Status: **evidence accepted (2026-10-03, A-14)**. Checkpoint tag
 `demo-01-baseline`. Tools, prompts, and the visible journey are in
-[tools/demo](../../tools/demo/README.md). Agent: Claude Code in a fresh session;
+[tools/demo](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/tools/demo/README.md). Agent: Claude Code in a fresh session;
 disposable workspace with no prior Checkout history; prepared prompt (reading
 the shared JavaScript runtime is allowed and disclosed).
 
@@ -908,7 +908,7 @@ reviews it before anything protected changes.
 
 Status: **frozen 2026-10-10; follow-up patch awaiting review and freeze.**
 - Design: [docs/design/spec-08-delivery.md](../design/spec-08-delivery.md).
-- Spec: [spec/delivery/](../../spec/delivery/README.md).
+- Spec: [spec/delivery/](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/delivery/README.md).
 - Human guide (generated): [docs/delivery/environments.md](../delivery/environments.md).
 
 29 control scenarios plus 4 catalog checks, calibrated with 27 plants (all caught).

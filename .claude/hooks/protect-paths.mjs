@@ -16,7 +16,7 @@ const args = input.tool_input ?? {};
 
 const REASON = (what) => `Blocked by GUARD-01: ${what}. Protected files are the specification `
   + "and tests that define correct behavior; humans change them deliberately. Change the implementation "
-  + "under services/ or frontend/ instead. If you believe the specification is wrong, stop and explain the "
+  + "under unprotected implementation paths instead. If you believe the specification is wrong, stop and explain the "
   + "problem to the user rather than editing it.";
 
 function deny(reason) {

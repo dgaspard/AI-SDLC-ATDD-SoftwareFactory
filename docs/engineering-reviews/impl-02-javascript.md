@@ -40,8 +40,8 @@ them. No unrelated application's process was stopped.
 All post-fix individual suite reruns completed successfully, including combined
 service BDD after the authorized harness correction. Logs are retained in
 `test-results/engineering/` (generated, Git-ignored evidence). See the
-[final aggregate log](../../test-results/engineering/impl02-final-validation.log).
-The [reviewed-source SHA-256 manifest](../../test-results/engineering/implementation-sha256.txt)
+[final aggregate log](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/test-results/engineering/impl02-final-validation.log).
+The [reviewed-source SHA-256 manifest](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/test-results/engineering/implementation-sha256.txt)
 identifies the reviewed source at checkpoint `impl-02`; all hashes still match after
 final validation. The reviewed protected-file diff is retained alongside it.
 

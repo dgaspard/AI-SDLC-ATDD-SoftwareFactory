@@ -4,8 +4,8 @@ The project-level decision log: how the system, its verification and its deliver
 built. Each row is a decision with its date and rationale. Later decisions supersede
 earlier ones explicitly; superseded rows stay for history.
 
-- Product and business behavior: [D-xx in docs/specs/business-decisions.md](../specs/business-decisions.md) (protected).
-- Schema rules: [docs/specs/schema-decisions.md](../specs/schema-decisions.md) (protected).
+- Product and business behavior: [D-xx in docs/specs/business-decisions.md](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/docs/specs/business-decisions.md) (protected).
+- Schema rules: [docs/specs/schema-decisions.md](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/docs/specs/schema-decisions.md) (protected).
 - Where to record a new decision: see [docs/README.md](../README.md).
 
 Older references to "PROJECT-PLAN A-xx" point here; the IDs are unchanged.

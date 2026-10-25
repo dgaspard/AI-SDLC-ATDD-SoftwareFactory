@@ -1,6 +1,6 @@
 # SPEC-08 design: delivery as an executable specification
 
-Status: **frozen in [spec/delivery/](../../spec/delivery/README.md) (2026-10-10).** The follow-up
+Status: **frozen in [spec/delivery/](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/delivery/README.md) (2026-10-10).** The follow-up
 (`@awaiting` tags, and CTL-025 rewritten around a separate agent identity) is frozen too
 (PR #1–#2): see "Decided after the freeze" below. No AWS spend and no delivery code until after 2026-11-13. Backlog:
 [SPEC-08](../history/backlog-completed.md#spec-08--delivery-as-an-executable-specification).
@@ -95,8 +95,8 @@ scheduled teardown.
 
 ## Shape
 
-See the draft [README](../../spec/delivery/README.md) for the tag vocabulary
-and commands, and [contract.md](../../spec/delivery/contract.md) for DC-001..DC-008.
+See the draft [README](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/delivery/README.md) for the tag vocabulary
+and commands, and [contract.md](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/spec/delivery/contract.md) for DC-001..DC-008.
 
 | Tier | Reads | Runs | Credentials |
 | --- | --- | --- | --- |

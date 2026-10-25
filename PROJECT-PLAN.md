@@ -99,7 +99,7 @@ No result here is claimed yet, and no numeric targets are set.
 ## The reference project
 
 PetClinic is the factory's reference consumer and proving ground (A-30); its files
-remain in this checkout until extraction:
+belong to the separate PetClinic consumer repository:
 four services, a frontend, a black-box harness, and frozen specifications. PetClinic work
 must serve a specific factory capability, a regression need or an experiment. Its domain
 choices (clinic rules, demo authentication, the `petclinic.*` telemetry namespace) are
@@ -262,7 +262,7 @@ Evidence paths:
 Outcome and next action:
 ```
 
-The scripted procedure for Checkout is in [tools/demo/](tools/demo/README.md).
+The scripted procedure for Checkout is in [tools/demo/](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/tools/demo/README.md).
 
 ## Risks
 

@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# Runtime contract: foreground, env-configured, exits on SIGTERM.
-set -euo pipefail
-cd "$(dirname "$0")"
-exec node server.js

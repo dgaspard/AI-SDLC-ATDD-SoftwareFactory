@@ -1,8 +1,8 @@
 {
-  "name": "ai-sdlc-petclinic",
+  "name": "ai-sdlc-software-factory",
   "version": "1.0.0",
   "private": true,
-  "description": "Specification-first PetClinic demo: an AI agent builds four services from protected BDD, API, schema, and observability tests.",
+  "description": "Reusable consumer verification and evidence mechanisms",
   "scripts": {
     "test": "npm --prefix spec test",
     "test:fast": "node spec/run-all.js --tier fast",
@@ -12,16 +12,7 @@
     "test:verify": "node spec/run-all.js --verify",
     "evidence:change": "node tools/evidence/change-evidence.mjs",
     "evidence:verify": "node tools/evidence/change-evidence.mjs --verify",
-    "metrics:dora": "node tools/dora/dora-metrics.mjs",
-    "test:engineering": "node --test --test-concurrency=1 tools/review/project-specific/*.test.mjs",
-    "trace:payment": "node tools/capture-payment-trace.mjs",
-    "demo:journey": "spec/node_modules/.bin/playwright test --config tools/demo/playwright.demo.config.mjs",
-    "demo:journey:step": "spec/node_modules/.bin/playwright test --config tools/demo/playwright.demo.config.mjs --debug",
-    "demo:baselines": "spec/node_modules/.bin/playwright test --config tools/demo/playwright.demo.config.mjs --update-snapshots=all",
-    "lint": "services/platform/node_modules/.bin/eslint services frontend tools eslint.config.mjs",
-    "format:check": "services/platform/node_modules/.bin/prettier --check 'services/**/*.js' 'services/**/package.json' 'frontend/*.js' 'frontend/package.json' 'tools/**/*.mjs' eslint.config.mjs package.json",
-    "format": "services/platform/node_modules/.bin/prettier --write 'services/**/*.js' 'services/**/package.json' 'frontend/*.js' 'frontend/package.json' 'tools/**/*.mjs' eslint.config.mjs package.json",
-    "check": "npm run lint && npm run format:check"
+    "metrics:dora": "node tools/dora/dora-metrics.mjs"
   },
   "engines": {
     "node": "22 || 24 || >=26"

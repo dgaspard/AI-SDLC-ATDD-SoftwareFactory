@@ -1,8 +1,0 @@
-{
-  "_comment": "This app's actual CORS behavior, as implemented in services/platform/runtime.js (shared by every JavaScript service). Recorded here so a future portable CORS check has a concrete, real value to diff against, and so SEC-01's defect #4 (overly broad CORS) can be verified absent from the real build, not just assumed absent.",
-  "allowedOrigin": "process.env.FRONTEND_ORIGIN, default http://localhost:3000 — checked for exact equality before being echoed back, never a wildcard",
-  "allowedMethods": ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  "allowedHeaders": ["Authorization", "Content-Type", "Idempotency-Key"],
-  "allowCredentials": false,
-  "verifiedAgainstRealImplementation": "2026-10-03, manual read of services/platform/runtime.js — not yet confirmed by a scanner run"
-}

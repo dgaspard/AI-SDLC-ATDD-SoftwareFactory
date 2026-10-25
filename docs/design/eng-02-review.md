@@ -127,7 +127,7 @@ decisions are now answered:
    aren't starting from zero.
 4. **Threat-model note: its own single-purpose file**, not folded into
    another record's prose. Built at
-   [`tools/review/project-specific/threat-model.md`](../../tools/review/project-specific/threat-model.md),
+   [`tools/review/project-specific/threat-model.md`](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/blob/9809c120cafd0ad867be6568621fac3ef54f1780/tools/review/project-specific/threat-model.md),
    ID-keyed (`THREAT-01`, `THREAT-02`, ...) so other records — decisions,
    contracts, future reviews — reference an entry by ID instead of
    duplicating it. `business-decisions.md` D-44 and `auth-contract.md` were

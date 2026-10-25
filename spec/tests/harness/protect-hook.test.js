@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
-import { REPO_ROOT } from "../../harness/config.js";
+import { fileURLToPath } from "node:url";
+const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
 function decision(tool, toolInput) {
   const r = spawnSync("node", [path.join(REPO_ROOT, ".claude/hooks/protect-paths.mjs")], {

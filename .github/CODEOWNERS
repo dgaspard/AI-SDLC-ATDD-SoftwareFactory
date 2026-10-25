@@ -5,7 +5,6 @@
 /.github/     @dgaspard
 /AGENTS.md    @dgaspard
 /CLAUDE.md    @dgaspard
-/tools/petclinic/suite.mjs  @dgaspard
 
 # ENG-02: portable review/security engines require review before they change —
 # mandatory review, not an immutable hash freeze (lighter than GUARD-01 above,
