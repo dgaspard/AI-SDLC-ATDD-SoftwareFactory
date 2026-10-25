@@ -258,3 +258,18 @@ only the implementation. Its human-only freeze entry point must remain blocked b
 the agent hook, including the extracted `.mjs` module; test command strings against
 the hook without executing freeze. Reviewable patch/results and current status live
 in [BACKLOG.md](../../BACKLOG.md), not in this design.
+
+## Governed local update proof
+
+The next specification is [governed-change.v1](../../spec/factory/governed-change.v1.md).
+It narrows lifecycle work to an approved frozen requirement change, isolated candidate
+implementation and independent full verification. Reuse consumer.mjs/core.mjs/processes.mjs;
+retain existing evidence-v1 and consumer envelope meanings. File create/update/delete
+permissions are explicit per task; they grant no infrastructure, data, repository or
+deployment authority. The coordinator is not a general coding-agent platform.
+
+A real runner must supply OS-enforced bounds and a separately provisioned credential
+boundary. A worktree, prompt or hash check alone is not that boundary. Protocol fixtures
+are explicitly simulated, and missing real runner support blocks demonstration.
+PetClinic owns its D-67 API/BDD acceptance separately; factory tests remain neutral.
+Review and freeze the contracts before implementation. Status is only in BACKLOG.md.

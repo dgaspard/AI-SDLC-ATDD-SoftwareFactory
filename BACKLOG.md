@@ -22,7 +22,7 @@ for every item. Finished items keep their full history in
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **consumer independently verified; factory cleanup awaiting exact review and human freeze** (A-30).
+Status: **repository separation and immutable consumption complete; lifecycle specification is next** (A-30).
 Canonical ID START-02 and its ordered slices are retained.
 Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
@@ -30,10 +30,34 @@ Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md
 |---|---|---|
 | Consumer-contract specification | Human-frozen in `0fca4ef`; original 14-case red baseline retained historically | Preserve frozen interface and assertions; separately review any amendments |
 | Local extraction | Verified and owner-approved | Reviewed consumer `508e8e947323ca1723966344a90d1036a077a93e`; combined proof and approval recorded below |
-| Repository separation and immutable consumption | Consumer published and CI verified; factory cleanup pending | Review cleanup patch and human-freeze factory baseline; verify consumer protections |
-| Lifecycle specification | Planned after repository separation | Define create/update/delete/deploy scope and recovery; no deployment authorization |
+| Repository separation and immutable consumption | Complete | Independent consumer CI/evidence verified; factory cleanup merged; owner confirms branch protection |
+| Lifecycle specification | Governed local update draft awaiting human review/freeze | Review governed-change contract/tests and PetClinic D-67 acceptance; no implementation or deployment authorization |
 | Local lifecycle proof | Planned after lifecycle freeze | Disposable local copies, retained hashes and bounded recovery; no cloud activity |
 | Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
+
+**Next proof: governed local PetClinic update (specification phase).**
+The owner authorized drafting [governed-change.v1](spec/factory/governed-change.v1.md)
+and its neutral executable contract tests. Reuse the existing consumer verifier,
+process cleanup, canonical path/trust checks and evidence mechanisms. The new boundary
+adds an isolated implementation task, explicit create/update/delete grants, external
+runner authority, independent verification and retained recovery evidence. No broad
+agent platform or automatic approval/merge/deploy is proposed.
+
+The consumer-only acceptance candidate is D-67: profile PATCH selecting a known
+inactive veterinarian returns 409 invalid_state, atomically preserving the profile;
+unknown remains 400, active/omitted selections retain current behavior. This exercises
+Customer -> Reservation's existing live roster with both service BDD and a real-service
+journey. Factory mechanisms contain no clinic rule. The task grants only update of
+services/customer/server.js; create/delete grants are empty.
+
+The workflow CLI is not implemented. The new neutral tests are an intentional red
+specification baseline; fixture launcher results can only be SIMULATED_VERIFIED and
+cannot satisfy the real demonstration. A real constrained coding-agent launcher and
+its OS/credential conformance remain an explicit implementation prerequisite. PetClinic
+still pins 9809c120cafd0ad867be6568621fac3ef54f1780, which has no change coordinator;
+a later released implementation pin, separately reviewed consumer pin/freeze/commit,
+and renewed external trust are required for real proof. Neither frozen manifest has
+been refreshed by the agent. Existing application code and all prior assertions remain.
 
 **Current separation verification (2026-10-24).** Consumer commit
 `8c16963fcb9392907ebb14a62aa1537eca12bc43` is published on PetClinic main and
@@ -48,12 +72,22 @@ negative run also recorded browser failure and the final DORA adapter rejected t
 incomplete application gate (its 22 DORA assertions passed). Human freeze contains 198 matching consumer entries. Shared history and tags remain;
 a self-contained consumer Git bundle preserves the clean import and freeze commits.
 
-The proposed factory cleanup retains neutral boundary/runner/guard/evidence/DORA/App
-assertions. It has not been applied to the source repository or human-frozen. Existing
-factory CI names remain but their scope becomes factory mechanisms; the original
-application delivery controls remain in PetClinic. Repository ruleset/branch-protection
-inspection is blocked by the required App wrapper, so human verification remains due.
-No lifecycle delivery or second-consumer completion is claimed.
+Factory cleanup was reviewed, human-frozen and merged in
+[PR #22](https://github.com/dgaspard/AI-SDLC-ATDD-SoftwareFactory/pull/22), merge commit
+`4e12241f6bde7e995f4ef1726a82e80793ad7d4f`. The factory now retains neutral
+boundary/runner/guard/evidence/DORA/App assertions instead of active PetClinic code.
+All 38 boundary checks and the full factory gate passed on tree `1f8b192f2291`;
+run record `test-results/runs/2026-10-25T00-13-03-960Z-full.json`. The accidental duplicate
+legacy workflow was removed before final green CI and merge. Existing check names
+remain, with factory-only scope; original application delivery controls live in PetClinic.
+
+The owner confirmed PetClinic branch protection is set after being asked to require
+all three named checks, pull requests with human CODEOWNERS approval and no GitHub
+App bypass. This is human-attested enforcement: the mandated App wrapper blocks
+independent ruleset/protection inspection, so no API verification is claimed.
+Repository separation is complete; Prompt 5 is lifecycle specification only.
+No lifecycle implementation, cloud deployment, automatic approval or second-consumer
+completion is claimed. START-02 overall remains open for the later slices.
 
 The following preflight and preparation paragraphs are historical observations;
 the current verification above supersedes their empty-destination and pending-import statements.
