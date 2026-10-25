@@ -273,3 +273,125 @@ boundary. A worktree, prompt or hash check alone is not that boundary. Protocol 
 are explicitly simulated, and missing real runner support blocks demonstration.
 PetClinic owns its D-67 API/BDD acceptance separately; factory tests remain neutral.
 Review and freeze the contracts before implementation. Status is only in BACKLOG.md.
+
+
+## Local model broker setup for review
+
+This is a proposed implementation arrangement for the frozen governed-change
+credential boundary, not an amendment to its authority or evidence contracts.
+The review template is [broker.config.example.json](../../tools/factory/broker.config.example.json).
+It is deliberately disabled and is not consumed by the coordinator. No broker start
+command exists yet. Null fields are unresolved provisioning inputs, not defaults.
+Canonical status and qualification evidence remain in BACKLOG.md.
+
+Use the existing Codex CLI through a custom model provider, backed by a minimal
+Responses HTTP relay outside the coding sandbox. Do not build a second agent loop
+or model SDK. Official [Codex authentication guidance](https://learn.chatgpt.com/docs/auth)
+supports a custom provider with an environment-supplied token; here that token would
+be a per-run broker capability, never the upstream API key. [Automation guidance](https://learn.chatgpt.com/docs/non-interactive-mode)
+warns that repository-controlled processes can read credentials in their environment.
+Do not reuse desktop login, copy auth.json, or expose the GitHub App credential.
+
+Proposed local layout:
+
+- A private Docker internal network contains exactly one runner and its broker.
+  No host ports are published. The runner has no other network, host mounts,
+  Docker socket, cloud/Git credentials, or upstream credential mount.
+- The broker additionally has an egress network. It forwards only to the fixed
+  HTTPS upstream in the reviewed configuration, verifies TLS and follows no redirects.
+  It is not a CONNECT, SOCKS or general HTTP proxy. The destination cannot come from
+  the runner, query string, request body or headers.
+- The broker root filesystem and image are immutable; all capabilities are dropped,
+  privilege escalation is disabled, and it runs as an unprivileged user. The owner
+  credential is mounted read-only into the broker alone, outside scratch, consumer,
+  factory and evidence roots. A compromised runner must have no route to other
+  containers, host services or internet destinations. Docker internal-network
+  configuration alone is not accepted as proof; probe host gateways and DNS as well.
+- A trusted coordinator creates a random capability for one run, holds its binding
+  outside runner-writable space and revokes it on completion, failure, interruption
+  or deadline. The runner receives only that capability. Expired and cross-run
+  capabilities fail before forwarding. No API-key fallback is allowed.
+- The independent verifier has no model network or token. Its separate profile
+  permits only the application/test facilities required by the frozen consumer.
+
+The template proposes POST /v1/responses only, an exact owner-selected model,
+store=false, no background execution, no remote built-in tools and bounded request,
+response, time and output limits. Local Codex tool definitions/results may pass only
+through an explicit reviewed request-field allowlist; remote MCP, hosted code,
+web tools, arbitrary URLs and unknown fields fail closed. Streaming SSE is allowed
+only with cumulative byte limits, timeout and cancellation on disconnect. Strip
+client auth/upstream headers and inject the upstream credential inside the broker.
+Do not relay upstream headers, error bodies or diagnostics that could contain secrets;
+return sanitized errors. Log only the template's metadata fields. Request caps and
+output-token caps bound use, but do not guarantee a dollar budget; the owner sets a
+provider-side project budget independently.
+
+Owner preparation after reviewing this arrangement:
+
+1. Choose an API project/credential source and exact model available to that project.
+   API access and model availability have not been tested. Do not paste a key into chat.
+2. Choose a private directory outside both repositories, for example
+   `~/.config/software-factory/broker`, mode 0700. Resolve its real path and reject
+   symlink/hardlink aliases or overlap with either repository, run outputs or shared
+   directories. Store the credential as an owner-only regular file, mode 0600,
+   using a secure local editor or secret manager; never a shell argument/history entry.
+3. Copy the non-secret template there and record the canonical credential path and
+   exact model. Keep enabled=false. Leave image/launcher pins unset until qualified
+   implementation artifacts exist. Merely filling these fields does not approve a run.
+4. Review broker implementation and its neutral offline tests, then pin both images
+   and all launcher inputs immutably. The Linux runner image must contain the actual
+   reviewed Codex executable; the installed macOS binary is not a Linux image pin.
+5. Run broker and sandbox conformance before any live task. Only after qualification
+   may the owner approve live credential use and a small model smoke test. PetClinic
+   still requires its separate factory-pin upgrade, freeze/commit and external authority.
+
+Required broker tests: unauthorized/expired/cross-run tokens; denied methods, paths,
+redirects, upstream headers, model substitution and remote tools; oversize/truncated
+streams; timeout/disconnect cancellation; request quota; replay after revocation;
+secret canaries absent from runner environment, responses, logs and evidence; broker
+failure and surviving processes. Test with a local fake upstream first, explicitly
+labeling it as broker-component testing rather than real coding proof. Filesystem
+write-denial audit, scoped create/delete, host-loss cleanup and the separate verifier
+remain mandatory launcher conformance, not capabilities supplied by this relay.
+
+
+### Credential store (“wallet”) boundary
+
+The owner clarified that credential storage should later support local and cloud
+wallets. Keep storage separate from transport: `credential-store.mjs` provides the
+local-file adapter; the broker receives only `readSecret({signal})`. An OS keychain or
+cloud secret manager can later implement that interface. Cloud adapters must honor
+cancellation and use workload identity, not a bootstrap cloud key passed to the runner.
+No provider SDK or cloud resources are introduced here.
+
+The local file is a transitional storage adapter with owner/mode/alias checks, not an
+encrypted wallet. OS-keychain integration and cloud-managed encryption, rotation,
+audit and access policies remain future work. Separate local, non-prod and prod store
+references, workloads and identities; never copy the local credential into deployments
+or let non-prod read prod secrets. The model broker is not a general application-secret
+retrieval API. Application delivery credentials remain outside its scope.
+
+`model-broker.mjs` implements a single-run relay component with an injected credential
+store, bounded quotas, cancellation/revocation and sanitized metadata. Offline tests use
+only a loopback fake upstream and synthetic canaries. The component accepts text and
+structured local-message/tool requests plus bounded, fully buffered Responses SSE.
+It validates terminal status, completed item consistency and decoded secret reflection
+before relaying; it rejects hosted tools, namespaces, remote inputs and unknown request fields.
+The installed macOS Codex CLI has an explicit offline two-turn compatibility probe
+with web search and multi-agent features disabled. This does not establish a
+qualified launcher: immutable packaging, private-network wiring and mandatory
+filesystem/process/network/denial-audit conformance remain prerequisites.
+The disabled setup template is design input, not a parsed deployment configuration.
+There is no broker start CLI, integration into change.mjs, cloud provisioning or live
+credential validation. A successful component test must never be reported as real-agent
+or wallet-provider qualification.
+
+
+The supported wire subset follows the official [Responses streaming reference](https://developers.openai.com/api/reference/resources/responses/streaming-events)
+and the observed installed CLI request shape. Full buffering trades incremental
+latency for withholding partial tool events and incomplete responses. JSON and SSE
+responses must represent completed Responses objects; interrupted/truncated streams,
+failed/incomplete statuses, malformed or inconsistent item events and decoded secret
+canaries are rejected. Additional provider/model features require explicit validation;
+unknown request fields are not silently forwarded. A neutral model name in offline probes
+uses CLI fallback metadata and says nothing about a live model's availability.

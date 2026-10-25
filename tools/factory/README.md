@@ -77,3 +77,42 @@ resumes, commits, merges, publishes or deletes a retained run. Host-loss process
 recovery is not qualified: process IDs are journaled after launch, leaving a crash
 window. Human inspection and explicit cleanup remain necessary after host loss.
 PetClinic implementation and any consumer pin upgrade remain separate work.
+
+
+The proposed [local broker setup](../../docs/design/start-02-factory-core.md#local-model-broker-setup-for-review)
+and [disabled configuration template](broker.config.example.json) describe the credential
+boundary for review. The template is not a runnable launcher or accepted coordinator
+configuration. Keep credentials external; no broker or model call is enabled by it.
+
+
+`model-broker.mjs` exports the single-run relay component; `credential-store.mjs`
+exports a local-file implementation of `readSecret({signal})`. This separates the
+credential “wallet” from model forwarding, allowing a future OS-keychain or cloud
+secret-manager adapter without giving the runner the upstream secret. The local file
+is not an encrypted wallet. The component supports bounded text/structured-message
+requests, local function/custom-tool roundtrips and buffered Responses SSE. Streams
+are withheld until completion, item consistency and decoded secret checks pass.
+Hosted tools, namespaces, remote inputs and unknown request fields fail closed. Client tracing
+and cache metadata are discarded; output limits are supplied when the client omits
+them. This is not yet connected to the governed-change coordinator. Run offline checks with `node --test tools/factory/model-broker.test.mjs`;
+they also participate in the required boundary suite. No live credentials are needed.
+
+
+An explicit offline compatibility probe uses an installed Codex executable with a
+private temporary HOME, no saved authentication, disabled web search/multi-agent
+features and a fake model endpoint behind the real broker:
+
+```sh
+node tools/factory/broker-codex-probe.mjs --codex /absolute/path/to/codex
+```
+
+The macOS probe retains its report under `/private/tmp/`, records the executable
+SHA256/version, and requires a successful neutral `printf` tool roundtrip plus a
+final response. It checks cleanup before reporting success and uses the shared
+bounded process-group stop mechanism. It is explicit rather than part of the
+portable gate because the Codex executable is externally provisioned. The regular
+boundary gate always runs protocol and adversarial tests without that executable.
+Synthetic model responses prove wire compatibility only; they are not a real coding
+agent demonstration. No model catalog/API access, Linux image compatibility or
+mandatory launcher conformance is inferred. Broker deployment and immutable runner
+packaging remain separate work; the disabled template does not start a service.

@@ -22,7 +22,7 @@ for every item. Finished items keep their full history in
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **repository separation complete; frozen local workflow implementation under verification** (A-30).
+Status: **repository separation complete; fixture workflow verified; real-runner qualification pending** (A-30).
 Canonical ID START-02 and its ordered slices are retained.
 Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
@@ -34,6 +34,27 @@ Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md
 | Lifecycle specification | Governed local update frozen | Factory `aac1de392cdbd180dab722ddbd689b6aacd4e829`, fixture correction `a3134b5`; consumer acceptance `5bd4c8415a9a6a01f41973f1df01aaa075463af5` |
 | Local lifecycle proof | Fixture coordinator implemented; real proof blocked | Qualify real isolated runner and verifier, then review consumer pin upgrade before PetClinic implementation |
 | Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
+
+**Local broker preparation.** Owner requested a setup for review. The
+[proposed arrangement](docs/design/start-02-factory-core.md#local-model-broker-setup-for-review)
+and disabled `tools/factory/broker.config.example.json` describe an external credential,
+per-run capability, model-only relay and bounded network arrangement. The owner approved local implementation and clarified a future local/cloud wallet
+abstraction. A single-run relay and local-file credential-store adapter have offline component
+tests. The relay now accepts structured local-tool messages and validates buffered
+Responses SSE. An actual installed macOS Codex CLI completed a two-request neutral
+tool roundtrip through the broker with a synthetic model and credential; report
+`test-results/start02-broker-protocol/codex-probe.json` records executable identity.
+This is wire compatibility only. Immutable Linux runner/broker packaging, network
+deployment, denial-attempt audit, create/delete isolation, host-loss recovery, independent
+verifier profile, model access and live credential use remain unqualified. No real
+runner is enabled. Protocol/gate records live under `test-results/start02-broker-protocol/`. The local
+file is not an encrypted wallet; OS keychain and cloud store adapters remain future work.
+The credential-free isolation probe at `test-results/start02-runner-qualification/isolation-probe.json`
+denied eight tested filesystem/socket operations and external network access while
+allowing one granted update; it is component evidence only, not denial-audit or real
+runner conformance. The reviewed fixture implementation is local commit
+`6395a1629f6149860b4c983aecc0ce4dbbf286d2`; its verified tree is
+`6370ee527e0d3704c16937759d71dd2465d67ca2` (154 assertions plus guard).
 
 **Next proof: governed local PetClinic update.**
 The owner authorized drafting [governed-change.v1](spec/factory/governed-change.v1.md)

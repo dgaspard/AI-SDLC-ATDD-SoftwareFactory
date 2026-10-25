@@ -1,0 +1,67 @@
+{
+  "proposalOnly": true,
+  "enabled": false,
+  "schemaVersion": 1,
+  "transport": {
+    "runnerEndpoint": "http://model-broker:8080/v1/responses",
+    "hostPublishedPorts": [],
+    "runnerNetwork": "per-run-internal-only"
+  },
+  "upstream": {
+    "url": "https://api.openai.com/v1/responses",
+    "model": null,
+    "followRedirects": false
+  },
+  "credential": {
+    "source": "external-owner-file",
+    "hostPath": null,
+    "containerPath": "/run/secrets/model-api-key",
+    "requiredMode": "0600",
+    "runnerMount": false,
+    "storeInterface": "readSecret({signal})",
+    "environment": "local",
+    "futureProviders": [
+      "os-keychain",
+      "cloud-secret-manager"
+    ]
+  },
+  "session": {
+    "runId": null,
+    "tokenSource": "coordinator-generated-memory-only",
+    "ttlSeconds": 1800,
+    "maxRequests": 40,
+    "maxConcurrentRequests": 1
+  },
+  "limits": {
+    "requestBytes": 1048576,
+    "responseBytes": 16777216,
+    "requestTimeoutMs": 120000,
+    "maxOutputTokensPerRequest": 8192
+  },
+  "requestPolicy": {
+    "method": "POST",
+    "path": "/v1/responses",
+    "store": false,
+    "remoteTools": false,
+    "background": false,
+    "allowClientUpstreamHeaders": false
+  },
+  "logging": {
+    "bodies": false,
+    "headers": false,
+    "tokens": false,
+    "fields": [
+      "runId",
+      "requestId",
+      "status",
+      "durationMs",
+      "requestBytes",
+      "responseBytes"
+    ]
+  },
+  "pins": {
+    "brokerImageDigest": null,
+    "runnerImageDigest": null,
+    "launcherInputsSha256": null
+  }
+}

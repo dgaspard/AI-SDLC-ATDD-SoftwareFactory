@@ -1,3 +1,4 @@
+import "./model-broker.test.mjs";
 // Additional governed-change regressions participate in the frozen boundary suite.
 import "./change.test.mjs";
 import { test } from "node:test";
