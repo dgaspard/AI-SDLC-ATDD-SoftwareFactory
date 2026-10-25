@@ -23,7 +23,7 @@ function fixture(t,mode='pass') {
   put('spec/policy.json',{suites:{acceptance:{cmd:process.execPath,args:['spec/check.cjs']}},tiers:{full:{suites:['acceptance']},fast:{always:['acceptance']}},rules:{list:[]}});
   const revision=execFileSync('git',['rev-parse','HEAD'],{cwd:factory,encoding:'utf8'}).trim();
   const task={schemaVersion:1,id:'neutral-update',intent:'Implement the frozen value requirement',requirementPaths:['spec/requirement.txt'],permissions:{create:[],update:['app/value.txt'],delete:[]}};
-  put('spec/change.json',task);put('spec/paths.json',{protected:['spec/']});
+  put('spec/change.json',task);put('spec/paths.json',{protected:['spec/'],ignored:['spec/protected.sha256']});
   const config={schemaVersion:1,application:{id:'neutral',repository:'example/consumer',root:'.'},factory:{repository:'example/factory',revision,interfaceVersion:1},locations:Object.fromEntries(['domainContracts','apiContracts','bdd','performanceScenarios','performanceWorkloads','applicationPolicies','fixtures'].map(k=>[k,['spec/requirement.txt']])),runtime:{contract:'spec/requirement.txt',projects:[],startupGroups:[],telemetry:{endpoint:'http://localhost:4318',protocol:'http/protobuf',tracesExporter:'otlp',metricsExporter:'none',logsExporter:'none',batchDelayMs:100,waitMs:5000}},testing:{policy:'spec/policy.json',cwd:'.',results:'results',evidence:'evidence'},trust:{protectedPaths:'spec/paths.json',manifest:'spec/protected.sha256',configuration:'spec/authority.json'},contractVersions:[{id:'neutral',version:'1',path:'spec/requirement.txt'}]};
   put('spec/config.json',config);put('spec/authority.json',{requiredSuites:['acceptance'],requiredEvidence:['evidence/result.json']});
   // Synthetic fixture hash list only; never invoke a human freeze tool.
