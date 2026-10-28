@@ -44,7 +44,10 @@ tests. The relay now accepts structured local-tool messages and validates buffer
 Responses SSE. An actual installed macOS Codex CLI completed a two-request neutral
 tool roundtrip through the broker with a synthetic model and credential; report
 `test-results/start02-broker-protocol/codex-probe.json` records executable identity.
-This is wire compatibility only. Immutable Linux runner/broker packaging, network
+This is wire compatibility only. Offline Linux arm64 component packaging now pins
+the Codex archive and Node base, records image identities and passes a runner version
+smoke plus 20 broker tests under a read-only, network-none container profile. Records:
+`test-results/start02-packaging/`. This does not qualify a real launcher. Network
 deployment, denial-attempt audit, create/delete isolation, host-loss recovery, independent
 verifier profile, model access and live credential use remain unqualified. No real
 runner is enabled. Protocol/gate records live under `test-results/start02-broker-protocol/`. The local
@@ -55,6 +58,22 @@ allowing one granted update; it is component evidence only, not denial-audit or 
 runner conformance. The reviewed fixture implementation is local commit
 `6395a1629f6149860b4c983aecc0ce4dbbf286d2`; its verified tree is
 `6370ee527e0d3704c16937759d71dd2465d67ca2` (154 assertions plus guard).
+
+**Container recovery component.** `container-session.mjs` now records durable container
+ownership before start and confirms shutdown before terminal process status. Explicit
+credential-free Docker tests cover failure propagation, timeout, interruption, lost
+create response, ownership mismatch, stale temporary journals and recovery after the
+coordinator is killed. Records are under `test-results/start02-container-lifecycle/`.
+This is not wired into `change.mjs` and does not close its host-process recovery gap
+or qualify denial auditing, source permissions or the independent verifier.
+
+**Independent observer experiment.** A pinned strace image now observes nine fixed
+neutral denial cases even when the unprivileged workload suppresses errors and claims
+success. A missing-observer-capability control fails without a passing report; outer
+container cleanup precedes result validation. Raw trace, image/source identity and
+results live under `test-results/start02-audit-probe/`. This proves only the fixed
+cases, not complete arbitrary-runner auditing or tracing-escape resistance. Scoped
+grants, isolated verifier and coordinator integration remain outstanding.
 
 **Next proof: governed local PetClinic update.**
 The owner authorized drafting [governed-change.v1](spec/factory/governed-change.v1.md)

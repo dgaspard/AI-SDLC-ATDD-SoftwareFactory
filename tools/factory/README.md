@@ -114,5 +114,120 @@ portable gate because the Codex executable is externally provisioned. The regula
 boundary gate always runs protocol and adversarial tests without that executable.
 Synthetic model responses prove wire compatibility only; they are not a real coding
 agent demonstration. No model catalog/API access, Linux image compatibility or
-mandatory launcher conformance is inferred. Broker deployment and immutable runner
-packaging remain separate work; the disabled template does not start a service.
+mandatory launcher conformance is inferred. Broker deployment remains separate work. Offline Linux component packaging is
+described below; the disabled template does not start a service.
+
+### Offline Linux component packaging
+
+`packaging/inputs.json` pins the Linux arm64 Codex archive by SHA-512 and the
+cached Node base by image digest. Provision that exact archive explicitly from its
+recorded URL, then run:
+
+```bash
+python3 tools/factory/packaging/build-local.py --archive /absolute/codex.tgz --output /absolute/new-external-directory
+PYTHONDONTWRITEBYTECODE=1 python3 tools/factory/packaging/build-local.test.py
+```
+
+The builder rejects existing output, factory overlap through shortcuts, mismatched
+archives and unsafe archive members before staging. It requires the pinned base to
+already exist locally, builds with `--network=none --pull=false`, and records input
+hashes and resulting immutable image IDs. It does not fetch packages or run npm
+installation hooks. Keep the output as a packaging record; failed output is retained.
+Only Linux arm64 is covered. The full pinned platform package is preserved, including
+its bundled resources; no mutable transitive npm resolution is performed.
+
+These images are components, not a governed launcher. The runner's default command
+only reports its version; the broker image runs neutral offline tests and starts no
+credential-bearing service. For smoke checks use recorded image IDs with
+`docker run --rm --pull=never --network=none --read-only --cap-drop=ALL
+--security-opt=no-new-privileges --pids-limit=128 --memory=512m --cpus=2
+--tmpfs=/tmp:rw,nosuid,nodev,size=128m,mode=1777 <image-id>`.
+No host folders, sockets or credentials are mounted. A version check and passing
+broker tests do not prove coding-agent isolation, denial auditing or independent
+consumer verification. Production runner startup must provision its private HOME;
+the version-only smoke may warn that CODEX_HOME does not yet exist.
+
+### Container ownership and recovery component
+
+`container-session.mjs` separates prepare, start, completion and explicit recovery.
+It writes and flushes a unique container name and run label before Docker creates
+anything, then records the resolved container ID before starting workload code.
+A lost create response can therefore be reconciled by the recorded name and label.
+Recovery checks ID, name, label and pinned image before stopping a container. It
+never restarts work, converts interruption to success, or rewrites terminal history.
+Journals and stopped containers are retained; deletion is not part of recovery.
+
+The fixed component profile has no network, host mounts or forwarded credentials,
+a read-only root, dropped capabilities, an unprivileged UID, private temporary
+storage and bounded resources/logs. Images with implicit volumes are rejected.
+Callers supply an absolute Docker executable, cached image ID, argv and new external
+session directory; they must include all consumer/trust roots in `forbiddenRoots`.
+The factory checkout is always excluded. This is a trusted host library, not an
+untrusted-runner API or approved launcher descriptor parser. Arguments and image
+configuration must contain no secrets. Docker remains owner-provisioned host tooling.
+
+`finishSession` waits for exit or an explicit timeout/AbortSignal, then stops remaining
+work and verifies the container is stopped with PID zero before recording a result.
+The timeout starts when `finishSession` is called. Callers must use it immediately
+after start and must connect coordinator signals to its AbortSignal; this component
+does not install global signal handlers. A caller crash leaves the durable journal
+for explicit recovery. Docker unavailability fails closed and requires retrying
+recovery once the daemon is available. A component `COMPLETE` means only zero process
+exit with confirmed cleanup; it is never consumer evidence or VERIFIED_CANDIDATE.
+
+Run its explicit Docker tests against the reviewed local broker component image:
+
+```bash
+FACTORY_DOCKER=/absolute/path/to/docker \
+FACTORY_COMPONENT_IMAGE=sha256:<recorded-broker-image-id> \
+node --test tools/factory/container-session.test.mjs
+```
+
+These optional platform tests retain private temporary journals and remove only
+stopped test-owned containers. They are separate from the portable gate, which has
+no Docker prerequisite. This module is not integrated with `change.mjs`; the fixture
+coordinator's PID-journaling limitation, denial-attempt audit, scoped source writes,
+private model network and independent verifier qualification remain separate work.
+
+### Fixed independent denial-audit experiment
+
+`audit-probe/` tests a root-owned syscall observer against a fixed unprivileged
+workload that suppresses its errors and reports success. The observer checks denied
+direct/symlink/hardlink writes, protected create/delete, a descendant's write,
+audit-log read/overwrite and signalling the observer. It also checks unchanged
+protected bytes and allowed private scratch. These are neutral fixtures baked into
+the image; no consumer, factory checkout, host socket or credential is mounted.
+
+The optional packaging input `--strace-archive /absolute/strace.deb` adds an auditor
+image. `packaging/inputs.json` pins the exact Debian arm64 archive and SHA-256; its
+libc dependency comes from the pinned base. Downloading is explicit provisioning;
+the builder validates bytes before staging, does not run package-maintainer scripts,
+and builds without network access. The artifact is a probe image, not a deployed
+audit service or qualified runner. No publisher-signature verification is claimed.
+
+```bash
+python3 tools/factory/packaging/build-local.py \
+  --archive /absolute/codex.tgz --strace-archive /absolute/strace.deb \
+  --output /absolute/new-packaging-directory
+python3 tools/factory/audit-probe/run-probe.py \
+  --docker /absolute/path/to/docker --image sha256:<recorded-auditor-image-id> \
+  --output /absolute/new-probe-directory
+```
+
+The explicit test driver records the create arguments and container ID before
+start. It uses no network, a read-only root, dropped default capabilities, private
+0700 audit storage and bounded resources. Only the trusted observer receives
+SYS_PTRACE/SETUID/SETGID/KILL; the traced workload runs as `nobody`. The independent
+container-lifecycle component is not changed to grant these capabilities. The driver
+also tests missing SYS_PTRACE. It confirms outer container shutdown before evaluating
+results and removes only stopped test-owned containers after successful validation.
+Failed test records and containers remain inspectable. This driver is a fixed test
+harness, not a general launcher or recovery implementation.
+
+Raw traces are retained solely for this credential-free fixed workload. They must
+not be enabled for credential-bearing work without a separate disclosure review.
+The recognizer is tied to this workload and strace dialect. It does not establish
+complete syscall coverage, tracing-escape resistance, grant enforcement, arbitrary
+agent compatibility or independent verifier qualification. `PROBE_PASSED` means this
+experiment passed; `realRunnerQualified` remains false. Missing observation or
+unconfirmed cleanup cannot produce a passing probe.

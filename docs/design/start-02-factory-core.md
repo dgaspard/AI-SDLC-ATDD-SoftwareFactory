@@ -395,3 +395,26 @@ failed/incomplete statuses, malformed or inconsistent item events and decoded se
 canaries are rejected. Additional provider/model features require explicit validation;
 unknown request fields are not silently forwarded. A neutral model name in offline probes
 uses CLI fallback metadata and says nothing about a live model's availability.
+
+The offline component builder (`tools/factory/packaging/build-local.py`) stages only
+explicit pinned inputs in a new external directory and builds without network access.
+Its image IDs and input hashes are packaging provenance, not authority to execute a
+consumer task. The broker image defaults to offline component tests; real deployment
+and launcher conformance remain separate from this packaging step.
+
+For future container launcher integration, `container-session.mjs` supplies a separate
+ownership journal: durable name/label before create, immutable container ID before
+start, identity-checked recovery and shutdown confirmation before terminal process
+status. It retains incomplete work and never resumes it. This is a neutral component;
+its COMPLETE status is not a consumer or governed-change evidence result. The existing
+fixture coordinator is unchanged. A later launcher must bind this component to trusted
+authority, approved filesystem grants, independent denial audit and verifier profiles
+before real execution can be enabled.
+
+The fixed `tools/factory/audit-probe/` experiment explores independent denial capture
+with a root-owned strace observer and a separate unprivileged tracee. A private audit
+buffer and read-only fixture image let it distinguish silent denied attempts from a
+workload's success claim. This remains qualification research: the fixed recognizer
+is not an arbitrary-syscall policy engine, and the additional observer capabilities
+must never be granted to coding-agent processes. Complete syscall/escape coverage,
+source grants and verifier isolation remain prerequisites to launcher integration.
