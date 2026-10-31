@@ -58,3 +58,13 @@ test('broker rejects split decoded secret deltas before any successful relay',as
 test('probe timeout escalates a TERM-resistant process group before returning',async t=>{const child=spawn(process.execPath,['-e',"process.on('SIGTERM',()=>{});console.log('ready');setInterval(()=>{},1000);"],{detached:true,stdio:['ignore','pipe','ignore']});const state={child,exited:false,error:null};state.done=new Promise(resolve=>{child.on('error',e=>{state.error=e;state.exited=true;resolve();});child.on('exit',(code,signal)=>{state.code=code;state.signal=signal;state.exited=true;resolve();});});t.after(()=>stop(state,100));await new Promise(resolve=>child.stdout.once('data',resolve));assert.equal(await waitOwned(state,20,new Promise(()=>{})),'timeout');await stop(state,30);assert.equal(state.signal,'SIGKILL');assert.equal(state.exited,true);});
 
 test('done-only scalar content must match terminal identity and value',async t=>{const item={id:'fc_1',type:'function_call',call_id:'call_1',name:'read_value',arguments:'{}',status:'completed'};for(const [id,args,expected] of [['foreign','{}',502],['fc_1','wrong',502],['fc_1','{}',200]]){const events=[streamEvents()[0],{type:'response.function_call_arguments.done',item_id:id,output_index:0,arguments:args},streamEvents([item])[1]];const f=await setup(t,{},streamReply(events));assert.equal((await f.request({stream:true})).status,expected);}});
+
+test('Bedrock configuration preserves model binding and secret isolation through offline relay',async t=>{
+ const model='neutral.model-v1:0';
+ const f=await setup(t,{model,upstreamConfig:{provider:'bedrock',region:'us-east-1',endpoint:'runtime'}});
+ assert.equal((await f.request({model})).status,200);
+ assert.equal((await f.request({model:'other.model'})).status,403);
+ assert.equal(f.calls.length,1);assert.equal(f.calls[0].body.model,model);
+ assert.equal(f.calls[0].authorization,'Bearer '+canary);
+ assert.ok(!JSON.stringify(f.logs).includes(canary));
+});

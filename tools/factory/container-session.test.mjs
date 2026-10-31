@@ -3,6 +3,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
+import net from 'node:net';
 import path from 'node:path';
 import {execFileSync,spawn} from 'node:child_process';
 import {once} from 'node:events';
@@ -73,4 +74,40 @@ test('killed coordinator leaves a recoverable running container with durable own
   const s={...payload,docker};assert.equal(info(s).State.Running,true);assert.equal(read(s).phase,'RUNNING');
   const result=recoverSession({docker,directory:options.directory});assert.equal(result.phase,'INTERRUPTED');assert.equal(result.cleanupConfirmed,true);removeStopped(s);
  }finally{clearTimeout(timer);if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await closed;}}
+});
+
+test('update-only workspace preserves protected files and denies source create/delete',async()=>{
+ const root=path.join(output,'workspace');fs.mkdirSync(root);
+ for(const name of ['allowed.txt','protected.txt']){fs.writeFileSync(path.join(root,name),'before');fs.chmodSync(path.join(root,name),0o666);}
+ fs.symlinkSync('protected.txt',path.join(root,'alias.txt'));
+ fs.linkSync(path.join(root,'protected.txt'),path.join(root,'hardlink.txt'));
+ const script=`const fs=require('fs');const denied=[];for(const [name,fn] of [
+ ['direct',()=>fs.writeFileSync('/workspace/protected.txt','bad')],
+ ['symlink',()=>fs.writeFileSync('/workspace/alias.txt','bad')],
+ ['hardlink',()=>fs.writeFileSync('/workspace/hardlink.txt','bad')],
+ ['create',()=>fs.writeFileSync('/workspace/new.txt','bad')],
+ ['delete',()=>fs.unlinkSync('/workspace/protected.txt')],
+ ['delete-granted',()=>fs.unlinkSync('/workspace/allowed.txt')]]){
+ try{fn();throw Error('Unexpected permission: '+name)}catch(e){if(!['EROFS','EACCES','EPERM','EBUSY'].includes(e.code))throw e;denied.push(name)}}
+ fs.writeFileSync('/workspace/allowed.txt','after');fs.writeFileSync('/tmp/scratch','ok');console.log(JSON.stringify(denied));`;
+ const s=prepareSession({...opts('file-grants',script),filesystem:{root,permissions:{create:[],update:['allowed.txt'],delete:[]}}});
+ startSession(s);const result=await finishSession(s);assert.equal(result.phase,'COMPLETE');assert.equal(result.cleanupConfirmed,true);
+ assert.equal(fs.readFileSync(path.join(root,'allowed.txt'),'utf8'),'after');assert.equal(fs.readFileSync(path.join(root,'protected.txt'),'utf8'),'before');assert.equal(fs.existsSync(path.join(root,'new.txt')),false);
+ const denials=JSON.parse(execFileSync(docker,['logs',s.j.containerId],{encoding:'utf8'}));assert.equal(denials.length,6);removeStopped(s);
+});
+
+test('unsafe or unsupported filesystem grants fail before Docker execution',()=>{
+ const root=path.join(output,'workspace');const base={...opts('invalid-grants','process.exit(0)'),docker:'/does/not/exist'};
+ for(const update of [['alias.txt'],['hardlink.txt'],['../outside'],['allowed.txt','allowed.txt']])assert.throws(()=>prepareSession({...base,filesystem:{root,permissions:{create:[],update,delete:[]}}}),/grant/);
+ for(const operation of ['create','delete'])assert.throws(()=>prepareSession({...base,filesystem:{root,permissions:{create:[],update:[],delete:[],[operation]:['new.txt']}}}),/unavailable/);
+ assert.throws(()=>prepareSession({...base,forbiddenRoots:[root],filesystem:{root,permissions:{create:[],update:['allowed.txt'],delete:[]}}}),/overlaps/);
+ assert.equal(fs.existsSync(base.directory),false);
+});
+
+
+test('read-only workspace cannot expose a host socket, including an ungranted path',async()=>{
+ const root=fs.mkdtempSync(path.join(output,'socket-workspace-'));
+ const server=net.createServer();server.listen(path.join(root,'ignored.sock'));await once(server,'listening');
+ try{assert.throws(()=>prepareSession({...opts('socket-refused','process.exit(0)'),docker:'/does/not/exist',filesystem:{root,permissions:{create:[],update:[],delete:[]}}}),/Special file/);}
+ finally{await new Promise(resolve=>server.close(resolve));}
 });

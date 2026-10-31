@@ -1,24 +1,24 @@
 import http from 'node:http';
+import {brokerUpstream} from './broker-upstream.mjs';
 import crypto from 'node:crypto';
 import {normalizeRequest,validateStream,validateResponse} from './broker-protocol.mjs';
 
 const positive = (n, max) => Number.isSafeInteger(n) && n > 0 && n <= max;
-const fixedUpstream = 'https://api.openai.com/v1/responses';
 
 // A single-run relay component. No CLI, Docker launcher or real-runner activation.
 // offlineUpstream is explicit test injection and accepts loopback HTTP only.
 export function createModelBroker({ runId, model, credentialStore, ttlMs = 1800000,
   maxRequests = 40, maxConcurrent = 1, requestBytes = 1048576,
   responseBytes = 16777216, timeoutMs = 120000, maxOutputTokens = 8192,
-  audit = () => {}, offlineUpstream = null }) {
+  audit = () => {}, converseTransport = null, upstreamConfig = {provider:'openai'}, offlineUpstream = null }) {
   if (typeof runId !== 'string' || !/^[a-zA-Z0-9-]{1,100}$/.test(runId) ||
-      typeof model !== 'string' || !/^[a-zA-Z0-9._-]{1,100}$/.test(model) ||
-      typeof credentialStore?.readSecret !== 'function' ||
+      typeof model !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,199}$/.test(model) ||
+      (converseTransport===null?typeof credentialStore?.readSecret !== 'function':typeof converseTransport?.request!=='function'||credentialStore!==undefined||offlineUpstream!==null) ||
       !positive(ttlMs,1800000) || !positive(maxRequests,1000) ||
       !positive(maxConcurrent,4) || !positive(requestBytes,1048576) ||
       !positive(responseBytes,16777216) || !positive(timeoutMs,120000) ||
       !positive(maxOutputTokens,8192)) throw new Error('Invalid broker configuration');
-  let upstream = fixedUpstream;
+  let upstream = brokerUpstream(upstreamConfig);
   if (offlineUpstream !== null) {
     const u = new URL(offlineUpstream);
     if (u.protocol !== 'http:' || u.hostname !== '127.0.0.1' || u.username || u.password || u.pathname !== '/v1/responses' || u.search || u.hash)
@@ -61,7 +61,7 @@ export function createModelBroker({ runId, model, credentialStore, ttlMs = 18000
       body=normalizeRequest(body,model,maxOutputTokens);
       if(!body) return reply(403);
       // Only the broker reads the store. No incoming headers are forwarded.
-      const secret = await new Promise((resolve,reject)=>{
+      const secret = converseTransport?null:await new Promise((resolve,reject)=>{
         const abort=()=>reject(new Error('Credential read cancelled'));
         if(controller.signal.aborted) return abort();
         controller.signal.addEventListener('abort',abort,{once:true});
@@ -69,7 +69,13 @@ export function createModelBroker({ runId, model, credentialStore, ttlMs = 18000
           .finally(()=>controller.signal.removeEventListener('abort',abort));
       });
       if (controller.signal.aborted || revoked) return reply(401);
-      const upstreamResponse = await fetch(upstream, {
+      const upstreamResponse = converseTransport?await new Promise((resolve,reject)=>{
+        const abort=()=>reject(new Error('Converse cancelled'));
+        if(controller.signal.aborted)return abort();
+        controller.signal.addEventListener('abort',abort,{once:true});
+        Promise.resolve().then(()=>converseTransport.request(body,{signal:controller.signal})).then(resolve,reject)
+          .finally(()=>controller.signal.removeEventListener('abort',abort));
+      }):await fetch(upstream, {
         method:'POST',redirect:'manual',signal:controller.signal,
         headers:{authorization:'Bearer '+secret,'content-type':'application/json'},
         body:JSON.stringify(body)
@@ -88,10 +94,10 @@ export function createModelBroker({ runId, model, credentialStore, ttlMs = 18000
         output.push(chunk);
       }
       const payload = Buffer.concat(output);
-      if (payload.includes(Buffer.from(secret)) || payload.includes(Buffer.from(token)) || revoked || controller.signal.aborted) return reply(502);
+      if ((secret!==null&&payload.includes(Buffer.from(secret))) || payload.includes(Buffer.from(token)) || revoked || controller.signal.aborted) return reply(502);
       try {
-        if(streaming) validateStream(payload,[secret,token]);
-        else validateResponse(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(payload)),[secret,token]);
+        if(streaming) validateStream(payload,[secret,token].filter(x=>x!==null));
+        else validateResponse(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(payload)),[secret,token].filter(x=>x!==null));
       } catch { return reply(502); }
       status = 200;
       res.writeHead(200,{'content-type':streaming?'text/event-stream':'application/json','connection':'close'});

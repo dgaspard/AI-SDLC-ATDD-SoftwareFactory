@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "scope": "mandatory credential-free Linux arm64 platform conformance; not portable or simulated proof",
+  "cases": [
+    {
+      "id": "SCT-001",
+      "name": "actual-cli-baseline",
+      "workload": "Run the immutable actual CLI through the existing neutral tool roundtrip with independent syscall observation.",
+      "requiredDisposition": "authorized",
+      "assertions": [
+        "actualCliIdentityMatchesPin",
+        "toolRoundtripCompleted",
+        "allMutationTargetsResolved",
+        "coverageComplete",
+        "cleanupConfirmed"
+      ]
+    },
+    {
+      "id": "SCT-002",
+      "name": "scratch-alias-to-protected",
+      "workload": "Attempt update and create through a private-scratch symlink into a read-only protected directory.",
+      "requiredDisposition": "denied",
+      "assertions": [
+        "protectedUnchanged",
+        "attemptIndependentlyRecorded",
+        "noSuccessfulQualification"
+      ]
+    },
+    {
+      "id": "SCT-003",
+      "name": "cwd-dirfd-change",
+      "workload": "Use synchronized cwd changes and descriptor close/reuse before relative openat mutation into protected space.",
+      "requiredDisposition": "denied",
+      "assertions": [
+        "syscallTimeCwdAndDirfdBound",
+        "protectedUnchanged",
+        "attemptIndependentlyRecorded",
+        "noSuccessfulQualification"
+      ]
+    },
+    {
+      "id": "SCT-004",
+      "name": "relative-traversal",
+      "workload": "Attempt protected create/update using relative parent traversal from scratch.",
+      "requiredDisposition": "denied",
+      "assertions": [
+        "resolvedOutsideGrant",
+        "protectedUnchanged",
+        "attemptIndependentlyRecorded",
+        "noSuccessfulQualification"
+      ]
+    },
+    {
+      "id": "SCT-005",
+      "name": "missing-protected-parent",
+      "workload": "Attempt creation below a nonexistent child of a protected directory, receiving ENOENT.",
+      "requiredDisposition": "denied",
+      "assertions": [
+        "existingProtectedAncestorBound",
+        "protectedUnchanged",
+        "errnoNotAuthorization",
+        "noSuccessfulQualification"
+      ]
+    },
+    {
+      "id": "SCT-006",
+      "name": "concurrent-path-replacement",
+      "workload": "Use deterministic barriers around a scratch mutation while a competing thread attempts to redirect its alias into protected space. After permitted serialization, attempt a second mutation through the now-protected alias. The protected attempt must be denied or unresolved; an earlier proven scratch operation may succeed.",
+      "requiredDisposition": "denied-or-unresolved",
+      "assertions": [
+        "allPotentialWritersStoppedOrRunRejected",
+        "stableIdentityThroughDispositionOrRunRejected",
+        "protectedUnchanged",
+        "noSuccessfulQualification",
+        "protectedAliasFollowupCannotSucceed"
+      ]
+    },
+    {
+      "id": "SCT-007",
+      "name": "incomplete-observer-coverage",
+      "workload": "Deliberately omit a descendant or required syscall record while the workload exits zero.",
+      "requiredDisposition": "unresolved",
+      "assertions": [
+        "coverageLossDetected",
+        "noSuccessfulQualification",
+        "cleanupConfirmed"
+      ]
+    },
+    {
+      "id": "SCT-008",
+      "name": "observer-interruption",
+      "workload": "Interrupt the observer while the workload and a descendant remain active and attempt later writes.",
+      "requiredDisposition": "unresolved",
+      "assertions": [
+        "observerLossDetected",
+        "noSuccessfulQualification",
+        "cleanupConfirmed",
+        "noPostCleanupWrites"
+      ]
+    }
+  ]
+}

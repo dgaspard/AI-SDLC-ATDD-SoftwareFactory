@@ -8,22 +8,20 @@
     "runnerNetwork": "per-run-internal-only"
   },
   "upstream": {
-    "url": "https://api.openai.com/v1/responses",
-    "model": null,
+    "provider": "bedrock",
+    "region": "us-east-1",
+    "endpoint": "runtime",
+    "api": "converse",
+    "model": "us.moonshotai.kimi-k3",
+    "foundationModel": "moonshotai.kimi-k3",
     "followRedirects": false
   },
   "credential": {
-    "source": "external-owner-file",
-    "hostPath": null,
-    "containerPath": "/run/secrets/model-api-key",
-    "requiredMode": "0600",
+    "source": "aws-profile",
+    "profile": "software-factory-dev",
     "runnerMount": false,
-    "storeInterface": "readSecret({signal})",
     "environment": "local",
-    "futureProviders": [
-      "os-keychain",
-      "cloud-secret-manager"
-    ]
+    "fallbackToDefaultCredentials": false
   },
   "session": {
     "runId": null,

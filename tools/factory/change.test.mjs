@@ -90,3 +90,9 @@ test('later verifier ignored non-output write invalidates check',t=>{
 });
 
 test('later Git metadata mutation is rejected by evidence checking',t=>{const f=fixture(t),v=f.run();assert.equal(v.r.status,0,v.r.stderr);const e=JSON.parse(fs.readFileSync(v.report.evidence));fs.appendFileSync(path.join(e.isolation.workspace,'.git/config'),'\n[arbitrary]\n value = changed\n');assert.equal(check(v.report.evidence).status,8);});
+
+test('qualification injection cannot produce real candidate evidence',t=>{
+ const f=fixture(t),r=JSON.parse(fs.readFileSync(f.runner));r.kind='real';f.write(f.runner,r);const a=JSON.parse(fs.readFileSync(f.authority));a.runnerSha256=sha(fs.readFileSync(f.runner));f.write(f.authority,a);
+ const harness=path.join(f.dir,'qualification-injection.mjs');f.write(harness,`import {runChange} from ${JSON.stringify(new URL('./change-engine.mjs',import.meta.url).href)};process.exitCode=await runChange(process.argv.slice(2),{profile:{enabled:false},openBroker(){throw Error('MUST_NOT_INVOKE_BROKER')}});`);
+ const v=spawnSync(process.execPath,[harness,'run','--root',f.root,'--task','spec/change.json','--authority',f.authority,'--runner',f.runner,'--output',f.output],{encoding:'utf8'});assert.equal(v.status,5,v.stderr);assert.equal(JSON.parse(v.stdout).category,'TOOLING_UNAVAILABLE');assert.match(v.stderr,/fixture-only/);assert.equal(fs.existsSync(f.output),false);assert.equal(f.original(),'');
+});

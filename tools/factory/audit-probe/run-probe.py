@@ -49,7 +49,8 @@ def main():
 
     reports = []
     for name, capabilities in [('observed-denials', ['--cap-add=SYS_PTRACE']),
-                               ('missing-observer-capability', [])]:
+                               ('missing-observer-capability', []),
+                               ('unfiltered-control', ['--cap-add=SYS_PTRACE'])]:
         identity = 'factory-audit-' + str(uuid.uuid4())
         journal = output / (name + '.json')
         record = {'containerName': identity, 'image': args.image, 'phase': 'PREPARED'}
@@ -61,6 +62,8 @@ def main():
                   '--no-healthcheck', '--log-driver=json-file', '--log-opt=max-size=10m',
                   '--log-opt=max-file=1', '--tmpfs=/tmp:rw,nosuid,nodev,size=16m,mode=1777',
                   '--tmpfs=/audit:rw,nosuid,nodev,size=16m,mode=0700', args.image]
+        if name == 'unfiltered-control':
+            create.append('--negative-unfiltered')
         cid = command(create).stdout.strip()
         if not re.fullmatch(r'[a-f0-9]{64}', cid):
             raise ValueError('Missing container identity')
@@ -89,6 +92,15 @@ def main():
                 raise ValueError('Audit trace identity mismatch')
             (output / 'syscalls.log').write_text(trace)
             write(output / 'observations.json', result)
+        elif name == 'unfiltered-control':
+            result = json.loads(logs.stdout)
+            if state['ExitCode'] != 0 or result['status'] != 'ESCAPE_REPRODUCED' or result['realRunnerQualified']:
+                raise ValueError('Unfiltered escape control did not reproduce the observation gap')
+            trace = result.pop('trace')
+            if hashlib.sha256(trace.encode()).hexdigest() != result['traceSha256']:
+                raise ValueError('Control trace identity mismatch')
+            (output / 'unfiltered-syscalls.log').write_text(trace)
+            write(output / 'unfiltered-observations.json', result)
         elif state['ExitCode'] == 0 or 'PROBE_PASSED' in logs.stdout:
             raise ValueError('Missing observer capability incorrectly succeeded')
         reports.append(record)

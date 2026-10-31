@@ -14,5 +14,6 @@
     "architecture": "arm64",
     "archive": "https://deb.debian.org/debian/pool/main/s/strace/strace_6.1-0.1_arm64.deb",
     "sha256": "751817724af91cb95df566a21a154f9a7dcdd938e700e5cb9a5a47eb19752ea2"
-  }
+  },
+  "compilerImage": "node@sha256:66d2eb8b463114d1f416d61dbd5fa9cea83e8fc250feb997338467728a06124b"
 }

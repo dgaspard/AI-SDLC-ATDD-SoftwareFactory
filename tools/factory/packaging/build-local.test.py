@@ -34,6 +34,15 @@ class PackagingSafety(unittest.TestCase):
                 build.stage(archive, root / 'shortcut' / 'must-not-exist')
             self.assertFalse((build.ROOT / 'spec/must-not-exist').exists())
 
+    def test_cache_shortcut_into_protected_input_rejected_before_commands(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'cache-shortcut').symlink_to(build.ROOT / 'spec', target_is_directory=True)
+            with patch.object(build.subprocess, 'run', side_effect=AssertionError('command reached')):
+                with self.assertRaisesRegex(ValueError, 'overlaps'):
+                    build.stage_aws(root, root / 'cache-shortcut')
+            self.assertFalse((root / 'broker').exists())
+
     def test_existing_output_preserved(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -303,8 +303,11 @@ Proposed local layout:
   the runner, query string, request body or headers.
 - The broker root filesystem and image are immutable; all capabilities are dropped,
   privilege escalation is disabled, and it runs as an unprivileged user. The owner
-  credential is mounted read-only into the broker alone, outside scratch, consumer,
-  factory and evidence roots. A compromised runner must have no route to other
+  AWS identity is supplied only to the broker through an explicit approved provider.
+  For a bearer-key binding only the broker retrieves the pinned Secrets Manager value;
+  Kimi Converse instead signs requests using the approved AWS profile. The runner receives
+  neither AWS credentials nor the upstream secret. The optional local-file adapter
+  instead mounts its credential read-only outside repository and evidence roots. A compromised runner must have no route to other
   containers, host services or internet destinations. Docker internal-network
   configuration alone is not accepted as proof; probe host gateways and DNS as well.
 - A trusted coordinator creates a random capability for one run, holds its binding
@@ -328,16 +331,16 @@ provider-side project budget independently.
 
 Owner preparation after reviewing this arrangement:
 
-1. Choose an API project/credential source and exact model available to that project.
-   API access and model availability have not been tested. Do not paste a key into chat.
-2. Choose a private directory outside both repositories, for example
-   `~/.config/software-factory/broker`, mode 0700. Resolve its real path and reject
-   symlink/hardlink aliases or overlap with either repository, run outputs or shared
-   directories. Store the credential as an owner-only regular file, mode 0600,
-   using a secure local editor or secret manager; never a shell argument/history entry.
-3. Copy the non-secret template there and record the canonical credential path and
-   exact model. Keep enabled=false. Leave image/launcher pins unset until qualified
-   implementation artifacts exist. Merely filling these fields does not approve a run.
+1. The owner selected `us-east-1`, `us.moonshotai.kimi-k3` and AWS profile
+   `software-factory-dev`; control-plane availability is verified below. Inference
+   and full runner compatibility remain unverified. Do not paste credentials.
+2. Keep non-secret owner configuration outside both repositories and output roots.
+   Resolve aliases before approving its destination. The broker alone receives the
+   approved identity provider; no implicit AWS credential discovery is enabled.
+3. Copy the disabled template and record those identifiers. Keep enabled=false and
+   image/launcher pins unset until qualified artifacts exist. Configuration is not
+   live-run approval. A local credential file remains an optional adapter, subject
+   to its owner/mode/alias checks, rather than the selected AWS setup.
 4. Review broker implementation and its neutral offline tests, then pin both images
    and all launcher inputs immutably. The Linux runner image must contain the actual
    reviewed Codex executable; the installed macOS binary is not a Linux image pin.
@@ -359,10 +362,13 @@ remain mandatory launcher conformance, not capabilities supplied by this relay.
 
 The owner clarified that credential storage should later support local and cloud
 wallets. Keep storage separate from transport: `credential-store.mjs` provides the
-local-file adapter; the broker receives only `readSecret({signal})`. An OS keychain or
-cloud secret manager can later implement that interface. Cloud adapters must honor
-cancellation and use workload identity, not a bootstrap cloud key passed to the runner.
-No provider SDK or cloud resources are introduced here.
+optional local-file adapter; that bearer-key path receives only `readSecret({signal})`.
+The Kimi Converse path instead uses the explicitly approved AWS profile inside its SDK transport. The
+AWS Secrets Manager adapter and pinned SDK are implemented and tested offline.
+The adapter requires an explicit identity provider and immutable secret version,
+and honors cancellation. No cloud resources are provisioned; the optional Secrets Manager adapter has no
+secret retrieval configured. Kimi profile authentication was used for read-only model discovery.
+OS-keychain support remains future work; never pass a bootstrap cloud key to the runner.
 
 The local file is a transitional storage adapter with owner/mode/alias checks, not an
 encrypted wallet. OS-keychain integration and cloud-managed encryption, rotation,
@@ -418,3 +424,215 @@ workload's success claim. This remains qualification research: the fixed recogni
 is not an arbitrary-syscall policy engine, and the additional observer capabilities
 must never be granted to coding-agent processes. Complete syscall/escape coverage,
 source grants and verifier isolation remain prerequisites to launcher integration.
+
+The tracee-side `isolation/syscall-guard.c` adds an inherited Linux arm64 seccomp
+filter before workload execution. It rejects untraced clone creation, clone3 (with
+ENOSYS fallback), process-observer interference, asynchronous-I/O bypass paths,
+unshare/setns namespace operations and process-group escape. The probe retains an explicitly
+unfiltered control to demonstrate why ordinary strace following is insufficient.
+This component supplements the container boundary and must not be treated as literal
+file authorization or a complete audit policy. Its installation failure is fatal;
+real launcher and independent verifier qualification remain separate requirements.
+
+### Update-only workspace confinement and verifier prerequisite
+
+`container-session.mjs` accepts an optional `filesystem` profile with a canonical
+private `root` and explicit `permissions:{create:[],update:[...],delete:[]}`. It binds
+that tree read-only at `/workspace` and overlays only existing, unaliased, single-link
+regular update files as writable. Nonempty source create/delete grants fail closed;
+this backend does not claim general lifecycle support. The caller must supply a
+coordinator-owned private staging tree, keep it stable during launch, include the
+original consumer/trusted roots in `forbiddenRoots`, and validate task authority and
+protected-path exclusions before requesting mounts. This low-level helper is not an
+authority validator. Special files throughout the tree are rejected because a
+read-only mount does not prevent connecting to a Unix socket. Scratch remains private
+container tmpfs. Mount tests are explicit Docker component checks, not portable gate
+or arbitrary-workload conformance. The tracee syscall guard closes inherited file
+descriptors numbered 3 and above; its launcher must provide trusted stdio.
+
+Records under `test-results/start02-verifier-profile/` include the native descriptor
+regression, fixed audit controls and mount tests. Real execution in `change.mjs`
+remains disabled. The original PetClinic protected browser adapter starts Docker,
+mounts a writable checkout and can install dependencies at runtime. The reviewed consumer change `1e477272b3a548af46356e739ffe50dc7cc1d9d8` adds an explicit preprovisioned mode, preserving
+the pinned reference image, lockfile checks, complete test command and arguments.
+It performs no install and exposes no Docker socket. Its read-only image marker is
+only a dispatch precondition: a trusted coordinator must additionally bind and verify
+the actual immutable verifier image. The owner applied, froze and committed this adapter change;
+that approval does not qualify the complete verifier profile. No application behavior or acceptance test is changed.
+
+### AWS broker: Kimi K3 through Converse
+
+The owner-selected local configuration is Region `us-east-1`, AWS profile
+`software-factory-dev`, foundation model `moonshotai.kimi-k3` and US inference
+profile **`us.moonshotai.kimi-k3`**. AWS discovery returned the profile ACTIVE and
+model agreement, entitlement and Region AVAILABLE, with authorization AUTHORIZED.
+These are control-plane checks, not proof of an inference invocation. US inference
+can route to `us-east-1`, `us-east-2` or `us-west-2`; this is not a single-Region pin.
+Non-prod/prod environments remain later work.
+
+`aws/converse.mjs` exports `createProfileModelBroker({runId, region, profile, model,
+...limits})`, which wires the pinned Bedrock Runtime SDK into `model-broker.mjs`.
+Supply the exact identifiers above from the reviewed configuration. It returns the
+existing broker server/token/close interface; it neither listens nor launches a
+runner automatically. Authentication uses the explicitly named AWS profile via
+`fromIni`, with no default/environment credential-chain fallback. Credentials stay
+inside the broker process and never appear in the configuration, runner or evidence.
+The profile must remain valid (including its SSO session). Invoke permission requires
+`bedrock:InvokeModel` for the selected inference profile and its routed models.
+
+`bedrock-converse.mjs` translates the bounded Responses request to Converse text
+and JSON function tools. Completed output is validated before JSON or buffered SSE
+is released. Truncation, filtering, invalid tool identities, forbidden parallel calls
+and unsupported input fail closed. Previous-turn reasoning blocks are omitted as
+required by the [Kimi K3 Converse limitations](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-moonshot-ai-kimi-k3.html).
+Strict function schemas, explicit reasoning/verbosity controls, document input and
+custom/grammar tools are unsupported and rejected before invocation; this does **not** establish full Codex-runner compatibility.
+The existing runner probe must pass against the actual adapter before live governed
+work. No fake transport substitutes for that demonstration.
+
+The disabled `broker.config.example.json` records these identifiers. Keep it disabled
+until launcher qualification and immutable image bindings are complete. The SDK's
+exact versions and transitive integrity hashes are in `aws/package-lock.json`.
+Run `node --test tools/factory/bedrock-converse.test.mjs tools/factory/model-broker.test.mjs`
+and `node --test tools/factory/aws/converse.test.mjs` for credential-free checks.
+For offline packaging use `--aws --aws-cache /absolute/preprovisioned/npm-cache`;
+clean `npm ci --offline --ignore-scripts` fails on an incomplete cache and excludes
+stale installed files. Existing `aws-secrets.mjs` and Responses endpoint helpers
+remain optional components for other bindings; Kimi Converse does not use a bearer
+key or require a Secrets Manager ARN/version.
+
+### Independent verifier baseline
+
+The corrected independent-verifier experiment runs frozen consumer
+`1e477272b3a548af46356e739ffe50dc7cc1d9d8` with its existing factory pin
+`9809c120cafd0ad867be6568621fac3ef54f1780`, inside immutable image
+`sha256:c02aaabd1cb99508e0848ee722214946fc18a391ec081a231683920fc2bd62b6`.
+Consumer/factory files are read-only, only declared result/evidence directories are
+writable, external networking is disabled and no Docker socket or AWS credentials
+are present. Private scratch permits execution because frozen CI-authority tests
+create a local Git shim. Dependencies for consumer and factory were installed from
+local cache with lock integrity and scripts disabled before image construction.
+The full gate returned exit 1 for exactly the two unimplemented D-67 scenarios
+GPC-001/GPC-005 (400 instead of 409); all other required suites passed, including
+browser 9/9, performance 4/4 and evidence/DORA tests. A separate permission probe
+confirmed denied source, policy, Git and factory writes, aliases and descendant
+writes, while allowing evidence output and loopback. Cleanup preceded hashes.
+Records: `test-results/start02-independent-verifier/`. This is retained baseline and
+profile evidence, not a governed candidate, real-agent demonstration, complete
+consumer gate or current-factory pin upgrade. Reusable coordinator integration and
+arbitrary-runner denial audit conformance remain outstanding.
+
+
+### Shared verifier lifecycle component
+
+`tools/factory/verifier-session.mjs` reuses the durable container-session lifecycle
+for credential-free independent verification. Its candidate mount is read-only,
+its working directory is explicitly `/workspace`, and writable output bindings must
+be nonoverlapping and outside caller-supplied protected paths. Existing aliases fail
+before container operations. Collection waits for owned-container cleanup, rejects
+aliased/nonregular artifacts, and hashes through no-follow descriptors. Zero process
+exit first records `PENDING_EVIDENCE`; validated collection records
+`OUTPUTS_COLLECTED`, never a governed result. After zero exit, invalid collection records
+`EVIDENCE_INVALID`; when collection fails, nonzero verification and interruption
+retain their failure phases with collection status INVALID.
+
+This is a mechanism for later coordinator integration. It does not interpret evidence-v1, authorize a real runner, or replace full conformance.
+Optional envelope validation uses independently supplied authority expectations as
+described below.
+The frozen consumer interface remains responsible for suite selection and evidence
+meaning. Trusted verification resources are now bounded and journaled, including an
+explicit executable-scratch opt-in. The shared profile reproduces the frozen PetClinic
+baseline without changing application implementation: only GPC-001/GPC-005 fail.
+Record: `test-results/start02-shared-verifier/test-results/runs/2026-10-28T10-53-20-367Z-full.json`.
+
+
+The shared `consumer-proof.mjs` validator is used by the change coordinator and by
+`runVerifierSession` when an explicit `consumerEvidence` binding is supplied. The
+binding contains the envelope path and expectations derived independently from trusted
+consumer authority: repository/revisions, tree/configuration/trust hashes, required
+suites and required evidence. Callers must derive these expectations independently, never from the envelope itself. Validation
+runs after cleanup and artifact collection; stale identity, missing/failed/duplicate
+suites and missing/stale/duplicate artifacts reject. A zero-exit verifier with invalid
+proof records EVIDENCE_INVALID. Collection without a binding remains only collection;
+neither path activates the real runner or produces governed success. The caller still
+owns current-input fingerprinting, authority validation and subsequent stale checks.
+
+
+### Linux CLI sandbox profile
+
+Under the original nested sandbox, the pinned Linux CLI's neutral command roundtrip
+reached the synthetic broker, but command execution failed. The default tracee filter rejects setsid/setpgid. A retained
+experimental container-owned variant permits those calls, exposing a second failure:
+bubblewrap cannot create a namespace. A control without the tracee filter still
+reports the same bubblewrap failure under the restricted outer Docker profile.
+These failed experiments are not runner qualification. Inner process-group cleanup
+also reports incomplete; the owning outer container is subsequently stopped with PID
+zero before host records are retained. The source filter keeps its original defaults;
+an explicit container-owned variant is now available for approved offline qualification.
+
+The exact disabled proposal is `tools/factory/runner-profile.proposal.json`.
+The owner approved credential-free qualification with Codex
+`--sandbox danger-full-access` inside the independently enforced container, together
+with container-owned process-session cleanup. This changes which layer enforces the
+coding process boundary; it is not a qualified profile or permission to run on the
+host. Read-only mounts, literal grants, independent denial auditing, external network
+denial and cleanup-before-validation remain mandatory. All conformance cases must
+pass before real activation. A supported local Linux profile retaining the internal
+CLI sandbox is the alternative. No host sysctl or privileged-container change is
+implied. Live AWS configuration and PetClinic implementation remain separate later steps.
+
+Official CLI documentation describes the sandbox modes and restricts broader access
+to controlled environments:
+https://learn.chatgpt.com/docs/non-interactive-mode
+Diagnostic records: `test-results/start02-linux-cli-audit/`.
+
+### Syscall-time authorization for unresolved audit targets
+
+The frozen governed-change contract permits only task-granted source mutations and
+private scratch writes, and requires reporting denied attempts even when bytes do
+not change. Retained strace text does not establish syscall-time target identity:
+a nominal scratch path can traverse a symlink, a relative path depends on cwd/dirfd,
+and concurrent threads can replace path components. ENOENT/EEXIST alone cannot decide
+whether a failed mutation was authorized. Do not whitelist `/tmp/` text or use a
+post-run realpath to resolve this distinction.
+
+Owner-approved qualification direction (approval recorded in BACKLOG.md):
+replace text-only policy disposition with a bounded Linux arm64 syscall-time observer.
+Keep the existing container, unprivileged coding process, immutable images, network-none
+qualification, native protected audit volume, and shared shutdown lifecycle. No new
+host privileges, privileged containers, host settings or live credentials are proposed.
+The implementation must establish target identity while all potential sandbox path
+writers are stopped, bind cwd/dirfd and mount identity, and reject unsupported syscall
+forms or inability to establish a stable target. Preserve the original trace as
+independent evidence. This is a feasibility requirement, not a claim that a ptrace
+implementation already meets it. If the existing capabilities cannot enforce it,
+return TOOLING_UNAVAILABLE and return the exact additional boundary change for review.
+
+Dispositions are authorized private scratch, task-granted implementation mutation,
+out-of-scope mutation, or unresolved.
+Unresolved remains blocking. Never create a success exception merely to accommodate
+CLI startup. Specifically, writable `/dev/tty` opens are not implicitly permitted;
+eliminate them with a supported noninteractive configuration or separately specify
+an exact policy for a failed no-terminal probe before treating it as nonblocking.
+
+Required additional deterministic cases: scratch aliases into protected directories,
+cwd/dirfd changes, relative traversal, missing protected parents, concurrent path
+replacement, incomplete observer coverage, and observer interruption. Each must fail
+closed before a successful qualification result. A successful baseline must still run
+the actual pinned CLI; fixture success cannot replace it. This proposal does not
+activate the real coordinator, authorize PetClinic implementation, or change the
+frozen acceptance contract. Any contract/policy amendment is a separate exact patch
+for human review and freeze.
+
+
+The native qualification component implements this boundary separately from the real
+coordinator. It reuses container lifecycle cleanup and artifact collection, retains
+syscall-entry-linked identity records and stopped-task context, and rejects missing
+coverage or stale records. Its baseline write authority is private scratch plus inherited
+output channels. The separate task-session component adds literal existing-file byte
+update grants and applies staged changes only after audited cleanup. Full launcher
+qualification remains distinct from these component checks. See the
+[component operating instructions](../../tools/factory/README.md#native-observer-component-qualification)
+for reproducible offline builds and the SCT harness. Passing those component cases
+must not be used as a real-runner profile, consumer trust pin or live application proof.
+Canonical qualification status and remaining work are in BACKLOG.md.

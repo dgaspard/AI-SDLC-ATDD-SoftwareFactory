@@ -22,7 +22,7 @@ for every item. Finished items keep their full history in
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **repository separation complete; fixture workflow verified; real-runner qualification pending** (A-30).
+Status: **repository separation complete; mandatory alias conformance expanded; owner review and live lifecycle proof pending** (A-30).
 Canonical ID START-02 and its ordered slices are retained.
 Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
@@ -32,7 +32,7 @@ Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md
 | Local extraction | Verified and owner-approved | Reviewed consumer `508e8e947323ca1723966344a90d1036a077a93e`; combined proof and approval recorded below |
 | Repository separation and immutable consumption | Complete | Independent consumer CI/evidence verified; factory cleanup merged; owner confirms branch protection |
 | Lifecycle specification | Governed local update frozen | Factory `aac1de392cdbd180dab722ddbd689b6aacd4e829`, fixture correction `a3134b5`; consumer acceptance `5bd4c8415a9a6a01f41973f1df01aaa075463af5` |
-| Local lifecycle proof | Fixture coordinator implemented; real proof blocked | Qualify real isolated runner and verifier, then review consumer pin upgrade before PetClinic implementation |
+| Local lifecycle proof | Real coordinator implemented; qualification review and live proof pending | Review final conformance reports, runner profile and consumer pin; human freeze precedes live PetClinic implementation |
 | Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
 
 **Local broker preparation.** Owner requested a setup for review. The
@@ -48,10 +48,10 @@ This is wire compatibility only. Offline Linux arm64 component packaging now pin
 the Codex archive and Node base, records image identities and passes a runner version
 smoke plus 20 broker tests under a read-only, network-none container profile. Records:
 `test-results/start02-packaging/`. This does not qualify a real launcher. Network
-deployment, denial-attempt audit, create/delete isolation, host-loss recovery, independent
-verifier profile, model access and live credential use remain unqualified. No real
+deployment and live credential/model use remained unqualified at that component stage;
+the later qualification results below supersede its isolation and verifier limitations. No real
 runner is enabled. Protocol/gate records live under `test-results/start02-broker-protocol/`. The local
-file is not an encrypted wallet; OS keychain and cloud store adapters remain future work.
+file is not an encrypted wallet; OS keychain remains future work; the AWS adapter implementation is described below.
 The credential-free isolation probe at `test-results/start02-runner-qualification/isolation-probe.json`
 denied eight tested filesystem/socket operations and external network access while
 allowing one granted update; it is component evidence only, not denial-audit or real
@@ -75,6 +75,184 @@ results live under `test-results/start02-audit-probe/`. This proves only the fix
 cases, not complete arbitrary-runner auditing or tracing-escape resistance. Scoped
 grants, isolated verifier and coordinator integration remain outstanding.
 
+**Trace-escape hardening.** The fixed unfiltered control reproduced an invisible
+`CLONE_UNTRACED` child's protected-write attempt. The Linux arm64 tracee filter now
+rejects that creation before the child runs, while ordinary-child attempts remain
+observable. The probe additionally checks clone3 fallback and eighteen restricted
+syscalls; missing tracing capability remains a failure. Records are under
+`test-results/start02-syscall-filter/`. This closes the demonstrated probe gap only;
+arbitrary-workload audit completeness and end-to-end qualification of descriptor
+handling, filesystem grants and verifier/coordinator integration remain outstanding. No real launcher is enabled.
+
+**Update-only mount qualification.** The container-session component now mounts a
+private workspace read-only with only literal, regular, single-link update files
+writable. Source create/delete grants fail before Docker; aliased update grants, overlap and special
+files (including ignored Unix sockets) are rejected. Explicit neutral tests cover
+protected direct/symlink/hardlink writes and create/delete denial. The syscall guard
+also closes inherited descriptors; a native FD99 regression passes. These remain
+component checks, not a qualified real launcher. Records:
+`test-results/start02-verifier-profile/`. The original/default PetClinic browser wrapper mode
+requires Docker access, writable checkout mounts and possible runtime installation;
+that default mode cannot run in the required independent verifier profile. The owner applied and froze the narrow browser adapter change in consumer commit
+`1e477272b3a548af46356e739ffe50dc7cc1d9d8`; the record directory retains its exact patch. Runner/verifier integration and the live model demonstration remain
+pending; no PetClinic implementation has changed.
+
+**Shared verifier lifecycle integration.** The reusable verifier now uses the shared
+container-session lifecycle, an explicit read-only candidate working directory and
+writable evidence bindings only. Artifact collection follows confirmed cleanup;
+aliased evidence durably fails. Its successful terminal state is OUTPUTS_COLLECTED,
+not governed success. The prior Docker lifecycle/verifier baseline passed 19 cases; the expanded verifier
+suite now passes nine cases, including two new envelope cases.
+Shared consumer-envelope validation is now connected to the isolated verifier through
+an explicit trusted binding and reused by the change coordinator; 12 neutral proof
+cases cover success and rejection. The shared verifier now reproduces PetClinic’s bounded resource profile; its full gate
+returned exit 1 only for GPC-001/GPC-005, with browser 9/9 and performance 4/4.
+The expanded combined lifecycle/verifier suite passes 23 cases. Records:
+`test-results/start02-shared-verifier/`. Arbitrary-runner denial auditing and real
+coordinator activation remain incomplete. No application
+implementation or protected files changed. Records: `test-results/start02-verifier-integration/`.
+
+**AWS broker direction and offline implementation.** Owner selected Kimi K3 via
+Bedrock Converse in `us-east-1`, with profile `software-factory-dev` and discovered
+US inference profile `us.moonshotai.kimi-k3`. Control-plane discovery confirms ACTIVE
+and authorized/available; no inference invocation is claimed. The local adapter
+supports text and JSON function tools, omits prior reasoning, and rejects unsupported
+strict schemas, custom/grammar tools and explicit reasoning controls. Full coding-runner compatibility,
+immutable image qualification and real launcher integration remain pending; the
+configuration stays disabled. Secrets Manager remains an optional adapter, unused by
+this profile-authenticated path. Non-prod/prod environments remain deferred.
+
+**Independent verifier baseline.**
+
+The corrected independent-verifier experiment runs frozen consumer
+`1e477272b3a548af46356e739ffe50dc7cc1d9d8` with its existing factory pin
+`9809c120cafd0ad867be6568621fac3ef54f1780`, inside immutable image
+`sha256:c02aaabd1cb99508e0848ee722214946fc18a391ec081a231683920fc2bd62b6`.
+Consumer/factory files are read-only, only declared result/evidence directories are
+writable, external networking is disabled and no Docker socket or AWS credentials
+are present. Private scratch permits execution because frozen CI-authority tests
+create a local Git shim. Dependencies for consumer and factory were installed from
+local cache with lock integrity and scripts disabled before image construction.
+The full gate returned exit 1 for exactly the two unimplemented D-67 scenarios
+GPC-001/GPC-005 (400 instead of 409); all other required suites passed, including
+browser 9/9, performance 4/4 and evidence/DORA tests. A separate permission probe
+confirmed denied source, policy, Git and factory writes, aliases and descendant
+writes, while allowing evidence output and loopback. Cleanup preceded hashes.
+Records: `test-results/start02-independent-verifier/`. This is retained baseline and
+profile evidence, not a governed candidate, real-agent demonstration, complete
+consumer gate or current-factory pin upgrade. Reusable coordinator integration and
+arbitrary-runner denial audit conformance remain outstanding.
+
+**Approved credential-free external-container qualification.** The owner approved
+external enforcement for the pinned Linux CLI, with optional container-owned
+setsid/setpgid and unchanged default host restrictions. The original nested-sandbox
+failures remain in `test-results/start02-linux-cli-audit/`. The disabled proposal
+remains unchanged; approval does not activate a real launcher.
+
+The actual CLI completed a synthetic two-request command roundtrip. Both native
+guard modes passed, and a detached TERM-resistant writer stopped before stable
+artifact hashes were collected. The independent fixed-path observer caught direct,
+symlink, hardlink, create, delete, Git, factory, verifier, audit and descendant write
+attempts; despite CLI-reported success the result was PERMISSION_DENIED. Missing
+observer failed closed. Outer cleanup was confirmed. Records are in
+`test-results/start02-external-qualification/`; repeatable component checks are in
+`/private/tmp/start02-approved-external-checks/checks.json`.
+These are component proofs, not arbitrary-runner audit completeness or governed
+success. Generic denial auditing, coordinator integration and full real-launcher
+conformance remain outstanding. No credentials, application changes or host security
+changes were used.
+
+**Reusable retained-trace analysis.** The audit analyzer now identifies permission
+errors without a fixed path list, reconstructs interleaved unfinished/resumed calls,
+and rejects malformed, truncated, unmatched or invalid-UTF-8 input. Replaying the
+retained actual CLI trace yields 3,649 syscall records and 10 denials; the hash matches
+the independent observer record. Evidence:
+`test-results/start02-external-qualification/general-trace-analysis.json`.
+This is post-collection analysis, not proof that every syscall was observed. It does
+not resolve aliases/relative paths into launcher violations or attest observer
+ownership, shutdown, selected syscall coverage or trace completeness. Those remain
+required in the integrated real-launcher profile; real activation remains disabled.
+
+**Trusted observer integration and qualification blocker.** The shared lifecycle now
+runs the observer under the reviewed container capabilities and the tracee as nobody
+with zero effective capabilities. Native Docker audit volumes replace the initial
+host bind: the latter allowed trace truncation under Docker Desktop, which validation
+rejected. The failing experiment is retained. Observer-owned 0700 native storage denies
+trace/receipt tampering; artifacts are copied only after container shutdown and checked
+against retained hashes. Failed commands, interrupts and subsequent audit edits cannot
+produce successful collection. No real coordinator activation occurred.
+
+The actual CLI's neutral run exposed 87 additional failed mutation syscalls (82
+mkdirat EEXIST, one mkdirat ENOENT in private scratch, four writable /dev/tty ENXIO
+probes). These are retained as unresolved rather than silently treated as permission
+violations or successful qualification. The attack run adds ten permission denials.
+The owner approved the design's syscall-time authorization direction. The exact
+contract/conformance-matrix amendment retained at
+`test-results/start02-syscall-authorization/protected-syscall-authorization.patch`
+was applied and human-frozen; all 38 manifest entries match. Native prerequisite
+implementation and a separate credential-free syscall observer component are present;
+real-runner activation remains disabled. Current strace text cannot prove scratch target identity under aliases,
+relative cwd/dirfd or concurrent replacement. This blocks full conformance, real coordinator integration and the live PetClinic
+demonstration; merely providing AWS identifiers does not unblock real execution.
+Records: `test-results/start02-audit-integration/`. No agent protected edits or agent-run freeze.
+
+**Frozen SCT implementation prerequisites.** The actual pinned CLI completes its
+neutral tool roundtrip without writable `/dev/tty` probes when shell snapshots are
+disabled and the fixed tool uses non-login `/bin/sh`; `--color never` alone did not
+remove those probes. A fixed native two-thread probe demonstrates acknowledged
+ptrace stops, held tracee memory and matching private-path/descriptor mount identity
+under the existing SETUID/SETGID/SYS_PTRACE capabilities. It uses held O_PATH
+descriptors before switching fsuid to inspect nobody-owned private scratch. Native
+cleanup switches to the tracee identity to signal it; CAP_KILL was not added. Failed
+experiments are retained, and the host driver rejects start failures, missing/invalid
+receipts, runtime errors and incomplete cleanup. This proves prerequisites only, not
+SCT-001 through SCT-008. The subsequent native component now implements startup,
+dynamic task/exec tracking, selected-syscall serialization and target identity binding.
+The actual pinned CLI baseline passed with no denial, complete identity records and
+confirmed cleanup; the seven adversarial SCT cases and stale-record check passed
+individually. The complete final platform suite passed **9/9** (SCT-001–008 plus stale evidence).
+Platform records are under `test-results/start02-native-observer/`; portable gate
+records are under `test-results/runs/`. Failed experiments remain retained.
+
+Task-scoped update support and the owner-side model relay are now implemented as
+local qualification components. The grant suite passed 20 cases together and the
+remaining credential/network case passed after correcting a PATH/PAT test-pattern
+collision. The actual pinned CLI updated a neutral file through the Converse relay;
+its four relay checks passed with synthetic responses. Verifier checks passed 12 cases
+together and the read-only dependency case passed after preparing its mount target.
+These are component results, not full launcher qualification.
+
+An earlier six-suite run passed **66/66** on local review commit
+`9e9eec758ff2b1fbe2e82213a468b422e6ba7863`, but the complete mandatory-checklist review
+found missing genuine hardlink and protected create/delete alias proof. That candidate
+and its unapplied pin patch are withdrawn from approval; those passes remain narrower
+component evidence. Staging now preserves within-tree hardlinks, plain linkat binds
+source inode and destination parent, and metadata nofollow flags resolve the symlink
+inode itself. Expanded cases independently assert inode identity, denied disposition
+and unchanged protected state. Every proposed release must pass the complete expanded
+conformance set. The current candidate and bound reports are recorded under
+`test-results/start02-full-qualification/`; owner approval still precedes activation. For the withdrawn candidate, raw reports and 301 retained
+artifacts were bound under `test-results/start02-full-qualification/release-9e9eec75/`.
+That withdrawn candidate’s production preflight validated a temporary enabled profile
+copy without invoking a launcher or credential provider;
+its retained review profile is disabled and its unapplied consumer pin patch is
+withdrawn from approval. Earlier failed attempts remain retained. The validator
+now requires full assertion rosters, raw test-event hashes, and matching source/profile
+bindings; its 17 deterministic regressions pass. The trusted coordinator qualification
+harness now exercises the actual CLI and isolated verifier through the extracted
+engine with a synthetic broker. All four end-to-end cases passed on a clean local
+validation snapshot. Production CLI exposes no injection hook; injected qualification
+is fixture-only and cannot produce VERIFIED_CANDIDATE. Owner approval of that execution
+profile and the protected consumer pin remain required.
+Execution-profile/source/dependency binding, read-only verifier mounts and cleanup
+integration are implemented but have not demonstrated a full real run. The observer's
+default 60-second bound now accepts a trusted task deadline up to 30 minutes, while
+the host retains the unrounded timeout and includes startup time in its budget.
+Immutable consumer pin review and live Kimi/PetClinic proof remain unfinished. No
+cloud/model call, consumer application edit or agent freeze occurred.
+
+
+
 **Next proof: governed local PetClinic update.**
 The owner authorized drafting [governed-change.v1](spec/factory/governed-change.v1.md)
 and its neutral executable contract tests. Reuse the existing consumer verifier,
@@ -96,10 +274,12 @@ checking. All 18 frozen workflow assertions and eight additional engineering reg
 have passed on a disposable committed factory snapshot. Required full-tier run
 records are retained under `test-results/start02-governed-implementation/`; these
 are local implementation evidence, not a published or human-approved release pin. Fixture results can only
-be SIMULATED_VERIFIED and cannot satisfy the real demonstration. Real launchers fail
-closed with TOOLING_UNAVAILABLE; an OS-enforced runner, credential boundary and
-independent verifier profile remain unimplemented. Host-loss process recovery is also
-unqualified because PID journaling follows process launch. PetClinic
+be SIMULATED_VERIFIED and cannot satisfy the real demonstration. At that earlier
+fixture stage, real launchers failed closed with TOOLING_UNAVAILABLE and coordinator
+integration/end-to-end qualification were incomplete. The implemented coordinator integration supersedes those implementation gaps;
+expanded mandatory qualification and owner approval remain separate requirements. Host-loss process recovery remains
+a manual inspection/cleanup concern because host PID journaling follows process launch;
+nonterminal records never become successful evidence. PetClinic
 still pins 9809c120cafd0ad867be6568621fac3ef54f1780, which has no change coordinator;
 a later released implementation pin, separately reviewed consumer pin/freeze/commit,
 and renewed external trust are required for real proof. Neither frozen manifest has

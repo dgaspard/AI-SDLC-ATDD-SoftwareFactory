@@ -199,3 +199,58 @@ all fourteen consumer suites and evidence-v1 semantics remain binding. No servic
 implementation change is authorized in this specification phase. A later real proof
 needs a released workflow implementation SHA, reviewed consumer config pin upgrade,
 human freeze/commit, renewed external authority, and a real constrained launcher.
+
+## Syscall-time target authorization (SCT)
+
+The first implementation profile remains Linux arm64, update-only, with immutable
+container inputs, an unprivileged coding process, private scratch, network-none
+qualification and independent protected audit storage. This amendment authorizes
+no additional host privilege, privileged container, cloud access or real activation.
+
+A mutation attempt must be classified from independently established syscall-time
+identity, never nominal pathname text, errno alone or post-run realpath. Before
+classifying, stop all relevant tracee threads and descendants, including those
+that can modify syscall argument memory, shared file tables or filesystem context.
+Establish stable process, root, cwd, dirfd, mount, syscall arguments and
+target/nearest-existing-parent identity as applicable. Resume only the selected
+syscall thread through the attempted operation's disposition; keep every other
+relevant writer stopped, or prove equivalent exclusion. A concurrent rename,
+symlink substitution, argument-buffer rewrite, descriptor reuse or cwd change must
+not invalidate the decision. Unaccounted pending kernel/asynchronous writers make
+the target unresolved. If the mechanism cannot establish this invariant under
+current capabilities, stop with TOOLING_UNAVAILABLE; do not relax isolation.
+
+Report authorized private scratch, task-granted implementation mutation,
+out-of-scope mutation, or unresolved. A failed private scratch operation may be
+nonblocking only when the independent observer proves its authorization and
+coverage. ENOENT/EEXIST do not themselves prove authorization. An unresolved target,
+unsupported syscall form, missing descendant coverage or incomplete observer stream
+prevents successful qualification. Out-of-scope create/update/delete attempts remain
+PERMISSION_DENIED even if no bytes changed. Writable /dev/tty opens have no implicit
+exception. No generic /tmp prefix or startup-error allowance is permitted.
+
+Retain the original trace and independent identity/disposition records in protected
+observer storage, bound to the run and immutable observer/runner inputs. Confirm
+all owned processes stopped before collecting, hashing or validating those records.
+Observer interruption, lost coverage or stale records cannot produce success. An
+observed coordinator interrupt remains INTERRUPTED; inability to confirm cleanup
+remains COORDINATOR_ERROR under the existing precedence rules.
+
+The mandatory additional conformance cases are enumerated in
+`spec/factory/syscall-observer-cases.v1.json`. The trusted qualification harness must
+execute the actual synchronized workloads under the observer, assert their individual
+outcomes and retain trace/identity/cleanup evidence. A reported case name, fabricated
+receipt, injected snapshot, parser-only test or fixture launcher cannot satisfy these
+platform cases. Missing tooling is an explicit blocking result, never a passing or
+skipped case. Portable regression tests may supplement but not replace this proof.
+
+The concurrency case must use deterministic barriers that place a competing writer
+at the target replacement boundary; timing sleeps or repeated races are insufficient.
+The coverage/interruption cases deliberately disable observation and must demonstrate
+that a workload's successful exit cannot produce successful qualification. The
+baseline must run the actual pinned CLI through the neutral local tool roundtrip;
+synthetic model responses remain credential-free protocol fixtures, not live inference.
+
+All prior governed-change conformance remains mandatory. Passing SCT is component
+qualification only: it does not enable the real coordinator, approve a consumer pin,
+implement PetClinic, approve/merge a diff or authorize deployment.
