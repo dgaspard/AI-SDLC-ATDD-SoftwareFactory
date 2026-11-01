@@ -4,7 +4,7 @@ import {digest,need,object,regular} from './change-support.mjs';
 export const requiredReports=Object.freeze({
  'task-session.test.mjs':38,
  'model-channel.test.mjs':5,
- 'native-audit-session.test.mjs':17,
+ 'native-audit-session.test.mjs':26,
  'container-session.test.mjs':12,
  'verifier-session.test.mjs':13,
  'real-coordinator.test.mjs':4,
@@ -87,6 +87,16 @@ export const assertionRosters=Object.freeze({
     "consumer envelope invalid rejects after zero exit"
   ],
   "native-audit-session.test.mjs": [
+    "namespace-local Node interface discovery has bound route socket evidence",
+    "route socket rejects protocol before binding",
+    "route socket rejects groups before binding",
+    "route socket rejects port before binding",
+    "route socket rejects padding before binding",
+    "route socket rejects length before binding",
+    "route socket rejects reuse before binding",
+    "route socket preserves kernel receive-empty result",
+    "route socket preserves kernel mutation result",
+
     "SCT-009 suppressed terminal probes preserve native no-terminal results",
     "SCT-010 terminal-race cannot receive a terminal exception",
     "SCT-010 terminal-flags cannot receive a terminal exception",

@@ -536,8 +536,9 @@ remain with the owner process. Relay loss fails the session. Synthetic Converse 
 exercise the actual pinned CLI but do not establish live model capability.
 
 `real-profile.mjs`, `real-launcher.mjs` and `real-coordinator.mjs` integrate these
-components with governed change and a read-only independent verifier. They are not an
-enabled real profile: no complete qualification record exists. The validator rejects
+components with governed change and a read-only independent verifier. Activation requires
+an owner-reviewed profile and a complete qualification record matching the exact
+current candidate. The validator rejects
 missing suites, incomplete or substituted assertion rosters, stale raw test events,
 and source/profile drift. Standalone PASS labels are not evidence. The trusted
 coordinator qualification harness (`real-coordinator.test.mjs`) runs four end-to-end
@@ -579,3 +580,23 @@ runner image. It uses existing container capabilities and closes the PTY descrip
 before workload execution. Proof checks reject missing or substituted process,
 target, disposition and whole binding groups; artifact checks still reject stale
 records. Runtime activation requires the reviewed image/profile and consumer pin.
+
+
+### Namespace-local routing socket compatibility
+
+Interface discovery on Linux uses a local `NETLINK_ROUTE` socket. The observer
+supports an exact `sockaddr_nl` bind with padding, requested port, and groups all zero.
+It duplicates the stopped task's current descriptor with `pidfd_getfd`, verifies
+socket identity, raw type, domain, protocol and zero memberships, and compares its
+network-namespace cookie with the observer's namespace. No capability or external
+network access is added. If descriptor inspection is unavailable, including for an
+unsupported nonleader thread, the operation fails closed.
+
+Zero-flag receive operations use the same identity checks and preserve native
+kernel results. This is not a general read-only classification of NETLINK_ROUTE:
+route-changing requests remain constrained by the existing dropped capabilities.
+Qualification explicitly verifies kernel EPERM and unchanged loopback state, in
+addition to network escape checks, wrong protocols/addresses, fd reuse and evidence
+substitution. Bind address context and socket identity must agree; missing binding
+groups cannot produce successful proof. Main-thread Node interface discovery is the
+verified positive platform case; arbitrary-thread support is not implied.

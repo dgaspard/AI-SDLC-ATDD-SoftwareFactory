@@ -34,3 +34,17 @@ for(const [name,nr,args] of [['probe',56,['ffffffffffffff9c','1000','802','0','0
 });
 
 for(const disposition of [2,3])test('terminal proof rejects substituted disposition '+disposition,()=>{const f=terminalFixture();f.identities=[];f.receipt.identityRecords=0;Object.assign(f.trace[3],{disposition,bindings:0});assert.throws(()=>verify(f),/Invalid writable probe disposition/);});
+
+function routeFixture(){const f=fixture();Object.assign(f.trace[1],{nr:200,args:['3','1000','c','0','0','0']});Object.assign(f.trace[2],{addressFamily:16,netlinkPort:0,netlinkGroups:0,netlinkPadding:0});Object.assign(f.trace[3],{nr:200,result:0,kernelResult:0});Object.assign(f.identities[0],{kind:'route-socket',operation:'bind',fd:3,domain:16,type:3,protocol:0,localPort:0,groups:0,netCookie:7,ownerNetCookie:7});return f;}
+test('route socket proof binds current protocol namespace and native result',()=>assert.equal(verify(routeFixture()).coverageClosed,true));
+for(const [name,alter] of [
+ ['protocol',f=>f.identities[0].protocol=2],['domain',f=>f.identities[0].domain=2],['type',f=>f.identities[0].type=2],
+ ['namespace',f=>f.identities[0].netCookie=8],['groups',f=>f.trace[2].netlinkGroups=1],['port',f=>f.trace[2].netlinkPort=1],['padding',f=>f.trace[2].netlinkPadding=1],
+ ['descriptor',f=>f.identities[0].fd=4],['length',f=>f.trace[1].args[2]='b'],['native result',f=>f.trace[3].result=1],
+ ['substituted family',f=>f.trace[2].addressFamily=2],['missing address',f=>delete f.trace[2].addressFamily],['missing identity',f=>{f.identities=[];f.receipt.identityRecords=0;Object.assign(f.trace[3],{bindings:0,disposition:2});}],
+ ['missing group',f=>{f.identities=[];f.receipt.identityRecords=0;f.trace=[f.trace[0],f.trace[1],{seq:3,event:'exit-syscall',tid:2,nr:200,result:0},{seq:4,event:'exit',tid:2}];f.receipt.traceRecords=4;}]
+])test('route socket proof rejects '+name,()=>{const f=routeFixture();alter(f);assert.throws(()=>verify(f));});
+
+function routeReceiveFixture(){const f=routeFixture();Object.assign(f.trace[1],{nr:212,args:['3','1000','0','0','0','0']});Object.assign(f.trace[3],{nr:212,result:-11,kernelResult:-11});f.identities[0].operation='receive';return f;}
+test('route receive proof preserves native failure',()=>assert.equal(verify(routeReceiveFixture()).coverageClosed,true));
+for(const [name,alter] of [['native result',f=>f.trace[3].result=0],['flags',f=>f.trace[1].args[2]='2'],['operation',f=>f.identities[0].operation='bind'],['protocol',f=>f.identities[0].protocol=2],['namespace',f=>f.identities[0].ownerNetCookie=8],['missing binding',f=>{f.identities=[];f.receipt.identityRecords=0;Object.assign(f.trace[3],{bindings:0,disposition:2});}]])test('route receive rejects '+name,()=>{const f=routeReceiveFixture();alter(f);assert.throws(()=>verify(f));});

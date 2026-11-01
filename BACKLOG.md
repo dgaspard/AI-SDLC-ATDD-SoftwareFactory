@@ -20,12 +20,29 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Frozen terminal-probe implementation.** The human approved and froze the exact
+**Current local-proof follow-up: routing socket compatibility.** The human-frozen
+consumer `5e87e2b699a6f8036aa8a75109f4a2a445c79b62` pins reviewed factory
+`748ec02458d96a0a2dd29778342596d590b5448b`. Its second live attempt completed ten
+model requests, then failed closed on a namespace-local routing-socket bind; retained
+evidence is `/private/tmp/start02-live-petclinic-5e87e2b-qxlq68f6/run-2/`. No candidate
+changes were transferred and cleanup completed. The new compatibility mechanism
+uses current-descriptor/kernel namespace evidence without additional capabilities.
+Nine component cases pass, including real Node discovery and kernel-denied route
+mutation. Full qualification and gate records for the next review candidate belong
+in `test-results/start02-netlink-implementation-review/`; owner review of the next
+profile/pin and a successful live candidate remain required before local-proof completion.
+
+
+**Historical terminal-probe qualification (reviewed and consumed by 5e87e2b).** The human approved and froze the exact
 no-terminal policy and SCT-009/SCT-010 catalogue (38 manifest entries). Implementation
 now includes suppressed-probe evidence, descriptor-bound terminal queries, a real
 private-PTY negative fixture, and default-shell CLI coverage. Independent review found
-and prompted a whole-binding-removal proof regression. Renewed full qualification,
-final-tree gate, profile/pin review and live PetClinic proof are separate pending steps;
+and prompted a whole-binding-removal proof regression. The final local review commit
+`748ec02458d96a0a2dd29778342596d590b5448b` passed 89/89 credential-free platform
+qualification cases and the full gate (`2026-11-01T14-56-23-964Z-full.json`, tree
+`04cb54ae963b`). Review artifacts are retained under
+`test-results/start02-terminal-implementation-review/`. The proposed profile validates;
+owner profile/pin review subsequently completed; live PetClinic proof remains pending;
 the earlier failed live attempts remain retained and are not successful proof.
 
 

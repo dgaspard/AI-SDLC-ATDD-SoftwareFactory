@@ -71,3 +71,15 @@ test('SCT-010 real controlling terminal blocks the no-terminal exception',async(
  const id=lines(path.join(root,'terminal-present/audit/native-identities.jsonl')).filter(x=>x.kind==='terminal-probe');assert.equal(id.length,1);assert.notEqual(id[0].controllingTerminal,0);assert.equal(id[0].disposition,0);
  const trace=lines(path.join(root,'terminal-present/audit/native-trace.jsonl'));assert.ok(trace.some(x=>x.event==='bound-exit'&&x.nr===29&&x.result===0&&x.kernelResult===0));
 });
+
+test('namespace-local Node interface discovery has bound route socket evidence',async()=>{
+ const r=await run('route-discovery',['node','-e',"const n=require('node:os').networkInterfaces();if(!n.lo?.some(x=>x.address==='127.0.0.1'))process.exit(91);console.log('LOOPBACK_DISCOVERY_PASSED')"]);assert.equal(r.exitCode,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
+ const records=lines(path.join(root,'route-discovery/audit/native-identities.jsonl')).filter(x=>x.kind==='route-socket');assert.ok(records.some(x=>x.operation==='bind'));assert.ok(records.some(x=>x.operation==='receive'));assert.ok(records.every(x=>x.domain===16&&x.protocol===0&&x.groups===0&&x.netCookie===x.ownerNetCookie));
+});
+for(const name of ['protocol','groups','port','padding','length','reuse'])test('route socket rejects '+name+' before binding',async()=>{
+ const r=await run('route-'+name,['/opt/factory/syscall-observer-cases','route-'+name]);assert.equal(r.exitCode,5);assert.equal(r.cleanupConfirmed,true);const trace=lines(path.join(root,'route-'+name+'/audit/native-trace.jsonl'));assert.ok(trace.some(x=>x.event==='entry'&&x.nr===200));assert.notEqual(r.phase,'AUDIT_COLLECTED');
+});
+for(const name of ['receive-empty','mutation'])test('route socket preserves kernel '+name+' result',async()=>{
+ const r=await run('route-'+name,['/opt/factory/syscall-observer-cases','route-'+name]);assert.equal(r.exitCode,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
+ const trace=lines(path.join(root,'route-'+name+'/audit/native-trace.jsonl'));if(name==='receive-empty')assert.ok(trace.some(x=>x.event==='bound-exit'&&x.nr===212&&x.result===-11&&x.kernelResult===-11));else assert.match(fs.readFileSync(path.join(root,'route-'+name+'/audit/stdout'),'utf8'),/ROUTE_MUTATION_DENIED_LOOPBACK_UNCHANGED/);
+});

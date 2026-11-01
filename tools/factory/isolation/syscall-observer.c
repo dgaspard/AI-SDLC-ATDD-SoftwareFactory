@@ -5,6 +5,7 @@
 #include <linux/audit.h>
 #include <linux/openat2.h>
 #include <linux/stat.h>
+#include <linux/netlink.h>
 #include <asm/ptrace.h>
 #include <elf.h>
 #include <dirent.h>
@@ -132,6 +133,21 @@ static int hold_proc(const char *p){
 static void identity_prefix(pid_t tid){fprintf(identity,"{\"seq\":%lu,\"entry\":%lu,\"tid\":%d,",++identity_records,binding_entry,tid);}
 static int descriptor(pid_t pid,int fd,int update){char p[80];snprintf(p,sizeof p,"/proc/%d/fd/%d",pid,fd);int held=hold_proc(p);if(held<0)return -1;int r=update?authorized_fd(held):authorized_metadata(held);int grant=granted_fd(held);if(grant)r=update?1:0;struct statx check;if(update&&!fd_identity(held,&check))for(int x=0;x<2;x++)if(check.stx_ino==output_stat[x].stx_ino&&check.stx_mnt_id==output_stat[x].stx_mnt_id)r=1;struct statx s;if(!fd_identity(held,&s)){identity_prefix(pid);fprintf(identity,"\"fd\":%d,\"mount\":%llu,\"inode\":%llu,\"disposition\":%d,\"grant\":%s}\n",fd,(unsigned long long)s.stx_mnt_id,(unsigned long long)s.stx_ino,r,grant?"true":"false");}close(held);return r;}
 // Called only under the all-writers-stopped invariant. No device is opened.
+static int route_socket(pid_t tid,int fd,const char*operation){
+ int pidfd=syscall(SYS_pidfd_open,tid,0);if(pidfd<0){fprintf(stderr,"route pidfd unavailable errno=%d\n",errno);return -1;}
+ int held=syscall(SYS_pidfd_getfd,pidfd,fd,0);int saved=errno;close(pidfd);if(held<0){fprintf(stderr,"route descriptor unavailable errno=%d\n",saved);return -1;}
+ struct statx sock;int domain=-1,protocol=-1,type=-1;socklen_t size=sizeof(int);
+ int bad=fd_identity(held,&sock)||!S_ISSOCK(sock.stx_mode)||getsockopt(held,SOL_SOCKET,SO_DOMAIN,&domain,&size)||size!=sizeof(int);
+ size=sizeof(int);bad=bad||getsockopt(held,SOL_SOCKET,SO_PROTOCOL,&protocol,&size)||size!=sizeof(int);
+ size=sizeof(int);bad=bad||getsockopt(held,SOL_SOCKET,SO_TYPE,&type,&size)||size!=sizeof(int);
+ struct sockaddr_nl address={0};size=sizeof address;bad=bad||getsockname(held,(struct sockaddr*)&address,&size)||size!=sizeof address;
+ unsigned long long cookie=0,owner_cookie=0;size=sizeof cookie;
+ bad=bad||getsockopt(held,SOL_SOCKET,SO_NETNS_COOKIE,&cookie,&size)||size!=sizeof cookie;
+ int owner=socket(AF_NETLINK,SOCK_RAW|SOCK_CLOEXEC,NETLINK_ROUTE);if(owner<0){close(held);return -1;}
+ size=sizeof owner_cookie;bad=bad||getsockopt(owner,SOL_SOCKET,SO_NETNS_COOKIE,&owner_cookie,&size)||size!=sizeof owner_cookie;close(owner);close(held);
+ if(bad||domain!=AF_NETLINK||protocol!=NETLINK_ROUTE||type!=SOCK_RAW||address.nl_family!=AF_NETLINK||address.nl_groups||!cookie||cookie!=owner_cookie)return -1;
+ identity_prefix(tid);fprintf(identity,"\"mount\":%llu,\"inode\":%llu,\"disposition\":1,\"kind\":\"route-socket\",\"operation\":\"%s\",\"fd\":%d,\"domain\":%d,\"type\":%d,\"protocol\":%d,\"localPort\":%u,\"groups\":%u,\"netCookie\":%llu,\"ownerNetCookie\":%llu}\n",(unsigned long long)sock.stx_mnt_id,(unsigned long long)sock.stx_ino,operation,fd,domain,type,protocol,address.nl_pid,address.nl_groups,cookie,owner_cookie);return 1;
+}
 static int terminal_identity(pid_t tid,struct statx *target){
  char file[80],line[4096],state;int parent,group,session,tty;
  snprintf(file,sizeof file,"/proc/%d/stat",tid);FILE*f=fopen(file,"r");
@@ -207,8 +223,9 @@ static int policy(pid_t tid,struct ptrace_syscall_info*i){__u64*n=i->entry.args;
   int a=target_impl(tid,(int)n[0],n[1],0,0,1),b=target(tid,(int)n[2],n[3],1,0);
   return a<0||b<0?-1:a&&b;
  }
- case SYS_bind:{struct sockaddr_storage addr;size_t len=n[2];if(len<sizeof(sa_family_t)||len>sizeof addr)return -1;struct iovec l={&addr,len},r={(void*)n[1],len};if(process_vm_readv(tid,&l,1,&r,1,0)!=(ssize_t)len)return -1;if(addr.ss_family==AF_UNIX){struct sockaddr_un*u=(struct sockaddr_un*)&addr;if(len<=2)return -1;if(!u->sun_path[0])return 2;if(!memchr(u->sun_path,0,len-2))return -1;return target(tid,AT_FDCWD,n[1]+2,1,0);}return addr.ss_family==AF_INET||addr.ss_family==AF_INET6?2:-1;}
+ case SYS_bind:{struct sockaddr_storage addr;size_t len=n[2];if(len<sizeof(sa_family_t)||len>sizeof addr)return -1;struct iovec l={&addr,len},r={(void*)n[1],len};if(process_vm_readv(tid,&l,1,&r,1,0)!=(ssize_t)len)return -1;if(addr.ss_family==AF_NETLINK){struct sockaddr_nl*nl=(struct sockaddr_nl*)&addr;if(len!=sizeof *nl||nl->nl_pad||nl->nl_pid||nl->nl_groups)return -1;return route_socket(tid,(int)n[0],"bind");}if(addr.ss_family==AF_UNIX){struct sockaddr_un*u=(struct sockaddr_un*)&addr;if(len<=2)return -1;if(!u->sun_path[0])return 2;if(!memchr(u->sun_path,0,len-2))return -1;return target(tid,AT_FDCWD,n[1]+2,1,0);}return addr.ss_family==AF_INET||addr.ss_family==AF_INET6?2:-1;}
  case SYS_symlinkat:return target(tid,(int)n[1],n[2],1,0);
+ case SYS_recvmsg:if(n[2])return -1;return route_socket(tid,(int)n[0],"receive");
  case SYS_copy_file_range:return descriptor(tid,(int)n[2],1);
  case SYS_sendfile:return descriptor(tid,(int)n[0],1);
  case SYS_write:case SYS_writev:case SYS_pwrite64:case SYS_pwritev:case SYS_ftruncate:case SYS_fsync:case SYS_fdatasync:return descriptor(tid,(int)n[0],1);
@@ -251,7 +268,14 @@ static int mutation(struct task*t,struct ptrace_syscall_info*i){
  char rootpath[80],cwdpath[80];snprintf(rootpath,sizeof rootpath,"/proc/%d/root",t->tid);snprintf(cwdpath,sizeof cwdpath,"/proc/%d/cwd",t->tid);
  int rh=hold_proc(rootpath),ch=hold_proc(cwdpath);struct statx rs,cs;
  if(rh<0||ch<0||fd_identity(rh,&rs)||fd_identity(ch,&cs)){if(rh>=0)close(rh);if(ch>=0)close(ch);fail("context identity");return -1;}close(rh);close(ch);
- tracef("{\"event\":\"bound-start\",\"tid\":%d,\"entry\":%lu,\"rootMount\":%llu,\"rootInode\":%llu,\"cwdMount\":%llu,\"cwdInode\":%llu,\"stopped\":[",t->tid,binding_entry,(unsigned long long)rs.stx_mnt_id,(unsigned long long)rs.stx_ino,(unsigned long long)cs.stx_mnt_id,(unsigned long long)cs.stx_ino);
+ int bind_family=-1;unsigned bind_port=0,bind_groups=0,bind_padding=0;
+ if(i->entry.nr==SYS_bind&&i->entry.args[2]>=sizeof(sa_family_t)&&i->entry.args[2]<=sizeof(struct sockaddr_storage)){
+  struct sockaddr_storage address={0};size_t length=i->entry.args[2];struct iovec local={&address,length},remote={(void*)i->entry.args[1],length};
+  if(process_vm_readv(t->tid,&local,1,&remote,1,0)!=(ssize_t)length){fail("bind address identity");return -1;}
+  bind_family=address.ss_family;
+  if(bind_family==AF_NETLINK&&length==sizeof(struct sockaddr_nl)){struct sockaddr_nl*nl=(struct sockaddr_nl*)&address;bind_port=nl->nl_pid;bind_groups=nl->nl_groups;bind_padding=nl->nl_pad;}
+ }
+ tracef("{\"event\":\"bound-start\",\"tid\":%d,\"entry\":%lu,\"rootMount\":%llu,\"rootInode\":%llu,\"cwdMount\":%llu,\"cwdInode\":%llu,\"addressFamily\":%d,\"netlinkPort\":%u,\"netlinkGroups\":%u,\"netlinkPadding\":%u,\"stopped\":[",t->tid,binding_entry,(unsigned long long)rs.stx_mnt_id,(unsigned long long)rs.stx_ino,(unsigned long long)cs.stx_mnt_id,(unsigned long long)cs.stx_ino,bind_family,bind_port,bind_groups,bind_padding);
  int comma=0;for(int k=0;k<used;k++)if(tasks[k].tid){fprintf(trace,"%s{\"tid\":%d,\"startTime\":%llu}",comma?",":"",tasks[k].tid,tasks[k].started);comma=1;}fputs("]}\n",trace);
  terminal_probe=0;denial_errno=EPERM;int disposition=policy(t->tid,i);if(disposition<0){fprintf(stderr,"Unsupported syscall/target nr=%llu tid=%d\n",(unsigned long long)i->entry.nr,t->tid);fail("unresolved target");return -1;}
  if(disposition==4)denial_errno=ENXIO;

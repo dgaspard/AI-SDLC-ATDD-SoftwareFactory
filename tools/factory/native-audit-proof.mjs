@@ -26,6 +26,12 @@ export function validateNativeProof(receipt, traceBytes, identityBytes, exitCode
    const e=entries.get(r.entry),list=bindings.get(r.entry)??[];
    if(!e||e.tid!==r.tid||e.nr!==r.nr||!bound.has(r.entry)||finished.has(r.entry)||!integer(r.bindings)||list.length!==r.bindings||list.some(b=>b.tid!==r.tid)||![0,1,2,3,4].includes(r.disposition)||r.denied!==(r.disposition===0)||!Number.isSafeInteger(r.result)||!Number.isSafeInteger(r.kernelResult))throw Error('Incomplete syscall binding');
    if(e.nr===56&&e.args?.[2]==='802'&&(![0,1,4].includes(r.disposition)||!list.length))throw Error('Invalid writable probe disposition');
+   if(e.nr===200){const context=bound.get(r.entry);if(!Number.isInteger(context.addressFamily)||context.addressFamily<0)throw Error('Missing bind address identity');if(context.addressFamily===16&&(list.length!==1||list[0].kind!=='route-socket'||context.netlinkPort!==0||context.netlinkGroups!==0||context.netlinkPadding!==0))throw Error('Invalid route bind address');}
+   for(const b of list.filter(b=>b.kind==='route-socket')){
+    const bind=b.operation==='bind',receive=b.operation==='receive';
+    if(list.length!==1||r.disposition!==1||b.disposition!==1||(!bind&&!receive)||!integer(b.fd)||parseInt(e.args?.[0],16)!==b.fd||b.domain!==16||b.type!==3||b.protocol!==0||b.groups!==0||!integer(b.localPort)||!positive(b.netCookie)||b.netCookie!==b.ownerNetCookie||r.result!==r.kernelResult||(bind&&(e.nr!==200||e.args?.[2]!=='c'||bound.get(r.entry).addressFamily!==16||bound.get(r.entry).netlinkPort!==0||bound.get(r.entry).netlinkGroups!==0||bound.get(r.entry).netlinkPadding!==0))||(receive&&(e.nr!==212||e.args?.[2]!=='0')))throw Error('Invalid route socket binding');
+   }
+   if(e.nr===212&&(list.length!==1||list[0].kind!=='route-socket'))throw Error('Missing route receive binding');
    const probes=list.filter(b=>b.kind==='terminal-probe');
    if(r.disposition===4||probes.length){
     const b=probes[0],context=bound.get(r.entry),task=context.stopped.find(t=>t.tid===r.tid);
@@ -45,7 +51,7 @@ export function validateNativeProof(receipt, traceBytes, identityBytes, exitCode
   }else if(r.event!=='exit-syscall')throw Error('Unknown native event');
  }
  for(const [entry,list] of bindings)if(!bound.has(entry)||list.some(b=>entries.get(entry)?.tid!==b.tid)||(exitCode!==5&&!finished.has(entry)))throw Error('Orphaned target binding');
- if(exitCode!==5)for(const [seq,e] of entries)if((e.nr===56&&e.args?.[2]==='802')||(e.nr===29&&e.args?.[1]==='540f')){if(!bound.has(seq)||!finished.has(seq))throw Error('Missing mandatory terminal syscall binding');}
+ if(exitCode!==5)for(const [seq,e] of entries)if((e.nr===56&&e.args?.[2]==='802')||(e.nr===29&&e.args?.[1]==='540f')||e.nr===200||e.nr===212){if(!bound.has(seq)||!finished.has(seq))throw Error('Missing mandatory terminal syscall binding');}
  if(denials!==receipt.denials)throw Error('Denial count mismatch');
  if(exitCode!==5&&(!started||live.size||bound.size!==finished.size))throw Error('Incomplete task coverage');
  if(exitCode===0&&(denials||receipt.workloadExitCode||!receipt.events))throw Error('False native success');
