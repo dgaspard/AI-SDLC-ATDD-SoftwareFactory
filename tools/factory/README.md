@@ -606,3 +606,10 @@ Read-only `fcntl(F_GETPIPE_SZ)` is supported for pipe-capacity inspection. Nativ
 success and error results are preserved; query support does not authorize pipe
 resizing. Qualification checks that buffered bytes and capacity remain unchanged,
 closed descriptors preserve EBADF, and `F_SETPIPE_SZ` still blocks qualification.
+
+Owner-side Docker inspect/list queries retry an explicit daemon-connection failure
+at most twice, with 100 ms between attempts and one shared 30-second command budget.
+Only a successful fresh query supplies state; an unavailable daemon never means a
+container is absent or stopped. Mutations, timeout/signal failures and other Docker
+errors are not retried. Persistent query failures preserve the existing failure and
+recovery path; no retry authorizes success without cleanup and evidence validation.

@@ -1,3 +1,4 @@
+import './docker-command.test.mjs';
 import './qualification-proof.test.mjs';
 import './bedrock-converse.test.mjs';
 import './syscall-audit.test.mjs';

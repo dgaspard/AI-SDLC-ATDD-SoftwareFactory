@@ -1,3 +1,4 @@
+import {dockerCommand} from './docker-command.mjs';
 // Offline verifier execution component. Does not authorize a runner or qualify a change.
 import fs from 'node:fs';
 import {validateConsumerProof} from './consumer-proof.mjs';
@@ -10,7 +11,7 @@ import {prepareSession,startSession,finishSession,recoverSession,finalizeVerifie
 // Evidence content validity and consumer identity still belong to consumer.mjs/coordinator.
 export function collectVerifierArtifacts(session){
  const {docker,j}=session;
- const info=JSON.parse(execFileSync(docker,['inspect',j.containerId],{encoding:'utf8',timeout:30000,maxBuffer:1048576}))[0];
+ const info=JSON.parse(dockerCommand(docker,['inspect',j.containerId]))[0];
  if(!j.cleanupConfirmed||info.Id!==j.containerId||info.Name!=='/'+j.containerName||info.Config.Image!==j.image||info.Config.Labels?.['software-factory.session']!==j.runId||info.State.Running||info.State.Paused||info.State.Restarting||info.State.Pid!==0)throw new Error('Verifier cleanup not confirmed');
  const artifacts=[];
  function walk(directory,target){

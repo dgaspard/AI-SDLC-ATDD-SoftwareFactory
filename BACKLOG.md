@@ -20,7 +20,20 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Current local-proof follow-up: read-only pipe query.** Consumer
+**Current local-proof follow-up: Docker query transport recovery.** The pipe-query
+candidate passed the full factory gate and 28 native cases, but coordinator
+qualification remained incomplete. Credential-free instrumentation captured an
+intermittent `docker inspect` connection failure in `finishSession`; a later cleanup
+error had obscured it. Original attempts remain retained under
+`test-results/start02-pipe-implementation-review/`. The owner-side query helper now
+retries only explicit daemon-connection failures for read-only inspect/list calls,
+at most three attempts within the original 30-second command budget. Mutations,
+other errors and persistent outages still fail. Four deterministic transport tests
+pass; renewed gate/qualification records belong under
+`test-results/start02-transport-implementation-review/`. Runtime-profile review,
+consumer pin review/freeze and live candidate proof remain pending.
+
+**Historical pipe-query follow-up.** Consumer
 `fa849bd8b673a6dbbbbfbf072a39d8467d758bc1` pins reviewed factory
 `40095301fdac57d8b4d223e6ab9a633e90f3f4e7`. Its live run completed five model
 requests and failed closed on `fcntl(F_GETPIPE_SZ)`; cleanup completed and no changes
@@ -42,7 +55,7 @@ uses current-descriptor/kernel namespace evidence without additional capabilitie
 Nine component cases pass, including real Node discovery and kernel-denied route
 mutation. Full qualification and gate records for the next review candidate belong
 in `test-results/start02-netlink-implementation-review/`; owner review of the next
-profile/pin and a successful live candidate remain required before local-proof completion.
+profile/pin was subsequently completed for `fa849bd`; successful live candidate proof remains required.
 
 
 **Historical terminal-probe qualification (reviewed and consumed by 5e87e2b).** The human approved and froze the exact

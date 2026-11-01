@@ -1,7 +1,8 @@
+import {dockerCommand} from './docker-command.mjs';
 // Owner-side relay attachment. Only the already-configured broker may reach its upstream.
-import {spawn,execFileSync} from 'node:child_process';
+import {spawn} from 'node:child_process';
 export async function attachModelChannel({session,broker,model,prompt}){
- const info=JSON.parse(execFileSync(session.docker,['inspect',session.j.containerId],{encoding:'utf8',timeout:30000,maxBuffer:1048576,stdio:['ignore','pipe','pipe']}))[0];
+ const info=JSON.parse(dockerCommand(session.docker,['inspect',session.j.containerId]))[0];
  if(!session.j.audit||session.j.argv?.[0]!=='--model-channel'||session.j.phase!=='RUNNING'||info.Id!==session.j.containerId||info.Name!=='/'+session.j.containerName||info.Config.Labels?.['software-factory.session']!==session.j.runId||info.Config.Image!==session.j.image||!info.State.Running||info.HostConfig.NetworkMode!=='none')throw Error('Model channel container identity mismatch');
  const endpoint=`http://127.0.0.1:${broker.server.address().port}/v1/responses`;
  const child=spawn(session.docker,['exec','--interactive','--user','0:0',session.j.containerId,'/usr/local/bin/node','/opt/factory/model-channel.mjs'],{env:{PATH:process.env.PATH,...(process.env.DOCKER_HOST?{DOCKER_HOST:process.env.DOCKER_HOST}:{})},stdio:['pipe','pipe','pipe']});

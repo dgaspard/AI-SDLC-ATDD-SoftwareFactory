@@ -1,3 +1,4 @@
+import {dockerCommand} from './docker-command.mjs';
 // Explicit native component qualification. No governed-runner activation.
 import fs from 'node:fs';import path from 'node:path';import crypto from 'node:crypto';import {execFileSync} from 'node:child_process';
 import {prepareSession,startSession,finishSession,recoverSession,finalizeAuditSession} from './container-session.mjs';
@@ -12,7 +13,7 @@ export async function runNativeAuditSession(options,{timeoutMs=60000,signal,afte
   const remaining=deadline-Date.now();if(remaining<=0)throw Error('Native session deadline expired during startup');
   await finishSession(session,{timeoutMs:remaining,signal,deferSuccess:true});await closeOwner();
   collectVerifierArtifacts(session);
-  const volume=JSON.parse(execFileSync(session.docker,['volume','inspect',session.j.auditVolume],{encoding:'utf8',timeout:30000,maxBuffer:1048576}))[0];
+  const volume=JSON.parse(dockerCommand(session.docker,['volume','inspect',session.j.auditVolume]))[0];
   if(volume.Name!==session.j.auditVolume||volume.Labels?.['software-factory.session']!==session.j.runId)throw Error('Audit volume identity mismatch');
   const destination=session.j.outputBindings.find(x=>x.target==='/audit').source;if(fs.readdirSync(destination).length)throw Error('Nonempty audit destination');
   for(const name of ['native-trace.jsonl','native-identities.jsonl','native-receipt.json','stdout','stderr'])execFileSync(session.docker,['cp',session.j.containerId+':/audit/'+name,path.join(destination,name)],{timeout:30000,stdio:'pipe'});

@@ -2,7 +2,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const factory=fs.realpathSync(fileURLToPath(new URL('../../',import.meta.url)));
 const label='software-factory.session';
@@ -13,7 +12,7 @@ function save(file,value){
  fs.renameSync(temp,file);
  const dir=fs.openSync(path.dirname(file),'r');try{fs.fsyncSync(dir);}finally{fs.closeSync(dir);}
 }
-function command(docker,args){return execFileSync(docker,args,{encoding:'utf8',timeout:30000,maxBuffer:1048576,stdio:['ignore','pipe','pipe']}).trim();}
+import {dockerCommand as command} from './docker-command.mjs';
 function inspect(docker,id){return JSON.parse(command(docker,['inspect',id]))[0];}
 function assertIdentity(info,j){
  if(info.Id!==j.containerId||info.Name!=='/'+j.containerName||info.Config.Labels?.[label]!==j.runId||info.Config.Image!==j.image)
