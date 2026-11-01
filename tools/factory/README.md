@@ -621,3 +621,10 @@ Read-only `getgroups` queries preserve the kernel supplementary-group count and
 list/error results. They do not change process credentials or authorize `setgroups`.
 Native qualification checks the sandbox's empty group list, unchanged output buffer,
 negative-size EINVAL and unchanged group count; the mutation case remains blocking.
+
+The coding-stage prompt directs bounded requirement/source inspection and only the
+granted implementation edit. It tells the agent to leave package managers, running
+application services and test suites to the provisioned independent verifier. This
+instruction does not replace or waive any gate: successful implementation still
+requires separate full verification and evidence validation after cleanup. The
+observer event budget and all permission checks remain unchanged.

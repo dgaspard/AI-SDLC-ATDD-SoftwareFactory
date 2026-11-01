@@ -20,7 +20,22 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Current local-proof follow-up: exact-thread socket identity.** Consumer
+**Current local-proof follow-up: implementation-stage handoff.** Consumer
+`b445ee874ad93685bb2c78b8ffba7000155f1173` pins reviewed factory
+`c976424ea5f362d117b76e7f50d5b502d618dec0`. Its live attempt completed fifteen model
+requests and made a scoped sandbox edit, then failed closed at the existing
+500,000-event observer limit. Cleanup completed and no candidate was transferred.
+Evidence remains at `/private/tmp/start02-live-petclinic-b445ee8-vpqa_wrq/run-1/`.
+The audit establishes the event limit, not the exact high-level command causing it.
+The launcher now explicitly separates implementation from independent verification:
+bounded requirement/source inspection and the granted edit belong in the coding
+sandbox; package managers, application servers and full tests belong in the
+provisioned independent verifier. Required verification and observation limits are
+unchanged. Renewed evidence belongs under
+`test-results/start02-handoff-implementation-review/`. Profile/pin review and live
+proof remain required; the failed sandbox diff is not an approved candidate.
+
+**Historical exact-thread socket identity (reviewed and consumed by b445ee8).** Consumer
 `01dcb389699aca9bddf17da7924509b11ad4accb` pins reviewed factory
 `f8698979a05c43218c511cea874b745dd401fe2c` (full gate and 102-case qualification).
 Its live attempt completed fourteen successful model requests, then failed closed
@@ -30,8 +45,8 @@ Runner cleanup completed and no candidate was transferred. The owner observer no
 uses `PIDFD_THREAD` for the exact stopped caller; there is no process-leader fallback.
 Native worker discovery and wrong-protocol/reused-descriptor tests pass (3/3), with
 thread identity required by the proof validator. Gate/qualification records belong
-under `test-results/start02-thread-implementation-review/`. New profile/pin review,
-human consumer freeze and successful live proof remain required.
+under `test-results/start02-thread-implementation-review/`. Profile/pin review and
+human consumer freeze subsequently completed for `b445ee8`; live proof remains pending.
 
 **Historical supplementary-group query (reviewed and consumed by 01dcb38).** Consumer
 `5c0cb09fadda2fbc192919a0f22db578d72cb327` pins reviewed factory
