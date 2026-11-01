@@ -27,14 +27,32 @@ factory `7ff647eaa5c7492846a0b3b6aa3308db9f16fd20`; runner qualification passed
 exit 0. All 14 independent consumer suites passed, both containers stopped, and
 post-cleanup evidence checking passed. Node 22 gate verification on a separate
 copy passed on tree `73b77d36eb87bc9397f8d98321ea64c2b8ce60bb` without modifying retained evidence.
-The original consumer remains unchanged. Only `services/customer/server.js` changed;
-the candidate is unapplied and unmerged, awaiting human review. This completes the
+The original consumer remained unchanged during the run. Only `services/customer/server.js`
+changed. The human approved adoption in `5523b1d41404c901ab70ac0916884d3fe1e3e0ac`;
+PetClinic PR #1 merged as `ebb894c17e5e8a7550c873c1bcb3ff8abc156860`, and factory
+PR #23 squash-merged as `8a9d2d9582e4b578d58889b9574973768e65f299`. Both are tagged
+`factory-separation-prompt-5-complete`; `prompt-5-qualified-factory-runtime` preserves
+the exact consumer pin outside the squash-merged main history. The original run’s
+checker binds its source checkout, so post-adoption checking of that run is not
+claimed; its pre-adoption check is recorded historical evidence. This completes the
 scoped Prompt 5 local update demonstration, not general create/delete/deploy support.
 Evidence and patch: `test-results/start02-live-petclinic-final/`; recovery workspace:
 `/private/tmp/start02-live-petclinic-eab317d-nk1jm464/run-1/`.
 Earlier attempts remain retained: `mzzjylot` initially passed but became EVIDENCE_INVALID
 after a host verification command changed retained Git metadata; `qprikjqj` failed
 with broker HTTP 502. Neither is used as final success evidence.
+
+**Fresh isolated reproduction (2026-11-01).** Run `c68fc6d7-127d-4a57-9a60-a2a6990def37`
+returned VERIFIED_CANDIDATE with the same approved starting consumer and runtime pin,
+all 14 suites passed, cleanup confirmed, and final evidence check exit 0.
+Elapsed 232.249 seconds; 11 model requests. Its original checkout is
+retained unchanged at `/private/tmp/start02-repro-proof-do3luy_9/approved-consumer`,
+so the run remains independently checkable after the earlier application adoption.
+Run 1 failed with broker HTTP 502 / IMPLEMENTATION_FAILED and remains retained;
+it did not produce accepted work. Records: `test-results/start02-reproduction/summary.json`.
+The replay candidate remains unapplied; the merged application is unchanged.
+See the design’s reproduction commands, initial-red identities, failure cases,
+human interventions and current limitations. No runtime or pin change was needed.
 
 **Historical read-only Git inspection correction (reviewed and consumed by eab317d).** Consumer
 `e4bbf90cfa59713d287316520c83e0410bbd6ce0` pins reviewed factory
@@ -65,7 +83,7 @@ sandbox; package managers, application servers and full tests belong in the
 provisioned independent verifier. Required verification and observation limits are
 unchanged. Renewed evidence belongs under
 `test-results/start02-handoff-implementation-review/`. Profile/pin review and
-consumer freeze subsequently completed for `e4bbf90`; live proof remains pending.
+consumer freeze subsequently completed for `e4bbf90`; live proof remained pending at that stage.
 
 **Historical exact-thread socket identity (reviewed and consumed by b445ee8).** Consumer
 `01dcb389699aca9bddf17da7924509b11ad4accb` pins reviewed factory
@@ -78,7 +96,7 @@ uses `PIDFD_THREAD` for the exact stopped caller; there is no process-leader fal
 Native worker discovery and wrong-protocol/reused-descriptor tests pass (3/3), with
 thread identity required by the proof validator. Gate/qualification records belong
 under `test-results/start02-thread-implementation-review/`. Profile/pin review and
-human consumer freeze subsequently completed for `b445ee8`; live proof remains pending.
+human consumer freeze subsequently completed for `b445ee8`; live proof remained pending at that stage.
 
 **Historical supplementary-group query (reviewed and consumed by 01dcb38).** Consumer
 `5c0cb09fadda2fbc192919a0f22db578d72cb327` pins reviewed factory
@@ -92,7 +110,7 @@ closed on Linux arm64 `getgroups` (158). Both confirmed runner cleanup and trans
 no candidate. Read-only group queries now preserve native results; `setgroups`
 remains unsupported. Renewed component/gate/qualification records belong under
 `test-results/start02-groups-implementation-review/`. Profile/pin review and consumer
-freeze subsequently completed for `01dcb38`; successful live proof remains pending.
+freeze subsequently completed for `01dcb38`; successful live proof remained pending at that stage.
 
 **Historical Docker query transport recovery (reviewed and consumed by 5c0cb09).** The pipe-query
 candidate passed the full factory gate and 28 native cases, but coordinator
@@ -105,7 +123,7 @@ at most three attempts within the original 30-second command budget. Mutations,
 other errors and persistent outages still fail. Four deterministic transport tests
 pass; renewed gate/qualification records belong under
 `test-results/start02-transport-implementation-review/`. Runtime-profile and consumer pin review/freeze subsequently completed for
-`5c0cb09`; successful live candidate proof remains pending.
+`5c0cb09`; successful live candidate proof remained pending at that stage.
 
 **Historical pipe-query follow-up.** Consumer
 `fa849bd8b673a6dbbbbfbf072a39d8467d758bc1` pins reviewed factory
@@ -171,7 +189,7 @@ live run; this is not a completed application demonstration.
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **repository separation complete; scoped governed local update verified; candidate human review and later lifecycle slices pending** (A-30).
+Status: **repository separation complete; scoped governed local update verified; approved update adopted and merged; later lifecycle slices pending** (A-30).
 Canonical ID START-02 and its ordered slices are retained.
 Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
@@ -181,7 +199,7 @@ Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md
 | Local extraction | Verified and owner-approved | Reviewed consumer `508e8e947323ca1723966344a90d1036a077a93e`; combined proof and approval recorded below |
 | Repository separation and immutable consumption | Complete | Independent consumer CI/evidence verified; factory cleanup merged; owner confirms branch protection |
 | Lifecycle specification | Governed local update frozen | Factory `aac1de392cdbd180dab722ddbd689b6aacd4e829`, fixture correction `a3134b5`; consumer acceptance `5bd4c8415a9a6a01f41973f1df01aaa075463af5` |
-| Local lifecycle proof | Scoped real update verified; candidate unapplied | Human review of retained candidate; broader lifecycle slices remain open |
+| Local lifecycle proof | Scoped real update verified, human-approved and merged | Preserve independent proof; broader lifecycle slices remain open |
 | Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
 
 **Historical local broker preparation.** Owner requested a setup for review. The
@@ -635,6 +653,20 @@ until the `pipeline/` and `agent-governance/` scenarios pass:
 The CI-01 scope moves here, expressed as scenarios rather than prose. Also: the
 branch ruleset (GUARD-01 remote) and the pre-push `test:verify` hook, both planned
 catalog entries that need live-tier scenarios.
+
+**Next CI-02 milestone — consumer-configured non-prod delivery specification.**
+After the local update proof, specify a versioned consumer-owned non-prod delivery
+contract: target account/region and environment identity, immutable artifact and
+factory revisions, workload/health checks, resource and cost limits, data classification,
+required gates, human promotion authority, scoped OIDC role, evidence retention, and
+rollback/recovery expectations. The factory owns reusable plan/verify/evidence
+mechanisms; PetClinic owns its workload, policies and configuration. Start with
+human-reviewed executable negative cases and an offline plan that refuses absent
+approval, wrong environment, stale artifacts and invalid evidence. Existing frozen
+CI-02 delivery requirements and stable IDs remain binding; changes require human
+review/freeze. Implementation and cloud execution are later authorizations, not part
+of this task. No account provisioning, deployment, production approval, or
+`@awaiting:CI-02` removal occurs here. Second-consumer validation remains open.
 
 ### ENV-02 — AWS organization and non-prod
 
