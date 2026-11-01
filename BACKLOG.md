@@ -20,6 +20,15 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
+**Live-run compatibility follow-up.** The approved `3b8d5475` factory run against
+consumer `51d1fe03` completed one Bedrock request, then failed closed on ARM64
+`getpgid` (155); cleanup completed and no candidate edits were transferred. Retained
+evidence: `/private/tmp/start02-live-petclinic-51d1fe0-q_s52yxb/run-2/`.
+The read-only query compatibility fix has a deterministic kernel-result and closed-audit
+regression. Renewed qualification and profile/pin review are required before another
+live run; this is not a completed application demonstration.
+
+
 ### START-02 — Software factory: template repo, dev container and organization layer
 
 Status: **repository separation complete; mandatory alias conformance expanded; owner review and live lifecycle proof pending** (A-30).

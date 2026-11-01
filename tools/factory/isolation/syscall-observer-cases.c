@@ -18,7 +18,10 @@ static void *replace(void*unused){(void)unused;barrier(&start);if(rename("/tmp/s
 int main(int argc,char**argv){
  if(argc!=2)return 70;
  if(mkdir("/tmp/sct",0700)&&errno!=EEXIST)return 70;
- if(!strcmp(argv[1],"alias")){
+ if(!strcmp(argv[1],"process-group-query")){
+  pid_t group=getpgid(0);if(group<0||getpgid(getpid())!=group)return 70;
+  errno=0;if(getpgid(2147483647)!=-1||errno!=ESRCH)return 70;
+ }else if(!strcmp(argv[1],"alias")){
   if(symlink("/inputs","/tmp/sct/alias"))return 70;
   rejected(AT_FDCWD,"/tmp/sct/alias/protected.txt",O_WRONLY|O_TRUNC,EPERM);
   rejected(AT_FDCWD,"/tmp/sct/alias/new.txt",O_WRONLY|O_CREAT,EPERM);

@@ -45,3 +45,11 @@ test('subsequent artifact edit invalidates native collection',async()=>{
  const r=await run('stale',['/bin/true']);assert.equal(r.phase,'AUDIT_COLLECTED');const directory=path.dirname(r.journal);
  assert.equal(checkNativeAuditSession({docker,directory}).phase,'AUDIT_COLLECTED');fs.appendFileSync(path.join(directory,'audit/stdout'),'later');assert.throws(()=>checkNativeAuditSession({docker,directory}),/Stale native artifacts/);
 });
+
+test('read-only process-group queries preserve kernel results and closed coverage',async()=>{
+ const r=await run('process-group-query',['/opt/factory/syscall-observer-cases','process-group-query']);
+ assert.equal(r.exitCode,0);assert.equal(r.receipt.denials,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
+ assert.match(fs.readFileSync(path.join(root,'process-group-query/audit/stdout'),'utf8'),/SCT_WORKLOAD_ASSERTIONS_PASSED/);
+ const calls=lines(path.join(root,'process-group-query/audit/native-trace.jsonl')).filter(x=>x.event==='exit-syscall'&&x.nr===155);
+ assert.equal(calls.length,3);assert.ok(calls[0].result>0);assert.equal(calls[1].result,calls[0].result);assert.equal(calls[2].result,-3);
+});

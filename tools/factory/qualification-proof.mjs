@@ -4,7 +4,7 @@ import {digest,need,object,regular} from './change-support.mjs';
 export const requiredReports=Object.freeze({
  'task-session.test.mjs':38,
  'model-channel.test.mjs':4,
- 'native-audit-session.test.mjs':9,
+ 'native-audit-session.test.mjs':10,
  'container-session.test.mjs':12,
  'verifier-session.test.mjs':13,
  'real-coordinator.test.mjs':4,
@@ -86,6 +86,7 @@ export const assertionRosters=Object.freeze({
     "consumer envelope invalid rejects after zero exit"
   ],
   "native-audit-session.test.mjs": [
+    "read-only process-group queries preserve kernel results and closed coverage",
     "SCT-001 actual immutable CLI neutral roundtrip",
     "SCT-007 omitted observer record blocks successful workload",
     "SCT-008 observer death with active descendant writers",
