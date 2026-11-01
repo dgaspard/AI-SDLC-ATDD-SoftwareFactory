@@ -59,14 +59,12 @@ original checkout and Git metadata are checked independently. Ignored files also
 participate in permission enforcement and stale-evidence checking; only declared
 verifier output roots are excluded from verifier input comparison.
 
-Only explicitly declared fixture launchers run. Their success is
-`SIMULATED_VERIFIED` (exit 0), never a real application-change demonstration.
-Otherwise-valid real launcher requests fail before execution with `TOOLING_UNAVAILABLE`
-(exit 5): the implemented OS-enforced launcher, credential broker and independent
-verifier integration still require complete profile qualification. Fixture processes run with
-an allowlisted environment and process-group cleanup, but are trusted test code,
-not a security sandbox. Post-execution checks cannot prevent a hostile fixture
-from writing outside its workspace. Do not use fixture mode for application work.
+Qualified real launchers can return `VERIFIED_CANDIDATE` only after independent
+full consumer verification, cleanup and evidence validation. The reviewed PetClinic
+proof and reproduction commands are in the [START-02 design](../../docs/design/start-02-factory-core.md#governed-petclinic-update-reproduction).
+Missing/unqualified profiles fail closed with `TOOLING_UNAVAILABLE` (exit 5).
+Explicit fixture launchers return `SIMULATED_VERIFIED`, never live proof. Fixtures
+are trusted test code, not a security sandbox; do not use fixture mode for application work.
 
 Failures after output creation retain their run directories and report a nonzero
 contract exit status; preflight failures create no run directory. SIGINT/SIGTERM
@@ -76,7 +74,7 @@ filesystem change list without executing Git against the compromised metadata.
 resumes, commits, merges, publishes or deletes a retained run. Host-loss process
 recovery is not qualified: process IDs are journaled after launch, leaving a crash
 window. Human inspection and explicit cleanup remain necessary after host loss.
-PetClinic implementation and any consumer pin upgrade remain separate work.
+Consumer implementation adoption and pin upgrades remain separate human-reviewed actions.
 
 
 The proposed [local broker setup](../../docs/design/start-02-factory-core.md#local-model-broker-setup-for-review)

@@ -636,3 +636,121 @@ qualification remains distinct from these component checks. See the
 for reproducible offline builds and the SCT harness. Passing those component cases
 must not be used as a real-runner profile, consumer trust pin or live application proof.
 Canonical qualification status and remaining work are in BACKLOG.md.
+
+
+## Governed PetClinic update reproduction
+
+This is the bounded D-67 update proof, not a general application lifecycle platform.
+The frozen factory workflow and 38 protected fingerprints, and PetClinic’s requirement
+change and 202 protected fingerprints, were checked without running human freeze.
+The consumer supplies task, trust and implementation permission; the factory creates
+isolated implementation and verifier workspaces, invokes the configured real CLI,
+checks independent acceptance and cleanup, and returns evidence plus a diff.
+The only application write is `services/customer/server.js`; create/delete grants
+are empty. No production data, repository, infrastructure or specification deletion
+is authorized. No factory runtime change is needed for this reproduction; its pin
+remains `7ff647eaa5c7492846a0b3b6aa3308db9f16fd20`. Documentation revisions do not
+change the reviewed executable profile or silently upgrade the consumer pin.
+
+### Evidence sequence and interventions
+
+The retained initial red gate at consumer `1e477272b3a548af46356e739ffe50dc7cc1d9d8`
+and factory `9809c120cafd0ad867be6568621fac3ef54f1780` failed GPC-001/GPC-005:
+400 rather than 409. It took 115.684 seconds, exited 1 and confirmed cleanup;
+all 27 retained artifact fingerprints were rechecked. Its older factory identity is
+explicit: this is the initial requirement baseline, not a red run on the final pin.
+All six frozen requirement/test files named by the task and the starting customer
+implementation are byte-identical between that red baseline and `eab317d`; only
+the factory/consumer integration evolved.
+Record: `test-results/start02-independent-verifier/summary.json` and its full run
+`2026-10-28T01-50-47-405Z-full.json`.
+
+The successful real run `20003a0e-cec1-413a-ac3a-fe8af417427e` used approved consumer
+`eab317d972e963deff4475a0d50cc30703054f17` and the final runtime pin. It ran from
+2026-11-01T18:01:33.824Z to 18:05:38.942Z: 245.118 seconds, eight model requests,
+all 14 independent suites passing, exit 0 / VERIFIED_CANDIDATE, no violations,
+and both containers stopped before final evidence validation. This elapsed time is
+one successful attempt, not total project effort. The actual coding CLI produced
+the patch; the host assistant did not manually implement D-67.
+
+Human interventions included frozen task/contracts, repeated exact profile/pin
+reviews during qualification, AWS profile/permission setup, approval of the final
+candidate, the application commit, CI trust-variable update, and manual PR merges.
+A successful sandbox message alone did not qualify earlier denied runs. One later
+attempt failed on broker HTTP 502; another initially successful run became invalid
+after host gate verification modified retained Git metadata. Those records remain
+failures. The final candidate was independently reviewed before human adoption;
+its original-checkout binding means the historical run is not presented as a
+currently recheckable success after approved adoption changed that checkout.
+A fresh demonstration retains a separate original checkout. Its successful run
+`c68fc6d7-127d-4a57-9a60-a2a6990def37` took 232.249 seconds and 11 model requests,
+with 14 passing suites and final check exit 0. Run 1’s broker 502 remains a failure.
+Exact timestamps, cleanup and attempt results are in BACKLOG and
+`test-results/start02-reproduction/summary.json`.
+
+### Exact commands on the qualified local installation
+
+These commands require the existing owner-reviewed runner descriptor, its exact
+Node executable, Docker daemon/images, fingerprinted verifier dependencies and the
+approved `software-factory-dev` AWS profile in `us-east-1`. The broker uses
+`us.moonshotai.kimi-k3`; credentials remain outside the sandbox. Do not substitute
+another model, launcher or dependency tree. On another host, provision those inputs
+and repeat qualification/profile review before a live run; the retained `/private/tmp`
+paths are not a portable installation or durable archive.
+
+The reproduction original is the clean approved starting revision, not merged
+PetClinic (which already implements D-67). Retain it unchanged. On this installation:
+
+```sh
+FACTORY_CHECKOUT=/private/tmp/start02-gitlocks-review
+NODE=/opt/homebrew/Cellar/node@24/24.21.0/bin/node
+PROOF=/private/tmp/start02-repro-proof-do3luy_9
+RUNNER=/private/tmp/start02-gitlocks-qualification/runner.review.json
+REPLAY=$(mktemp -d /private/tmp/start02-replay.XXXXXX)
+
+"$NODE" "$FACTORY_CHECKOUT/tools/factory/change.mjs" run   --root "$PROOF/approved-consumer"   --task spec/factory/petclinic/governed-change.json   --authority "$PROOF/authority.json" --runner "$RUNNER"   --output "$REPLAY/run-1"
+"$NODE" "$FACTORY_CHECKOUT/tools/factory/change.mjs" check   --evidence "$REPLAY/run-1/governed-change-evidence.v1.json"
+```
+
+`authority.json` binds the frozen task hash, starting revision, runtime revision,
+trust snapshot and runner hash; it contains no credential. Inspect `candidate.patch`
+and JSON/log files directly. Run any additional Git-based gate verification on a
+separate copy: Git inspection can refresh index/object metadata and make retained
+proof stale. Do not restore or reseal stale evidence to manufacture success.
+
+### Failure cases and exit contracts
+
+The 107-case qualification includes the actual immutable CLI with synthetic model
+responses, clearly marked fixture evidence. Its six coordinator cases prove success
+requires independent verification, not the model’s “Neutral update completed” message:
+failed acceptance returns 7 / ACCEPTANCE_FAILED; interruption returns 130 after cleanup;
+a subsequent candidate edit makes check return 8 / EVIDENCE_INVALID; prohibited Git
+metadata writes return 6 / PERMISSION_DENIED. Native cases also deny protected-path
+aliases and writes before they occur. Fixture successes are SIMULATED_VERIFIED and
+cannot satisfy the real demonstration. Missing tooling/profile returns 5; cleanup
+failure returns 9. Retained reports live in
+`test-results/start02-gitlocks-implementation-review/`.
+
+Reproduce the six coordinator assertions without AWS credentials or model calls:
+
+```sh
+cd /private/tmp/start02-gitlocks-review
+python3 - <<'PYTEST'
+import json, os, subprocess
+p=json.load(open('/private/tmp/start02-gitlocks-qualification/profile.review.json'))
+env={k:v for k,v in os.environ.items() if k in ['PATH','HOME','TMPDIR','LANG']}
+env.update(FACTORY_DOCKER=p['docker']['path'], DOCKER_HOST=p['docker']['endpoint'],
+           FACTORY_NATIVE_IMAGE=p['runnerImage'], FACTORY_COMPONENT_IMAGE=p['verifier']['image'],
+           FACTORY_QUALIFICATION_PROFILE='/private/tmp/start02-gitlocks-qualification/profile.review.json')
+subprocess.run(['/opt/homebrew/Cellar/node@24/24.21.0/bin/node', '--test',
+                'tools/factory/real-coordinator.test.mjs'], env=env, check=True)
+PYTEST
+```
+
+This rerun creates separate fixture records; never edit or replace the approved
+qualification report. Host-loss recovery still needs manual inspection; future
+create/delete examples, broader recovery, second-domain validation and cloud delivery
+remain unproven. The next CI-02 milestone is consumer-configured non-prod delivery
+specification and offline planning, with explicit identity, artifact, approval,
+OIDC, cost, health and rollback contracts. No cloud provisioning/deployment occurs
+in this task; milestone status remains exclusively in BACKLOG.
