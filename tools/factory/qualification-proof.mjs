@@ -4,7 +4,7 @@ import {digest,need,object,regular} from './change-support.mjs';
 export const requiredReports=Object.freeze({
  'task-session.test.mjs':38,
  'model-channel.test.mjs':5,
- 'native-audit-session.test.mjs':28,
+ 'native-audit-session.test.mjs':30,
  'container-session.test.mjs':12,
  'verifier-session.test.mjs':13,
  'real-coordinator.test.mjs':4,
@@ -89,6 +89,8 @@ export const assertionRosters=Object.freeze({
   "native-audit-session.test.mjs": [
     "pipe capacity query preserves native results and buffered bytes",
     "pipe resizing remains unsupported and cannot qualify",
+    "supplementary group query preserves identity and native errors",
+    "supplementary group mutation remains unsupported and cannot qualify",
     "namespace-local Node interface discovery has bound route socket evidence",
     "route socket rejects protocol before binding",
     "route socket rejects groups before binding",

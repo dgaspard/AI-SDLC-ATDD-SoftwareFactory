@@ -20,7 +20,21 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Current local-proof follow-up: Docker query transport recovery.** The pipe-query
+**Current local-proof follow-up: supplementary group query.** Consumer
+`5c0cb09fadda2fbc192919a0f22db578d72cb327` pins reviewed factory
+`50c4d699e56df181640aa26d70710c5f9828d2a1` (full gate and 100-case qualification).
+Two live attempts remain failures, retained at
+`/private/tmp/start02-live-petclinic-5c0cb09-3l_j637q/`. Run 1 made a scoped sandbox
+edit but a subsequent broker 502 prevented successful implementation; the exact
+upstream cause is unavailable. A separate offline neutral patch-tool continuation
+passed and is not live proof. Run 2 completed eleven model requests, then failed
+closed on Linux arm64 `getgroups` (158). Both confirmed runner cleanup and transferred
+no candidate. Read-only group queries now preserve native results; `setgroups`
+remains unsupported. Renewed component/gate/qualification records belong under
+`test-results/start02-groups-implementation-review/`. Profile/pin review and a
+successful live candidate remain required; no application completion is claimed.
+
+**Historical Docker query transport recovery (reviewed and consumed by 5c0cb09).** The pipe-query
 candidate passed the full factory gate and 28 native cases, but coordinator
 qualification remained incomplete. Credential-free instrumentation captured an
 intermittent `docker inspect` connection failure in `finishSession`; a later cleanup

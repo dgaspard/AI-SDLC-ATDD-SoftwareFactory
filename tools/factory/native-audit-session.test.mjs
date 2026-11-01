@@ -94,3 +94,13 @@ test('pipe resizing remains unsupported and cannot qualify',async()=>{
  const r=await run('pipe-resize',['/opt/factory/syscall-observer-cases','pipe-resize']);assert.equal(r.exitCode,5);assert.equal(r.cleanupConfirmed,true);assert.notEqual(r.phase,'AUDIT_COLLECTED');
  const trace=lines(path.join(root,'pipe-resize/audit/native-trace.jsonl'));const e=trace.find(x=>x.event==='entry'&&x.nr===25&&x.args[1]==='407');assert.ok(e);assert.ok(trace.some(x=>x.event==='bound-start'&&x.entry===e.seq));
 });
+
+test('supplementary group query preserves identity and native errors',async()=>{
+ const r=await run('group-query',['/opt/factory/syscall-observer-cases','group-query']);assert.equal(r.exitCode,0);assert.equal(r.receipt.denials,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
+ const trace=lines(path.join(root,'group-query/audit/native-trace.jsonl')),results=[];let query=false;for(const e of trace){if(e.event==='entry')query=e.nr===158;if(e.event==='exit-syscall'&&query){results.push(e.result);query=false;}}
+ assert.deepEqual(results,[0,0,-22,0]);assert.match(fs.readFileSync(path.join(root,'group-query/audit/stdout'),'utf8'),/SCT_WORKLOAD_ASSERTIONS_PASSED/);
+});
+test('supplementary group mutation remains unsupported and cannot qualify',async()=>{
+ const r=await run('group-mutation',['/opt/factory/syscall-observer-cases','group-mutation']);assert.equal(r.exitCode,5);assert.equal(r.cleanupConfirmed,true);assert.notEqual(r.phase,'AUDIT_COLLECTED');
+ const trace=lines(path.join(root,'group-mutation/audit/native-trace.jsonl'));const e=trace.find(x=>x.event==='entry'&&x.nr===159);assert.ok(e);assert.ok(trace.some(x=>x.event==='bound-start'&&x.entry===e.seq));assert.ok(!trace.some(x=>x.event==='bound-exit'&&x.entry===e.seq));
+});

@@ -613,3 +613,8 @@ Only a successful fresh query supplies state; an unavailable daemon never means 
 container is absent or stopped. Mutations, timeout/signal failures and other Docker
 errors are not retried. Persistent query failures preserve the existing failure and
 recovery path; no retry authorizes success without cleanup and evidence validation.
+
+Read-only `getgroups` queries preserve the kernel supplementary-group count and
+list/error results. They do not change process credentials or authorize `setgroups`.
+Native qualification checks the sandbox's empty group list, unchanged output buffer,
+negative-size EINVAL and unchanged group count; the mutation case remains blocking.

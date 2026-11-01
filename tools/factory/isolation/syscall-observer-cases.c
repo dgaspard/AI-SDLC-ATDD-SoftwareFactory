@@ -2,6 +2,8 @@
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
+#include <sys/syscall.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +26,15 @@ static void *replace(void*unused){(void)unused;barrier(&start);if(rename("/tmp/s
 int main(int argc,char**argv){
  if(argc!=2)return 70;
  if(mkdir("/tmp/sct",0700)&&errno!=EEXIST)return 70;
- if(!strcmp(argv[1],"pipe-query")){
+ if(!strcmp(argv[1],"group-query")){
+  _Static_assert(SYS_getgroups==158,"Expected Linux arm64 getgroups");
+  gid_t sentinel=12345;int count=getgroups(0,NULL);if(count!=0)return 70;
+  if(getgroups(1,&sentinel)!=count||sentinel!=12345)return 70;
+  errno=0;if(syscall(SYS_getgroups,-1,NULL)!=-1||errno!=EINVAL)return 70;
+  if(getgroups(0,NULL)!=count)return 70;
+ }else if(!strcmp(argv[1],"group-mutation")){
+  setgroups(0,NULL);return 70;
+ }else if(!strcmp(argv[1],"pipe-query")){
   int pipes[2];if(pipe(pipes))return 70;int size=fcntl(pipes[0],F_GETPIPE_SZ);if(size<=0)return 70;
   if(write(pipes[1],"safe",4)!=4||fcntl(pipes[0],F_GETPIPE_SZ)!=size)return 70;
   char bytes[4];if(read(pipes[0],bytes,4)!=4||memcmp(bytes,"safe",4))return 70;
