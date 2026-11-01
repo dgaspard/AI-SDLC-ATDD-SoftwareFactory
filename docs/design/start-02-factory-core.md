@@ -120,7 +120,7 @@ These are START-02 slices, not new canonical backlog IDs. Status is only in BACK
 | Operation | Intended contract to specify | Evidence currently available / limitation |
 |---|---|---|
 | Create | Build in a new explicit local workspace from frozen consumer inputs; refuse occupied destination; retain original inputs | Existing application builds and launch scripts; no general `factory init` or independent-consumer create proof |
-| Update | Reviewed requirement or factory-pin change; preserve spec ownership; rerun affected/full obligations; retain recoverable checkpoint | Current runner/gate and change-evidence tooling in a co-located tree; no cross-repository update proof |
+| Update | Reviewed requirement or factory-pin change; preserve spec ownership; rerun affected/full obligations; retain recoverable checkpoint | Separated consumer runner/gate and governed-change evidence; exact current proof and limitations are recorded in BACKLOG; general lifecycle support remains unproven |
 | Delete/rebuild | Explicit allowlisted disposable implementation manifest, dry-run, path containment, retained-spec/data hashes, recovery copy; refuse repository root, specs and data | Checkout rehearsal scripts and historical r1/r2/r4; not a general safe-delete API, nor permission to run deletion now |
 | Deploy | Eventually build immutable artifacts and prove non-prod/prod promotion, rollback, approvals and release evidence | Local Compose/application gate history; cloud delivery controls include awaiting work. A-22/A-29 are designs, not authorization or proof of deploy/automatic approval |
 
@@ -451,8 +451,8 @@ or arbitrary-workload conformance. The tracee syscall guard closes inherited fil
 descriptors numbered 3 and above; its launcher must provide trusted stdio.
 
 Records under `test-results/start02-verifier-profile/` include the native descriptor
-regression, fixed audit controls and mount tests. Real execution in `change.mjs`
-remains disabled. The original PetClinic protected browser adapter starts Docker,
+regression, fixed audit controls and mount tests. At this component-baseline stage, real execution in `change.mjs`
+remained disabled; current qualification and live-proof records are in BACKLOG. The original PetClinic protected browser adapter starts Docker,
 mounts a writable checkout and can install dependencies at runtime. The reviewed consumer change `1e477272b3a548af46356e739ffe50dc7cc1d9d8` adds an explicit preprovisioned mode, preserving
 the pinned reference image, lockfile checks, complete test command and arguments.
 It performs no install and exposes no Docker socket. Its read-only image marker is

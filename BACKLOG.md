@@ -20,7 +20,23 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Current local-proof follow-up: read-only Git inspection.** Consumer
+**Prompt 5 governed local update — verified (2026-11-01).**
+Human-reviewed consumer `eab317d972e963deff4475a0d50cc30703054f17` pins
+factory `7ff647eaa5c7492846a0b3b6aa3308db9f16fd20`; runner qualification passed
+107/107 assertions. Real run `20003a0e-cec1-413a-ac3a-fe8af417427e` returned VERIFIED_CANDIDATE,
+exit 0. All 14 independent consumer suites passed, both containers stopped, and
+post-cleanup evidence checking passed. Node 22 gate verification on a separate
+copy passed on tree `73b77d36eb87bc9397f8d98321ea64c2b8ce60bb` without modifying retained evidence.
+The original consumer remains unchanged. Only `services/customer/server.js` changed;
+the candidate is unapplied and unmerged, awaiting human review. This completes the
+scoped Prompt 5 local update demonstration, not general create/delete/deploy support.
+Evidence and patch: `test-results/start02-live-petclinic-final/`; recovery workspace:
+`/private/tmp/start02-live-petclinic-eab317d-nk1jm464/run-1/`.
+Earlier attempts remain retained: `mzzjylot` initially passed but became EVIDENCE_INVALID
+after a host verification command changed retained Git metadata; `qprikjqj` failed
+with broker HTTP 502. Neither is used as final success evidence.
+
+**Historical read-only Git inspection correction (reviewed and consumed by eab317d).** Consumer
 `e4bbf90cfa59713d287316520c83e0410bbd6ce0` pins reviewed factory
 `e63631cb83471ecfe1df589a2e38ae2b4ecd7c77`. Its live agent finished the scoped edit
 and syntax check, but `git diff` attempted an optional `.git/index.lock` write. The
@@ -33,8 +49,8 @@ refresh in the regression. Together these suppress optional index refreshes, not
 required locks or protected-path enforcement. Actual-CLI qualification covers read-only
 diff/status with zero denials and a deliberately blocked `git add`.
 Renewed records belong under `test-results/start02-gitlocks-implementation-review/`.
-Profile/pin review and successful independent application verification remain
-required; the sandbox's completed message is not proof of success.
+Profile/pin review and independent application verification were subsequently completed
+in the live proof above; the sandbox's completed message alone is not proof of success.
 
 **Historical implementation-stage handoff (reviewed and consumed by e4bbf90).** Consumer
 `b445ee874ad93685bb2c78b8ffba7000155f1173` pins reviewed factory
@@ -155,7 +171,7 @@ live run; this is not a completed application demonstration.
 
 ### START-02 — Software factory: template repo, dev container and organization layer
 
-Status: **repository separation complete; mandatory alias conformance expanded; owner review and live lifecycle proof pending** (A-30).
+Status: **repository separation complete; scoped governed local update verified; candidate human review and later lifecycle slices pending** (A-30).
 Canonical ID START-02 and its ordered slices are retained.
 Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md).
 
@@ -165,10 +181,10 @@ Design and ownership map: [START-02 design](docs/design/start-02-factory-core.md
 | Local extraction | Verified and owner-approved | Reviewed consumer `508e8e947323ca1723966344a90d1036a077a93e`; combined proof and approval recorded below |
 | Repository separation and immutable consumption | Complete | Independent consumer CI/evidence verified; factory cleanup merged; owner confirms branch protection |
 | Lifecycle specification | Governed local update frozen | Factory `aac1de392cdbd180dab722ddbd689b6aacd4e829`, fixture correction `a3134b5`; consumer acceptance `5bd4c8415a9a6a01f41973f1df01aaa075463af5` |
-| Local lifecycle proof | Real coordinator implemented; qualification review and live proof pending | Review final conformance reports, runner profile and consumer pin; human freeze precedes live PetClinic implementation |
+| Local lifecycle proof | Scoped real update verified; candidate unapplied | Human review of retained candidate; broader lifecycle slices remain open |
 | Second consumer / reuse validation | Later phase 3 | Different domain, its own gate, recorded onboarding effort and forced factory changes |
 
-**Local broker preparation.** Owner requested a setup for review. The
+**Historical local broker preparation.** Owner requested a setup for review. The
 [proposed arrangement](docs/design/start-02-factory-core.md#local-model-broker-setup-for-review)
 and disabled `tools/factory/broker.config.example.json` describe an external credential,
 per-run capability, model-only relay and bounded network arrangement. The owner approved local implementation and clarified a future local/cloud wallet
@@ -386,7 +402,7 @@ cloud/model call, consumer application edit or agent freeze occurred.
 
 
 
-**Next proof: governed local PetClinic update.**
+**Historical specification and fixture stage: governed local PetClinic update.**
 The owner authorized drafting [governed-change.v1](spec/factory/governed-change.v1.md)
 and its neutral executable contract tests. Reuse the existing consumer verifier,
 process cleanup, canonical path/trust checks and evidence mechanisms. The new boundary
@@ -412,8 +428,8 @@ fixture stage, real launchers failed closed with TOOLING_UNAVAILABLE and coordin
 integration/end-to-end qualification were incomplete. The implemented coordinator integration supersedes those implementation gaps;
 expanded mandatory qualification and owner approval remain separate requirements. Host-loss process recovery remains
 a manual inspection/cleanup concern because host PID journaling follows process launch;
-nonterminal records never become successful evidence. PetClinic
-still pins 9809c120cafd0ad867be6568621fac3ef54f1780, which has no change coordinator;
+nonterminal records never become successful evidence. At that historical stage PetClinic
+pinned 9809c120cafd0ad867be6568621fac3ef54f1780, which has no change coordinator;
 a later released implementation pin, separately reviewed consumer pin/freeze/commit,
 and renewed external trust are required for real proof. Neither frozen manifest has
 been refreshed by the agent. Existing application code and all prior assertions remain.
@@ -444,9 +460,9 @@ The owner confirmed PetClinic branch protection is set after being asked to requ
 all three named checks, pull requests with human CODEOWNERS approval and no GitHub
 App bypass. This is human-attested enforcement: the mandated App wrapper blocks
 independent ruleset/protection inspection, so no API verification is claimed.
-Repository separation is complete. The frozen governed workflow has an authorized
-fixture implementation; real PetClinic lifecycle proof, cloud deployment, automatic
-approval and second-consumer completion are not claimed. START-02 overall remains open for the later slices.
+Repository separation is complete. The scoped real governed-update proof is recorded
+above; general lifecycle support, cloud deployment, automatic approval and
+second-consumer completion are not claimed. START-02 overall remains open for later slices.
 
 The following preflight and preparation paragraphs are historical observations;
 the current verification above supersedes their empty-destination and pending-import statements.
