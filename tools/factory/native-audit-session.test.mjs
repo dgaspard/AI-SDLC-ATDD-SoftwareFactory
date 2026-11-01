@@ -104,3 +104,14 @@ test('supplementary group mutation remains unsupported and cannot qualify',async
  const r=await run('group-mutation',['/opt/factory/syscall-observer-cases','group-mutation']);assert.equal(r.exitCode,5);assert.equal(r.cleanupConfirmed,true);assert.notEqual(r.phase,'AUDIT_COLLECTED');
  const trace=lines(path.join(root,'group-mutation/audit/native-trace.jsonl'));const e=trace.find(x=>x.event==='entry'&&x.nr===159);assert.ok(e);assert.ok(trace.some(x=>x.event==='bound-start'&&x.entry===e.seq));assert.ok(!trace.some(x=>x.event==='bound-exit'&&x.entry===e.seq));
 });
+
+test('worker-thread interface discovery binds the exact calling thread',async()=>{
+ const source="const {Worker}=require('node:worker_threads');const w=new Worker(\"const n=require('node:os').networkInterfaces();if(!n.lo?.some(x=>x.address==='127.0.0.1'))process.exit(91);console.log('WORKER_DISCOVERY_PASSED')\",{eval:true});w.on('error',()=>process.exit(92));w.on('exit',code=>process.exit(code));";
+ const r=await run('thread-discovery',['node','-e',source]);assert.equal(r.exitCode,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
+ const trace=lines(path.join(root,'thread-discovery/audit/native-trace.jsonl')),main=trace[0].tid;const ids=lines(path.join(root,'thread-discovery/audit/native-identities.jsonl')).filter(x=>x.kind==='route-socket');assert.ok(ids.some(x=>x.operation==='bind'&&x.tid!==main));assert.ok(ids.some(x=>x.operation==='receive'&&x.tid!==main));assert.ok(ids.every(x=>x.pidfdTid===x.tid&&x.pidfdFlags===128));
+ assert.match(fs.readFileSync(path.join(root,'thread-discovery/audit/stdout'),'utf8'),/WORKER_DISCOVERY_PASSED/);
+});
+for(const name of ['protocol','reuse'])test('worker-thread route socket rejects '+name,async()=>{
+ const r=await run('thread-route-'+name,['/opt/factory/syscall-observer-cases','thread-route-'+name]);assert.equal(r.exitCode,5);assert.equal(r.cleanupConfirmed,true);assert.notEqual(r.phase,'AUDIT_COLLECTED');
+ const trace=lines(path.join(root,'thread-route-'+name+'/audit/native-trace.jsonl'));const e=trace.find(x=>x.event==='entry'&&x.nr===200);assert.ok(e);assert.notEqual(e.tid,trace[0].tid);assert.ok(trace.some(x=>x.event==='bound-start'&&x.entry===e.seq));
+});

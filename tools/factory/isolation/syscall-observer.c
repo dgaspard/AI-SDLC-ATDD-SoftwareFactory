@@ -32,6 +32,11 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+// Linux UAPI: exact-thread pidfds require Linux 6.9+. Unsupported kernels fail closed.
+#ifndef PIDFD_THREAD
+#define PIDFD_THREAD O_EXCL
+#endif
+_Static_assert(PIDFD_THREAD==128,"Expected Linux arm64 thread pidfd flag");
 #define MAX_TASKS 128
 #define MAX_EVENTS 500000
 struct task {pid_t tid;int stopped,status,entry,born,interrupt_sent;unsigned long nr,entry_seq;pid_t vfork_child;unsigned long long started;};
@@ -134,7 +139,7 @@ static void identity_prefix(pid_t tid){fprintf(identity,"{\"seq\":%lu,\"entry\":
 static int descriptor(pid_t pid,int fd,int update){char p[80];snprintf(p,sizeof p,"/proc/%d/fd/%d",pid,fd);int held=hold_proc(p);if(held<0)return -1;int r=update?authorized_fd(held):authorized_metadata(held);int grant=granted_fd(held);if(grant)r=update?1:0;struct statx check;if(update&&!fd_identity(held,&check))for(int x=0;x<2;x++)if(check.stx_ino==output_stat[x].stx_ino&&check.stx_mnt_id==output_stat[x].stx_mnt_id)r=1;struct statx s;if(!fd_identity(held,&s)){identity_prefix(pid);fprintf(identity,"\"fd\":%d,\"mount\":%llu,\"inode\":%llu,\"disposition\":%d,\"grant\":%s}\n",fd,(unsigned long long)s.stx_mnt_id,(unsigned long long)s.stx_ino,r,grant?"true":"false");}close(held);return r;}
 // Called only under the all-writers-stopped invariant. No device is opened.
 static int route_socket(pid_t tid,int fd,const char*operation){
- int pidfd=syscall(SYS_pidfd_open,tid,0);if(pidfd<0){fprintf(stderr,"route pidfd unavailable errno=%d\n",errno);return -1;}
+ int pidfd=syscall(SYS_pidfd_open,tid,PIDFD_THREAD);if(pidfd<0){fprintf(stderr,"route pidfd unavailable errno=%d\n",errno);return -1;}
  int held=syscall(SYS_pidfd_getfd,pidfd,fd,0);int saved=errno;close(pidfd);if(held<0){fprintf(stderr,"route descriptor unavailable errno=%d\n",saved);return -1;}
  struct statx sock;int domain=-1,protocol=-1,type=-1;socklen_t size=sizeof(int);
  int bad=fd_identity(held,&sock)||!S_ISSOCK(sock.stx_mode)||getsockopt(held,SOL_SOCKET,SO_DOMAIN,&domain,&size)||size!=sizeof(int);
@@ -146,7 +151,7 @@ static int route_socket(pid_t tid,int fd,const char*operation){
  int owner=socket(AF_NETLINK,SOCK_RAW|SOCK_CLOEXEC,NETLINK_ROUTE);if(owner<0){close(held);return -1;}
  size=sizeof owner_cookie;bad=bad||getsockopt(owner,SOL_SOCKET,SO_NETNS_COOKIE,&owner_cookie,&size)||size!=sizeof owner_cookie;close(owner);close(held);
  if(bad||domain!=AF_NETLINK||protocol!=NETLINK_ROUTE||type!=SOCK_RAW||address.nl_family!=AF_NETLINK||address.nl_groups||!cookie||cookie!=owner_cookie)return -1;
- identity_prefix(tid);fprintf(identity,"\"mount\":%llu,\"inode\":%llu,\"disposition\":1,\"kind\":\"route-socket\",\"operation\":\"%s\",\"fd\":%d,\"domain\":%d,\"type\":%d,\"protocol\":%d,\"localPort\":%u,\"groups\":%u,\"netCookie\":%llu,\"ownerNetCookie\":%llu}\n",(unsigned long long)sock.stx_mnt_id,(unsigned long long)sock.stx_ino,operation,fd,domain,type,protocol,address.nl_pid,address.nl_groups,cookie,owner_cookie);return 1;
+ identity_prefix(tid);fprintf(identity,"\"mount\":%llu,\"inode\":%llu,\"disposition\":1,\"kind\":\"route-socket\",\"operation\":\"%s\",\"pidfdTid\":%d,\"pidfdFlags\":%d,\"fd\":%d,\"domain\":%d,\"type\":%d,\"protocol\":%d,\"localPort\":%u,\"groups\":%u,\"netCookie\":%llu,\"ownerNetCookie\":%llu}\n",(unsigned long long)sock.stx_mnt_id,(unsigned long long)sock.stx_ino,operation,tid,PIDFD_THREAD,fd,domain,type,protocol,address.nl_pid,address.nl_groups,cookie,owner_cookie);return 1;
 }
 static int terminal_identity(pid_t tid,struct statx *target){
  char file[80],line[4096],state;int parent,group,session,tty;

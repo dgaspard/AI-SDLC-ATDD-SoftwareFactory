@@ -35,9 +35,10 @@ for(const [name,nr,args] of [['probe',56,['ffffffffffffff9c','1000','802','0','0
 
 for(const disposition of [2,3])test('terminal proof rejects substituted disposition '+disposition,()=>{const f=terminalFixture();f.identities=[];f.receipt.identityRecords=0;Object.assign(f.trace[3],{disposition,bindings:0});assert.throws(()=>verify(f),/Invalid writable probe disposition/);});
 
-function routeFixture(){const f=fixture();Object.assign(f.trace[1],{nr:200,args:['3','1000','c','0','0','0']});Object.assign(f.trace[2],{addressFamily:16,netlinkPort:0,netlinkGroups:0,netlinkPadding:0});Object.assign(f.trace[3],{nr:200,result:0,kernelResult:0});Object.assign(f.identities[0],{kind:'route-socket',operation:'bind',fd:3,domain:16,type:3,protocol:0,localPort:0,groups:0,netCookie:7,ownerNetCookie:7});return f;}
+function routeFixture(){const f=fixture();Object.assign(f.trace[1],{nr:200,args:['3','1000','c','0','0','0']});Object.assign(f.trace[2],{addressFamily:16,netlinkPort:0,netlinkGroups:0,netlinkPadding:0});Object.assign(f.trace[3],{nr:200,result:0,kernelResult:0});Object.assign(f.identities[0],{kind:'route-socket',operation:'bind',pidfdTid:2,pidfdFlags:128,fd:3,domain:16,type:3,protocol:0,localPort:0,groups:0,netCookie:7,ownerNetCookie:7});return f;}
 test('route socket proof binds current protocol namespace and native result',()=>assert.equal(verify(routeFixture()).coverageClosed,true));
 for(const [name,alter] of [
+ ['wrong pidfd thread',f=>f.identities[0].pidfdTid=3],['process pidfd fallback',f=>f.identities[0].pidfdFlags=0],['missing thread binding',f=>delete f.identities[0].pidfdTid],
  ['protocol',f=>f.identities[0].protocol=2],['domain',f=>f.identities[0].domain=2],['type',f=>f.identities[0].type=2],
  ['namespace',f=>f.identities[0].netCookie=8],['groups',f=>f.trace[2].netlinkGroups=1],['port',f=>f.trace[2].netlinkPort=1],['padding',f=>f.trace[2].netlinkPadding=1],
  ['descriptor',f=>f.identities[0].fd=4],['length',f=>f.trace[1].args[2]='b'],['native result',f=>f.trace[3].result=1],

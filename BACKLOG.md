@@ -20,7 +20,20 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Current local-proof follow-up: supplementary group query.** Consumer
+**Current local-proof follow-up: exact-thread socket identity.** Consumer
+`01dcb389699aca9bddf17da7924509b11ad4accb` pins reviewed factory
+`f8698979a05c43218c511cea874b745dd401fe2c` (full gate and 102-case qualification).
+Its live attempt completed fourteen successful model requests, then failed closed
+on a worker-thread route bind: process-only `pidfd_open` returned EINVAL. Evidence
+is retained at `/private/tmp/start02-live-petclinic-01dcb38-8xief5pb/run-1/`.
+Runner cleanup completed and no candidate was transferred. The owner observer now
+uses `PIDFD_THREAD` for the exact stopped caller; there is no process-leader fallback.
+Native worker discovery and wrong-protocol/reused-descriptor tests pass (3/3), with
+thread identity required by the proof validator. Gate/qualification records belong
+under `test-results/start02-thread-implementation-review/`. New profile/pin review,
+human consumer freeze and successful live proof remain required.
+
+**Historical supplementary-group query (reviewed and consumed by 01dcb38).** Consumer
 `5c0cb09fadda2fbc192919a0f22db578d72cb327` pins reviewed factory
 `50c4d699e56df181640aa26d70710c5f9828d2a1` (full gate and 100-case qualification).
 Two live attempts remain failures, retained at
@@ -31,8 +44,8 @@ passed and is not live proof. Run 2 completed eleven model requests, then failed
 closed on Linux arm64 `getgroups` (158). Both confirmed runner cleanup and transferred
 no candidate. Read-only group queries now preserve native results; `setgroups`
 remains unsupported. Renewed component/gate/qualification records belong under
-`test-results/start02-groups-implementation-review/`. Profile/pin review and a
-successful live candidate remain required; no application completion is claimed.
+`test-results/start02-groups-implementation-review/`. Profile/pin review and consumer
+freeze subsequently completed for `01dcb38`; successful live proof remains pending.
 
 **Historical Docker query transport recovery (reviewed and consumed by 5c0cb09).** The pipe-query
 candidate passed the full factory gate and 28 native cases, but coordinator
@@ -44,8 +57,8 @@ retries only explicit daemon-connection failures for read-only inspect/list call
 at most three attempts within the original 30-second command budget. Mutations,
 other errors and persistent outages still fail. Four deterministic transport tests
 pass; renewed gate/qualification records belong under
-`test-results/start02-transport-implementation-review/`. Runtime-profile review,
-consumer pin review/freeze and live candidate proof remain pending.
+`test-results/start02-transport-implementation-review/`. Runtime-profile and consumer pin review/freeze subsequently completed for
+`5c0cb09`; successful live candidate proof remains pending.
 
 **Historical pipe-query follow-up.** Consumer
 `fa849bd8b673a6dbbbbfbf072a39d8467d758bc1` pins reviewed factory

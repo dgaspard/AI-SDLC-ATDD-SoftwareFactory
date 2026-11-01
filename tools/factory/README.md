@@ -598,8 +598,11 @@ route-changing requests remain constrained by the existing dropped capabilities.
 Qualification explicitly verifies kernel EPERM and unchanged loopback state, in
 addition to network escape checks, wrong protocols/addresses, fd reuse and evidence
 substitution. Bind address context and socket identity must agree; missing binding
-groups cannot produce successful proof. Main-thread Node interface discovery is the
-verified positive platform case; arbitrary-thread support is not implied.
+groups cannot produce successful proof. Main-thread and worker-thread Node interface discovery are
+covered platform cases. Route inspection requires Linux 6.9+ `PIDFD_THREAD` for the
+exact stopped caller, with no process-leader fallback. Audit validation binds the
+thread ID and flag to the syscall entry; missing or substituted bindings fail.
+Unsupported kernels fail closed without extra capabilities.
 
 
 Read-only `fcntl(F_GETPIPE_SZ)` is supported for pipe-capacity inspection. Native

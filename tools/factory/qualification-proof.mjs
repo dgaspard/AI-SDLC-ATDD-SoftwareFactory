@@ -4,7 +4,7 @@ import {digest,need,object,regular} from './change-support.mjs';
 export const requiredReports=Object.freeze({
  'task-session.test.mjs':38,
  'model-channel.test.mjs':5,
- 'native-audit-session.test.mjs':30,
+ 'native-audit-session.test.mjs':33,
  'container-session.test.mjs':12,
  'verifier-session.test.mjs':13,
  'real-coordinator.test.mjs':4,
@@ -87,6 +87,9 @@ export const assertionRosters=Object.freeze({
     "consumer envelope invalid rejects after zero exit"
   ],
   "native-audit-session.test.mjs": [
+    "worker-thread interface discovery binds the exact calling thread",
+    "worker-thread route socket rejects protocol",
+    "worker-thread route socket rejects reuse",
     "pipe capacity query preserves native results and buffered bytes",
     "pipe resizing remains unsupported and cannot qualify",
     "supplementary group query preserves identity and native errors",

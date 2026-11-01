@@ -23,10 +23,15 @@ static void die(void){_exit(70);}
 static void rejected(int dir,const char*p,int flags,int expected){errno=0;int fd=openat(dir,p,flags,0600);if(fd>=0||errno!=expected)die();}
 static void barrier(pthread_barrier_t*b){int r=pthread_barrier_wait(b);if(r&&r!=PTHREAD_BARRIER_SERIAL_THREAD)die();}
 static void *replace(void*unused){(void)unused;barrier(&start);if(rename("/tmp/sct/replacement","/tmp/sct/alias"))die();barrier(&changed);barrier(&finished);return NULL;}
+int main(int argc,char**argv);
+static void *route_worker(void *name){char *args[]={"worker",name};return (void*)(long)main(2,args);}
 int main(int argc,char**argv){
  if(argc!=2)return 70;
  if(mkdir("/tmp/sct",0700)&&errno!=EEXIST)return 70;
- if(!strcmp(argv[1],"group-query")){
+ if(!strncmp(argv[1],"thread-route-",13)){
+  char name[64];snprintf(name,sizeof name,"route-%s",argv[1]+13);pthread_t worker;void *result;
+  if(pthread_create(&worker,NULL,route_worker,name)||pthread_join(worker,&result)||result)return 70;
+ }else if(!strcmp(argv[1],"group-query")){
   _Static_assert(SYS_getgroups==158,"Expected Linux arm64 getgroups");
   gid_t sentinel=12345;int count=getgroups(0,NULL);if(count!=0)return 70;
   if(getgroups(1,&sentinel)!=count||sentinel!=12345)return 70;
