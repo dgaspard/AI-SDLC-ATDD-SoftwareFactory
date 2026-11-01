@@ -1,3 +1,11 @@
+import './docker-command.test.mjs';
+import './qualification-proof.test.mjs';
+import './bedrock-converse.test.mjs';
+import './syscall-audit.test.mjs';
+import './aws-secrets.test.mjs';
+import "./model-broker.test.mjs";
+// Additional governed-change regressions participate in the frozen boundary suite.
+import "./change.test.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -535,3 +543,7 @@ require('node:http').createServer((q,r)=>{r.end(JSON.stringify({status:fs.exists
   );
   assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
 });
+
+import "./consumer-proof.test.mjs";
+
+import "./native-audit-proof.test.mjs";

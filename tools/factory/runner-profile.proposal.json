@@ -1,0 +1,39 @@
+{
+  "proposalOnly": true,
+  "enabled": false,
+  "scope": "credential-free Linux launcher qualification only",
+  "codexChange": {
+    "from": ["--sandbox", "read-only"],
+    "to": ["--sandbox", "danger-full-access"],
+    "reason": "The CLI's nested bubblewrap sandbox cannot create namespaces under the current Docker profile. The proposed mode delegates filesystem/process/network enforcement to the external container."
+  },
+  "traceeGuardChange": {
+    "proposal": "Allow setsid/setpgid only for a launcher owned by the durable container lifecycle; retain all other trace-escape restrictions and the default host process-group mode.",
+    "appliedToSource": false
+  },
+  "requiredOuterControls": [
+    "Immutable cached Linux runner and observer images; explicit declared inputs",
+    "Read-only root and isolated consumer mount; only literal approved update files writable",
+    "No source create/delete grants in the first update-only profile",
+    "Private bounded scratch, no host checkout or credential/socket mounts",
+    "Unprivileged tracee; capabilities unavailable to the coding process",
+    "Network none for this qualification; synthetic model only; no real credentials",
+    "Independent protected audit observer with denied-attempt capture",
+    "Durable container ownership before start and full-container shutdown before evidence",
+    "Independent verifier remains isolated; no automatic approval, merge or deployment"
+  ],
+  "requiredProof": [
+    "Actual pinned Linux CLI completes the neutral synthetic tool roundtrip",
+    "Direct, symlink, hardlink and descendant protected writes are denied and independently recorded",
+    "Trace escape, inherited descriptors and namespace escape remain denied",
+    "Detached TERM-resistant descendants cannot survive container shutdown",
+    "Denied attempts, failed acceptance, interruption and stale evidence cannot become success"
+  ],
+  "notAuthorizedByApproval": [
+    "Live model or AWS credential use",
+    "PetClinic implementation or protected-file edits",
+    "Host sysctl changes or privileged Docker containers",
+    "Real-runner activation before complete conformance"
+  ],
+  "alternative": "Keep the CLI's internal sandbox and qualify a compatible local Linux execution profile; do not change host namespace/security settings implicitly."
+}

@@ -1,0 +1,45 @@
+// Trusted offline qualification uses the actual CLI and containers, with synthetic model replies.
+// This exercises the engine behind production preflight; it cannot produce VERIFIED_CANDIDATE.
+import {test} from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import path from 'node:path';import {fileURLToPath,pathToFileURL} from 'node:url';import {spawnSync,execFileSync} from 'node:child_process';
+import {fixture} from './qualification-consumer.mjs';import {digest,entire} from './change-support.mjs';
+const here=path.dirname(fileURLToPath(import.meta.url)),docker=process.env.FACTORY_DOCKER,image=process.env.FACTORY_NATIVE_IMAGE,verifier=process.env.FACTORY_COMPONENT_IMAGE;
+if(!docker||!image||!verifier)throw Error('Explicit immutable runner/verifier images required');
+function prepare(t,mode){
+ const f=fixture(t),profile={schemaVersion:1,enabled:false,docker:{path:docker,endpoint:process.env.DOCKER_HOST??'unix:///var/run/docker.sock'},runnerImage:image,broker:{model:'neutral-probe'},verifier:{image:verifier,resources:{memoryMiB:2048,pids:512,scratchMiB:512,shmMiB:256,executableScratch:true},dependencies:[]}};
+ if(process.env.FACTORY_QUALIFICATION_PROFILE){Object.assign(profile,JSON.parse(fs.readFileSync(process.env.FACTORY_QUALIFICATION_PROFILE)),{enabled:false});assert.equal(profile.docker.path,docker);assert.equal(profile.runnerImage,image);assert.equal(profile.verifier.image,verifier);}
+ const profileFile=path.join(f.dir,'component-profile.json');f.write(profileFile,{...profile,enabled:true});
+ const descriptor=JSON.parse(fs.readFileSync(f.runner));Object.assign(descriptor,{argv:[process.execPath,path.join(here,'real-launcher.mjs'),'--profile',profileFile],inputs:[{path:profileFile,sha256:digest(profileFile)},{path:path.join(here,'real-launcher.mjs'),sha256:digest(path.join(here,'real-launcher.mjs'))}],timeoutMs:60000});f.write(f.runner,descriptor);
+ const authority=JSON.parse(fs.readFileSync(f.authority));authority.runnerSha256=digest(f.runner);f.write(f.authority,authority);
+ const harness=path.join(f.dir,'trusted-harness.mjs');
+ let command='node -e '+JSON.stringify("require('fs').writeFileSync('/workspace/app/value.txt',"+JSON.stringify(mode==='fail'?'wrong\n':'after\n')+")");
+ if(mode==='git-inspect')command+=' && test "$GIT_OPTIONAL_LOCKS" = 0 && test "$(git config --get diff.autoRefreshIndex)" = false && git diff --stat && git diff -- app/value.txt && git status --short && echo GIT_INSPECT_PASSED';
+ if(mode==='git-mutate')command+=' && test "$GIT_OPTIONAL_LOCKS" = 0 && test "$(git config --get diff.autoRefreshIndex)" = false && echo GIT_WRITE_ATTEMPT && git add app/value.txt';
+ f.write(harness,`import {runChange} from ${JSON.stringify(pathToFileURL(path.join(here,'change-engine.mjs')).href)};
+ import {createModelBroker} from ${JSON.stringify(pathToFileURL(path.join(here,'model-broker.mjs')).href)};
+ import {createConverseTransport} from ${JSON.stringify(pathToFileURL(path.join(here,'bedrock-converse.mjs')).href)};
+ const profile=${JSON.stringify(profile)};
+ async function openBroker(p,runId){let calls=0;const audit=[];const transport=createConverseTransport({model:p.broker.model,send:async()=>{calls++;${mode==='interrupt'?"process.kill(process.pid,'SIGTERM');await new Promise(r=>setTimeout(r,100));":''}return {stopReason:calls===1?'tool_use':'end_turn',output:{message:{role:'assistant',content:calls===1?[{toolUse:{toolUseId:'neutral_tool',name:'exec_command',input:{cmd:${JSON.stringify(command)},shell:'/bin/sh',login:false,max_output_tokens:100}}}]:[{text:'Neutral update completed.'}]}}};}});const broker=createModelBroker({runId,model:p.broker.model,converseTransport:transport,audit:e=>audit.push(e)});await new Promise(r=>broker.server.listen(0,'127.0.0.1',r));return {broker,audit,channel:{endpoint:'http://127.0.0.1:'+broker.server.address().port+'/v1/responses',token:broker.token}};}
+ process.exitCode=await runChange(process.argv.slice(2),{profile,openBroker});`);
+ const before=entire(f.root);
+ function invoke(args){const run=spawnSync(process.execPath,[harness,...args],{encoding:'utf8',timeout:120000});assert.ifError(run.error);assert.equal(entire(f.root),before,'original tree changed');fs.writeFileSync(path.join(f.dir,args[0]+'.stdout'),run.stdout);fs.writeFileSync(path.join(f.dir,args[0]+'.stderr'),run.stderr);return {code:run.status,value:JSON.parse(run.stdout.trim().split('\n').at(-1)),stderr:run.stderr};}
+ return {...f,invoke,execute:()=>invoke(['run','--root',f.root,'--task','spec/change.json','--authority',f.authority,'--runner',f.runner,'--output',f.output])};
+}
+test('real coordinator completes neutral actual CLI candidate with independent verification',t=>{const f=prepare(t,'pass'),r=f.execute();assert.equal(r.code,0,r.stderr);assert.equal(r.value.status,'SIMULATED_VERIFIED');const e=JSON.parse(fs.readFileSync(r.value.evidence));assert.equal(e.runnerKind,'fixture');assert.equal(e.cleanup.runnerStopped,true);assert.equal(e.cleanup.verifierStopped,true);assert.equal(f.invoke(['check','--evidence',r.value.evidence]).code,0);});
+test('real coordinator propagates independent acceptance failure',t=>{const f=prepare(t,'fail'),r=f.execute();assert.equal(r.code,7,r.stderr);assert.equal(r.value.category,'ACCEPTANCE_FAILED');const e=JSON.parse(fs.readFileSync(r.value.evidence));assert.equal(e.cleanup.verifierStopped,true);assert.equal(e.verification.category,'APPLICATION_TEST_FAILED');assert.equal(e.originalUnchanged,true);});
+test('real coordinator interruption retains recoverable candidate and confirms cleanup',t=>{const f=prepare(t,'interrupt'),r=f.execute();assert.equal(r.code,130,r.stderr);assert.equal(r.value.status,'INTERRUPTED');const j=JSON.parse(fs.readFileSync(path.join(f.output,'real-implementation/execution/container-journal.json')));assert.equal(j.cleanupConfirmed,true);assert.equal(fs.existsSync(path.join(f.output,'candidate/app/value.txt')),true);});
+test('real coordinator rejects a subsequent candidate edit',t=>{const f=prepare(t,'pass'),r=f.execute();assert.equal(r.code,0,r.stderr);const e=JSON.parse(fs.readFileSync(r.value.evidence));fs.writeFileSync(path.join(e.isolation.workspace,'app/value.txt'),'later');assert.equal(f.invoke(['check','--evidence',r.value.evidence]).code,8);});
+
+test('real CLI Git inspection leaves protected metadata unchanged',t=>{
+ const f=prepare(t,'git-inspect'),r=f.execute();assert.equal(r.code,0,r.stderr);assert.equal(r.value.status,'SIMULATED_VERIFIED');
+ const e=JSON.parse(fs.readFileSync(r.value.evidence));assert.equal(e.originalUnchanged,true);assert.equal(e.cleanup.runnerStopped,true);assert.equal(e.cleanup.verifierStopped,true);
+ const task=JSON.parse(fs.readFileSync(path.join(f.output,'real-implementation/task-result.json')));assert.equal(task.receipt.denials,0);
+ assert.match(fs.readFileSync(path.join(f.output,'real-implementation/execution/audit/stdout'),'utf8'),/GIT_INSPECT_PASSED/);
+ assert.equal(f.invoke(['check','--evidence',r.value.evidence]).code,0);
+});
+test('real CLI Git mutation remains denied with optional locks disabled',t=>{
+ const f=prepare(t,'git-mutate'),r=f.execute();assert.equal(r.code,6,r.stderr);assert.equal(r.value.category,'PERMISSION_DENIED');
+ const e=JSON.parse(fs.readFileSync(r.value.evidence));assert.equal(e.originalUnchanged,true);assert.equal(e.cleanup.runnerStopped,true);
+ const audit=path.join(f.output,'real-implementation/execution/audit');const ids=fs.readFileSync(path.join(audit,'native-identities.jsonl'),'utf8').trim().split('\n').map(JSON.parse);
+ assert.ok(ids.some(x=>x.disposition===0&&Buffer.from(x.requestedHex??'','hex').toString().endsWith('/.git/index.lock')));
+ assert.match(fs.readFileSync(path.join(audit,'stdout'),'utf8'),/GIT_WRITE_ATTEMPT/);
+});

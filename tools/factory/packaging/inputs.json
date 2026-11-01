@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "purpose": "offline-component-packaging",
+  "platform": "linux/arm64",
+  "baseImage": "node@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20",
+  "codex": {
+    "version": "0.162.0-alpha.17.2-linux-arm64",
+    "archive": "https://registry.npmjs.org/@openai/codex/-/codex-0.162.0-alpha.17.2-linux-arm64.tgz",
+    "integrity": "sha512-Osq1BicYleQ9TzxOv9kvpwyozq1GeuSRJcpBw+m3Fuzg67RyrBCDVOUmYpou0KI2lGNF+v3XT5L1ATkqUNZwzg=="
+  },
+  "realRunnerEnabled": false,
+  "strace": {
+    "version": "6.1-0.1",
+    "architecture": "arm64",
+    "archive": "https://deb.debian.org/debian/pool/main/s/strace/strace_6.1-0.1_arm64.deb",
+    "sha256": "751817724af91cb95df566a21a154f9a7dcdd938e700e5cb9a5a47eb19752ea2"
+  },
+  "compilerImage": "node@sha256:66d2eb8b463114d1f416d61dbd5fa9cea83e8fc250feb997338467728a06124b"
+}

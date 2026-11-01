@@ -1,0 +1,70 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import http from 'node:http';
+import {spawn} from 'node:child_process';
+import {stop} from './processes.mjs';
+import {waitOwned} from './change-support.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {createModelBroker} from './model-broker.mjs';
+import {localFileStore} from './credential-store.mjs';
+const canary='canary-upstream-secret-not-for-runner';
+async function setup(t, overrides={}, responder=null) {
+ const calls=[], logs=[];
+ const upstream=http.createServer(async(req,res)=>{let body='';for await(const c of req)body+=c;calls.push({authorization:req.headers.authorization,body:JSON.parse(body)});if(responder)return responder(req,res);res.writeHead(200,{'content-type':'application/json','x-private':'never forward'});res.end(JSON.stringify({id:'resp_ok',object:'response',status:'completed',output:[]}));});
+ await new Promise(r=>upstream.listen(0,'127.0.0.1',r));
+ const broker=createModelBroker({runId:'neutral-run',model:'review-model',credentialStore:{async readSecret(){return canary;}},audit:e=>logs.push(e),offlineUpstream:`http://127.0.0.1:${upstream.address().port}/v1/responses`,...overrides});
+ await new Promise(r=>broker.server.listen(0,'127.0.0.1',r));
+ t.after(async()=>{await broker.close();upstream.closeAllConnections();await new Promise(r=>upstream.close(r));});
+ const url=`http://127.0.0.1:${broker.server.address().port}`;
+ async function request(body={},options={}){return fetch(url+(options.path??'/v1/responses'),{method:options.method??'POST',headers:{authorization:'Bearer '+(options.token??broker.token),'content-type':'application/json',...options.headers},body:JSON.stringify({model:'review-model',input:'neutral prompt',store:false,max_output_tokens:32,...body})});}
+ return {broker,calls,logs,request};
+}
+test('broker injects upstream credential without returning credential or upstream headers',async t=>{const f=await setup(t);const r=await f.request();assert.equal(r.status,200);assert.equal(r.headers.get('x-private'),null);assert.equal((await r.json()).status,'completed');assert.equal(f.calls[0].authorization,'Bearer '+canary);assert.ok(!JSON.stringify(f.logs).includes(canary));assert.ok(!JSON.stringify(f.logs).includes('neutral prompt'));});
+test('broker rejects wrong tokens and revoked tokens without forwarding',async t=>{const f=await setup(t);assert.equal((await f.request({}, {token:'wrong'})).status,401);f.broker.revoke();assert.equal((await f.request()).status,401);assert.equal(f.calls.length,0);});
+test('broker denies model substitution remote tools headers and unexpected paths',async t=>{const f=await setup(t);for(const body of [{model:'other'},{tools:[{type:'web_search'}]},{input:[{type:'input_image',image_url:'https://example.invalid'}]},{store:true},{max_output_tokens:9000}])assert.equal((await f.request(body)).status,403);assert.equal((await f.request({}, {headers:{'x-upstream-url':'https://example.invalid'}})).status,403);assert.equal((await f.request({}, {path:'/v1/files'})).status,403);assert.equal(f.calls.length,0);});
+test('broker request quota and body limit fail closed',async t=>{const f=await setup(t,{maxRequests:1,requestBytes:256});assert.equal((await f.request({input:'x'.repeat(400)})).status,413);assert.equal((await f.request()).status,429);assert.equal(f.calls.length,0);});
+test('broker sanitizes upstream errors redirects and secret reflection',async t=>{for(const kind of ['error','redirect','reflect']){const f=await setup(t,{},(req,res)=>{res.writeHead(kind==='error'?500:kind==='redirect'?302:200,{'content-type':'application/json',location:'https://example.invalid'});res.end(canary);});const r=await f.request();assert.equal(r.status,502);assert.ok(!(await r.text()).includes(canary));assert.equal(f.calls.length,1);}});
+test('broker bounds response bytes and time',async t=>{const f=await setup(t,{responseBytes:8},(req,res)=>{res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({output:'x'.repeat(20)}));});assert.equal((await f.request()).status,502);const slow=await setup(t,{timeoutMs:50},()=>{});assert.equal((await slow.request()).status,504);});
+test('broker capabilities expire and do not work across runs',async t=>{const a=await setup(t,{ttlMs:60});const b=await setup(t);assert.equal((await b.request({}, {token:a.broker.token})).status,401);await new Promise(r=>setTimeout(r,80));assert.equal((await a.request()).status,401);assert.equal(a.calls.length,0);assert.equal(b.calls.length,0);});
+test('local wallet reads owner-only file and rejects aliases permissions and repository overlap',async t=>{const dir=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'wallet-')));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));fs.chmodSync(dir,0o700);const forbidden=path.join(dir,'repo');fs.mkdirSync(forbidden);const p=path.join(dir,'key');fs.writeFileSync(p,canary,{mode:0o600});const store=localFileStore(p,[forbidden]);assert.equal(await store.readSecret(),canary);fs.chmodSync(p,0o644);await assert.rejects(store.readSecret(),/Credential unavailable/);fs.chmodSync(p,0o600);fs.symlinkSync(p,path.join(dir,'alias'));await assert.rejects(localFileStore(path.join(dir,'alias'),[forbidden]).readSecret());fs.linkSync(p,path.join(dir,'hard'));await assert.rejects(store.readSecret());fs.unlinkSync(path.join(dir,'hard'));await assert.rejects(localFileStore(p,[dir]).readSecret());});
+
+test('stalled credential store is cancelled by deadline and broker can close',async t=>{const f=await setup(t,{timeoutMs:40,credentialStore:{readSecret(){return new Promise(()=>{});}}});assert.equal((await f.request()).status,504);await f.broker.close();assert.equal(f.calls.length,0);});
+test('malformed upstream JSON and wrong streaming content type fail closed',async t=>{const f=await setup(t,{},(req,res)=>{res.writeHead(200,{'content-type':'application/json'});res.end('{"output":');});assert.equal((await f.request()).status,502);assert.equal((await f.request({stream:true})).status,502);assert.equal(f.calls.length,2);});
+
+function streamEvents(output=[]) {const response={id:'resp_neutral',object:'response',status:'completed',output};return [{type:'response.created',response:{...response,status:'in_progress',output:[]}},{type:'response.completed',response}];}
+function encode(events) {return events.map(e=>'event: '+e.type+'\ndata: '+JSON.stringify(e)+'\n\n').join('');}
+function streamReply(events){return (req,res)=>{res.writeHead(200,{'content-type':'text/event-stream'});res.end(encode(events));};}
+const localFunction={type:'function',name:'read_value',description:'Read a neutral value',parameters:{type:'object',properties:{},additionalProperties:false},strict:true};
+test('broker relays structured local function roundtrip and removes client metadata',async t=>{
+ const item={id:'fc_1',type:'function_call',call_id:'call_1',name:'read_value',arguments:'{}',status:'completed'};
+ const f=await setup(t,{},streamReply(streamEvents([item])));
+ const body={stream:true,input:[{type:'message',id:null,role:'user',content:[{type:'input_text',text:'read value'}]}],tools:[localFunction],tool_choice:'auto',parallel_tool_calls:true,reasoning:{summary:'auto'},include:['reasoning.encrypted_content'],prompt_cache_key:'untrusted-affinity',client_metadata:{trace:'do-not-forward'},max_output_tokens:undefined};
+ const r=await f.request(body,{headers:{'x-codex-turn-metadata':'do-not-forward'}});assert.equal(r.status,200);assert.match(await r.text(),/response.completed/);assert.equal(f.calls[0].body.max_output_tokens,8192);assert.equal(f.calls[0].body.client_metadata,undefined);assert.equal(f.calls[0].body.prompt_cache_key,undefined);
+ assert.equal((await f.request({...body,input:[item,{type:'function_call_output',call_id:'call_1',output:'neutral value'}]})).status,200);
+});
+test('broker accepts local custom tool definitions and reasoning continuation',async t=>{const f=await setup(t,{},streamReply(streamEvents()));const r=await f.request({stream:true,tools:[{type:'custom',name:'apply_patch',format:{type:'text'}}],input:[{type:'reasoning',id:'r1',summary:[],encrypted_content:'opaque'},{type:'custom_tool_call',call_id:'c1',name:'apply_patch',input:'neutral'},{type:'custom_tool_call_output',call_id:'c1',output:'done'}]});assert.equal(r.status,200);});
+test('broker denies hosted tool and remote input surfaces recursively',async t=>{const f=await setup(t);for(const tools of [[{type:'mcp',server_url:'https://example.invalid',name:'remote'}],[{type:'namespace',name:'outer',tools:[localFunction]}],[{...localFunction,parameters:{$ref:'https://example.invalid/schema'}}]])assert.equal((await f.request({tools})).status,403);for(const input of [[{type:'item_reference',id:'foreign'}],[{type:'message',role:'user',content:[{type:'input_file',file_url:'https://example.invalid'}]}]])assert.equal((await f.request({input})).status,403);assert.equal((await f.request({previous_response_id:'foreign'})).status,403);assert.equal(f.calls.length,0);});
+test('broker rejects incomplete failed wrong-identity and post-terminal event streams',async t=>{
+ for(const events of [streamEvents().slice(0,1),[...streamEvents().slice(0,1),{type:'response.failed',response:{id:'resp_neutral',status:'failed',output:[]}}],streamEvents().map((e,i)=>i?{...e,response:{...e.response,id:'other'}}:e),[...streamEvents(),{type:'response.output_text.delta',delta:'late'}],streamEvents([{type:'web_search_call',id:'web',status:'completed'}])]){const f=await setup(t,{},streamReply(events));const r=await f.request({stream:true});assert.equal(r.status,502);assert.ok(!(await r.text()).includes('response.completed'));}
+});
+test('broker withholds secret canary split across SSE chunks and truncated framing',async t=>{const f=await setup(t,{},(req,res)=>{res.writeHead(200,{'content-type':'text/event-stream'});const data=encode(streamEvents([{type:'message',role:'assistant',content:[{type:'output_text',text:canary,annotations:[]}]}]));const cut=data.indexOf(canary)+5;res.write(data.slice(0,cut));res.end(data.slice(cut));});assert.equal((await f.request({stream:true})).status,502);const g=await setup(t,{},(req,res)=>{res.writeHead(200,{'content-type':'text/event-stream'});res.end(encode(streamEvents()).slice(0,-1));});assert.equal((await g.request({stream:true})).status,502);});
+
+test('broker rejects decoded secret reflection in JSON and SSE',async t=>{for(const streaming of [false,true]){const f=await setup(t,{},(req,res)=>{res.writeHead(200,{'content-type':streaming?'text/event-stream':'application/json'});const response={id:'resp_neutral',object:'response',status:'completed',output:[{type:'message',role:'assistant',content:[{type:'output_text',text:canary,annotations:[]}]}]};const raw=streaming?encode([{type:'response.created',response:{...response,status:'in_progress',output:[]}},{type:'response.completed',response}]):JSON.stringify(response);const encoded=raw.replaceAll(canary,[...canary].map(c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')).join(''));res.end(encoded);});const response=await f.request({stream:streaming});assert.equal(response.status,502);assert.ok(!(await response.text()).includes(canary));}});
+test('broker rejects missing done payload and in-progress terminal tools',async t=>{for(const events of [[streamEvents()[0],{type:'response.output_item.done',output_index:0},streamEvents()[1]],streamEvents([{type:'function_call',id:'fc_1',call_id:'call_1',name:'read_value',arguments:'{}',status:'in_progress'}])]){const f=await setup(t,{},streamReply(events));assert.equal((await f.request({stream:true})).status,502);}});
+test('broker rejects split decoded secret deltas before any successful relay',async t=>{const item={type:'message',id:'m1',role:'assistant',status:'completed',content:[{type:'output_text',text:canary,annotations:[]}]};const events=[streamEvents()[0],...[canary.slice(0,7),canary.slice(7)].map(delta=>({type:'response.output_text.delta',item_id:'m1',output_index:0,content_index:0,delta})),streamEvents([item])[1]];const f=await setup(t,{},streamReply(events));assert.equal((await f.request({stream:true})).status,502);});
+
+test('probe timeout escalates a TERM-resistant process group before returning',async t=>{const child=spawn(process.execPath,['-e',"process.on('SIGTERM',()=>{});console.log('ready');setInterval(()=>{},1000);"],{detached:true,stdio:['ignore','pipe','ignore']});const state={child,exited:false,error:null};state.done=new Promise(resolve=>{child.on('error',e=>{state.error=e;state.exited=true;resolve();});child.on('exit',(code,signal)=>{state.code=code;state.signal=signal;state.exited=true;resolve();});});t.after(()=>stop(state,100));await new Promise(resolve=>child.stdout.once('data',resolve));assert.equal(await waitOwned(state,20,new Promise(()=>{})),'timeout');await stop(state,30);assert.equal(state.signal,'SIGKILL');assert.equal(state.exited,true);});
+
+test('done-only scalar content must match terminal identity and value',async t=>{const item={id:'fc_1',type:'function_call',call_id:'call_1',name:'read_value',arguments:'{}',status:'completed'};for(const [id,args,expected] of [['foreign','{}',502],['fc_1','wrong',502],['fc_1','{}',200]]){const events=[streamEvents()[0],{type:'response.function_call_arguments.done',item_id:id,output_index:0,arguments:args},streamEvents([item])[1]];const f=await setup(t,{},streamReply(events));assert.equal((await f.request({stream:true})).status,expected);}});
+
+test('Bedrock configuration preserves model binding and secret isolation through offline relay',async t=>{
+ const model='neutral.model-v1:0';
+ const f=await setup(t,{model,upstreamConfig:{provider:'bedrock',region:'us-east-1',endpoint:'runtime'}});
+ assert.equal((await f.request({model})).status,200);
+ assert.equal((await f.request({model:'other.model'})).status,403);
+ assert.equal(f.calls.length,1);assert.equal(f.calls[0].body.model,model);
+ assert.equal(f.calls[0].authorization,'Bearer '+canary);
+ assert.ok(!JSON.stringify(f.logs).includes(canary));
+});

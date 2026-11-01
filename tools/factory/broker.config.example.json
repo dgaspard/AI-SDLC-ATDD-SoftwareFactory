@@ -1,0 +1,65 @@
+{
+  "proposalOnly": true,
+  "enabled": false,
+  "schemaVersion": 1,
+  "transport": {
+    "runnerEndpoint": "http://model-broker:8080/v1/responses",
+    "hostPublishedPorts": [],
+    "runnerNetwork": "per-run-internal-only"
+  },
+  "upstream": {
+    "provider": "bedrock",
+    "region": "us-east-1",
+    "endpoint": "runtime",
+    "api": "converse",
+    "model": "us.moonshotai.kimi-k3",
+    "foundationModel": "moonshotai.kimi-k3",
+    "followRedirects": false
+  },
+  "credential": {
+    "source": "aws-profile",
+    "profile": "software-factory-dev",
+    "runnerMount": false,
+    "environment": "local",
+    "fallbackToDefaultCredentials": false
+  },
+  "session": {
+    "runId": null,
+    "tokenSource": "coordinator-generated-memory-only",
+    "ttlSeconds": 1800,
+    "maxRequests": 40,
+    "maxConcurrentRequests": 1
+  },
+  "limits": {
+    "requestBytes": 1048576,
+    "responseBytes": 16777216,
+    "requestTimeoutMs": 120000,
+    "maxOutputTokensPerRequest": 8192
+  },
+  "requestPolicy": {
+    "method": "POST",
+    "path": "/v1/responses",
+    "store": false,
+    "remoteTools": false,
+    "background": false,
+    "allowClientUpstreamHeaders": false
+  },
+  "logging": {
+    "bodies": false,
+    "headers": false,
+    "tokens": false,
+    "fields": [
+      "runId",
+      "requestId",
+      "status",
+      "durationMs",
+      "requestBytes",
+      "responseBytes"
+    ]
+  },
+  "pins": {
+    "brokerImageDigest": null,
+    "runnerImageDigest": null,
+    "launcherInputsSha256": null
+  }
+}
