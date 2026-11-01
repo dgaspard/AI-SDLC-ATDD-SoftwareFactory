@@ -7,7 +7,7 @@ export const requiredReports=Object.freeze({
  'native-audit-session.test.mjs':33,
  'container-session.test.mjs':12,
  'verifier-session.test.mjs':13,
- 'real-coordinator.test.mjs':4,
+ 'real-coordinator.test.mjs':6,
 });
 export const assertionRosters=Object.freeze({
   "model-channel.test.mjs": [
@@ -124,6 +124,8 @@ export const assertionRosters=Object.freeze({
     "SCT-006 race"
   ],
   "real-coordinator.test.mjs": [
+    "real CLI Git inspection leaves protected metadata unchanged",
+    "real CLI Git mutation remains denied with optional locks disabled",
     "real coordinator completes neutral actual CLI candidate with independent verification",
     "real coordinator interruption retains recoverable candidate and confirms cleanup",
     "real coordinator propagates independent acceptance failure",

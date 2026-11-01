@@ -11,7 +11,9 @@ function prepare(t,mode){
  const descriptor=JSON.parse(fs.readFileSync(f.runner));Object.assign(descriptor,{argv:[process.execPath,path.join(here,'real-launcher.mjs'),'--profile',profileFile],inputs:[{path:profileFile,sha256:digest(profileFile)},{path:path.join(here,'real-launcher.mjs'),sha256:digest(path.join(here,'real-launcher.mjs'))}],timeoutMs:60000});f.write(f.runner,descriptor);
  const authority=JSON.parse(fs.readFileSync(f.authority));authority.runnerSha256=digest(f.runner);f.write(f.authority,authority);
  const harness=path.join(f.dir,'trusted-harness.mjs');
- const command='node -e '+JSON.stringify("require('fs').writeFileSync('/workspace/app/value.txt',"+JSON.stringify(mode==='fail'?'wrong\n':'after\n')+")");
+ let command='node -e '+JSON.stringify("require('fs').writeFileSync('/workspace/app/value.txt',"+JSON.stringify(mode==='fail'?'wrong\n':'after\n')+")");
+ if(mode==='git-inspect')command+=' && test "$GIT_OPTIONAL_LOCKS" = 0 && test "$(git config --get diff.autoRefreshIndex)" = false && git diff --stat && git diff -- app/value.txt && git status --short && echo GIT_INSPECT_PASSED';
+ if(mode==='git-mutate')command+=' && test "$GIT_OPTIONAL_LOCKS" = 0 && test "$(git config --get diff.autoRefreshIndex)" = false && echo GIT_WRITE_ATTEMPT && git add app/value.txt';
  f.write(harness,`import {runChange} from ${JSON.stringify(pathToFileURL(path.join(here,'change-engine.mjs')).href)};
  import {createModelBroker} from ${JSON.stringify(pathToFileURL(path.join(here,'model-broker.mjs')).href)};
  import {createConverseTransport} from ${JSON.stringify(pathToFileURL(path.join(here,'bedrock-converse.mjs')).href)};
@@ -26,3 +28,18 @@ test('real coordinator completes neutral actual CLI candidate with independent v
 test('real coordinator propagates independent acceptance failure',t=>{const f=prepare(t,'fail'),r=f.execute();assert.equal(r.code,7,r.stderr);assert.equal(r.value.category,'ACCEPTANCE_FAILED');const e=JSON.parse(fs.readFileSync(r.value.evidence));assert.equal(e.cleanup.verifierStopped,true);assert.equal(e.verification.category,'APPLICATION_TEST_FAILED');assert.equal(e.originalUnchanged,true);});
 test('real coordinator interruption retains recoverable candidate and confirms cleanup',t=>{const f=prepare(t,'interrupt'),r=f.execute();assert.equal(r.code,130,r.stderr);assert.equal(r.value.status,'INTERRUPTED');const j=JSON.parse(fs.readFileSync(path.join(f.output,'real-implementation/execution/container-journal.json')));assert.equal(j.cleanupConfirmed,true);assert.equal(fs.existsSync(path.join(f.output,'candidate/app/value.txt')),true);});
 test('real coordinator rejects a subsequent candidate edit',t=>{const f=prepare(t,'pass'),r=f.execute();assert.equal(r.code,0,r.stderr);const e=JSON.parse(fs.readFileSync(r.value.evidence));fs.writeFileSync(path.join(e.isolation.workspace,'app/value.txt'),'later');assert.equal(f.invoke(['check','--evidence',r.value.evidence]).code,8);});
+
+test('real CLI Git inspection leaves protected metadata unchanged',t=>{
+ const f=prepare(t,'git-inspect'),r=f.execute();assert.equal(r.code,0,r.stderr);assert.equal(r.value.status,'SIMULATED_VERIFIED');
+ const e=JSON.parse(fs.readFileSync(r.value.evidence));assert.equal(e.originalUnchanged,true);assert.equal(e.cleanup.runnerStopped,true);assert.equal(e.cleanup.verifierStopped,true);
+ const task=JSON.parse(fs.readFileSync(path.join(f.output,'real-implementation/task-result.json')));assert.equal(task.receipt.denials,0);
+ assert.match(fs.readFileSync(path.join(f.output,'real-implementation/execution/audit/stdout'),'utf8'),/GIT_INSPECT_PASSED/);
+ assert.equal(f.invoke(['check','--evidence',r.value.evidence]).code,0);
+});
+test('real CLI Git mutation remains denied with optional locks disabled',t=>{
+ const f=prepare(t,'git-mutate'),r=f.execute();assert.equal(r.code,6,r.stderr);assert.equal(r.value.category,'PERMISSION_DENIED');
+ const e=JSON.parse(fs.readFileSync(r.value.evidence));assert.equal(e.originalUnchanged,true);assert.equal(e.cleanup.runnerStopped,true);
+ const audit=path.join(f.output,'real-implementation/execution/audit');const ids=fs.readFileSync(path.join(audit,'native-identities.jsonl'),'utf8').trim().split('\n').map(JSON.parse);
+ assert.ok(ids.some(x=>x.disposition===0&&Buffer.from(x.requestedHex??'','hex').toString().endsWith('/.git/index.lock')));
+ assert.match(fs.readFileSync(path.join(audit,'stdout'),'utf8'),/GIT_WRITE_ATTEMPT/);
+});

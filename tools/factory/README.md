@@ -628,3 +628,10 @@ application services and test suites to the provisioned independent verifier. Th
 instruction does not replace or waive any gate: successful implementation still
 requires separate full verification and evidence validation after cleanup. The
 observer event budget and all permission checks remain unchanged.
+
+The isolated coding client sets `GIT_OPTIONAL_LOCKS=0` and supplies
+`diff.autoRefreshIndex=false` through Git’s process-scoped configuration environment
+so Git inspection avoids optional index refreshes. Git metadata remains protected: necessary writes such as
+`git add` are still denied by the observer, and any denial still fails the run.
+Qualification exercises both diff/status inspection and prohibited staging through
+the actual pinned CLI, with cleanup and independent verification checks.

@@ -20,7 +20,23 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Current local-proof follow-up: implementation-stage handoff.** Consumer
+**Current local-proof follow-up: read-only Git inspection.** Consumer
+`e4bbf90cfa59713d287316520c83e0410bbd6ce0` pins reviewed factory
+`e63631cb83471ecfe1df589a2e38ae2b4ecd7c77`. Its live agent finished the scoped edit
+and syntax check, but `git diff` attempted an optional `.git/index.lock` write. The
+observer correctly reported PERMISSION_DENIED; cleanup completed and no candidate
+was transferred. Evidence remains at
+`/private/tmp/start02-live-petclinic-e4bbf90-99sfcn3p/run-1/`. The coding client now
+sets `GIT_OPTIONAL_LOCKS=0` and `diff.autoRefreshIndex=false` through its private
+process environment. The first setting alone did not prevent the observed diff
+refresh in the regression. Together these suppress optional index refreshes, not
+required locks or protected-path enforcement. Actual-CLI qualification covers read-only
+diff/status with zero denials and a deliberately blocked `git add`.
+Renewed records belong under `test-results/start02-gitlocks-implementation-review/`.
+Profile/pin review and successful independent application verification remain
+required; the sandbox's completed message is not proof of success.
+
+**Historical implementation-stage handoff (reviewed and consumed by e4bbf90).** Consumer
 `b445ee874ad93685bb2c78b8ffba7000155f1173` pins reviewed factory
 `c976424ea5f362d117b76e7f50d5b502d618dec0`. Its live attempt completed fifteen model
 requests and made a scoped sandbox edit, then failed closed at the existing
@@ -32,8 +48,8 @@ bounded requirement/source inspection and the granted edit belong in the coding
 sandbox; package managers, application servers and full tests belong in the
 provisioned independent verifier. Required verification and observation limits are
 unchanged. Renewed evidence belongs under
-`test-results/start02-handoff-implementation-review/`. Profile/pin review and live
-proof remain required; the failed sandbox diff is not an approved candidate.
+`test-results/start02-handoff-implementation-review/`. Profile/pin review and
+consumer freeze subsequently completed for `e4bbf90`; live proof remains pending.
 
 **Historical exact-thread socket identity (reviewed and consumed by b445ee8).** Consumer
 `01dcb389699aca9bddf17da7924509b11ad4accb` pins reviewed factory
