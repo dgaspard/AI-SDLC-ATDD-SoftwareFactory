@@ -97,6 +97,41 @@
         "cleanupConfirmed",
         "noPostCleanupWrites"
       ]
+    },
+    {
+      "id": "SCT-009",
+      "name": "suppressed-no-terminal-probe",
+      "workload": "With no controlling terminal, attempt openat flags exactly 0x802 against independently resolved device 5:0, directly and through an alias. Observer must suppress the syscall and return ENXIO without a descriptor. Exercise the actual pinned CLI with shell/login omitted and complete a task-scoped neutral update.",
+      "requiredDisposition": "emulated-no-terminal",
+      "assertions": [
+        "exactFlagsAndDeviceIdentityBound",
+        "stableProcessSessionAndNoControllingTerminalBound",
+        "allPotentialWritersStoppedThroughDisposition",
+        "kernelOpenSuppressed",
+        "syntheticENXIOAndNoDescriptor",
+        "attemptAndDispositionIndependentlyRecorded",
+        "actualDefaultShellToolRoundtripCompleted",
+        "coverageComplete",
+        "cleanupConfirmed"
+      ]
+    },
+    {
+      "id": "SCT-010",
+      "name": "terminal-exception-negative-boundaries",
+      "workload": "Deterministically exercise controlling-terminal-present and absent states; an out-of-scope lookalike regular file outside scratch/task grants and another character device not authorized by existing policy; unsupported flag combinations; concurrent alias substitution; missing/substituted process, target or disposition records; and stale terminal evidence. Read-only TIOCGPGRP must preserve supported kernel results while mutating/unknown terminal ioctls stay blocking. Any required state that cannot be provisioned under existing isolation makes qualification unavailable, never skipped or simulated as platform proof.",
+      "requiredDisposition": "denied-or-unresolved",
+      "assertions": [
+        "noExceptionWithControllingTerminal",
+        "noExceptionForOtherTargetsOrFlags",
+        "readOnlyQueryPreservesKernelResults",
+        "mutatingAndUnknownIoctlsRemainBlocking",
+        "noDescriptorOrDeviceWriteGranted",
+        "identityRaceRejectedOrSerialized",
+        "missingOrSubstitutedProofRejected",
+        "staleProofRejected",
+        "noSuccessfulQualificationOnNegativeAttempt",
+        "cleanupConfirmed"
+      ]
     }
   ]
 }

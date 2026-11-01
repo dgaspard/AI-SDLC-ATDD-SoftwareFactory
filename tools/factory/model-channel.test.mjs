@@ -4,7 +4,7 @@ import {runTaskSession} from './task-session.mjs';import {createModelBroker} fro
 const docker=process.env.FACTORY_DOCKER,image=process.env.FACTORY_NATIVE_IMAGE;if(!docker||!image)throw Error('Explicit immutable tooling required');
 const root=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'factory-model-channel-'));console.error('Retained records: '+root);
 function task(name,argv){const workspace=path.join(root,name+'-candidate');fs.mkdirSync(workspace);fs.mkdirSync(workspace+'/source');fs.mkdirSync(workspace+'/spec');fs.writeFileSync(workspace+'/source/allowed.js','before');return {docker,image,workspace,permissions:{create:[],update:['source/allowed.js'],delete:[]},protectedPaths:['spec'],directory:path.join(root,name),modelChannel:true,argv};}
-async function brokerFixture(name,tool){let calls=0;const audit=[];const model='neutral-probe';const transport=createConverseTransport({model,send:async()=>{calls++;return {stopReason:tool&&calls===1?'tool_use':'end_turn',output:{message:{role:'assistant',content:tool&&calls===1?[{toolUse:{toolUseId:'qualified_call',name:'exec_command',input:{cmd:tool,shell:'/bin/sh',login:false,max_output_tokens:100}}}]:[{text:'Completed approved update.'}]}}};}});const broker=createModelBroker({runId:name,model,converseTransport:transport,audit:e=>audit.push(e)});await new Promise(r=>broker.server.listen(0,'127.0.0.1',r));return {broker,model,audit,calls:()=>calls};}
+async function brokerFixture(name,tool){let calls=0;const audit=[];const model='neutral-probe';const transport=createConverseTransport({model,send:async()=>{calls++;return {stopReason:tool&&calls===1?'tool_use':'end_turn',output:{message:{role:'assistant',content:tool&&calls===1?[{toolUse:{toolUseId:'qualified_call',name:'exec_command',input:typeof tool==='string'?{cmd:tool,shell:'/bin/sh',login:false,max_output_tokens:100}:tool}}]:[{text:'Completed approved update.'}]}}};}});const broker=createModelBroker({runId:name,model,converseTransport:transport,audit:e=>audit.push(e)});await new Promise(r=>broker.server.listen(0,'127.0.0.1',r));return {broker,model,audit,calls:()=>calls};}
 async function execute(name,argv,tool,hook){const f=await brokerFixture(name,tool),options=task(name,argv);let channel;
  try{const result=await runTaskSession(options,{afterStart:async session=>{channel=await attachModelChannel({session,...f,prompt:'Update only source/allowed.js in place with the supplied neutral behavior. No other writes are authorized.'});await hook?.(session,f);},afterCleanup:async()=>{if(channel)await channel.close();else await f.broker.close();}});fs.writeFileSync(path.join(options.directory,'model-audit.json'),JSON.stringify({calls:f.calls(),audit:f.audit},null,2));return {result,options,...f};}finally{await f.broker.close();}}
 test('actual pinned CLI updates only granted bytes through external Converse relay',async()=>{
@@ -28,4 +28,10 @@ test('aborted HTTP upload cannot crash relay or bypass broker validation',async(
 });
 test('root relay attachment rejects substituted container identity',async()=>{
  const f=await brokerFixture('identity');try{await assert.rejects(attachModelChannel({session:{docker,j:{containerId:'0'.repeat(64),audit:true,argv:['--model-channel'],phase:'RUNNING'}},...f,prompt:'neutral'}));}finally{await f.broker.close();}
+});
+
+test('actual pinned CLI default shell startup preserves bounded task writes',async()=>{
+ const f=await execute('default-shell',['node','/opt/factory/coding-client.mjs'],{cmd:"node -e \"require('fs').writeFileSync('/workspace/source/allowed.js','approved')\"",max_output_tokens:100});
+ assert.equal(f.result.phase,'AUDIT_COLLECTED');assert.equal(f.calls(),2);assert.equal(f.result.receipt.denials,0);assert.equal(f.result.proof.coverageClosed,true);assert.equal(f.result.cleanupConfirmed,true);
+ assert.equal(fs.readFileSync(f.options.workspace+'/source/allowed.js','utf8'),'approved');
 });

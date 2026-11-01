@@ -2,7 +2,7 @@
 """Offline component image only. Uses an existing immutable qualified-tool input image."""
 import argparse, hashlib, json, re, shutil, subprocess, tempfile
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--docker',required=True);p.add_argument('--base',required=True);p.add_argument('--omit-record',action='store_true');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--docker',required=True);p.add_argument('--base',required=True);p.add_argument('--omit-record',action='store_true');p.add_argument('--terminal-fixture',action='store_true');args=p.parse_args()
 if not Path(args.docker).is_absolute() or not re.fullmatch(r'sha256:[a-f0-9]{64}',args.base):p.error('Absolute Docker binary and immutable local base image required')
 here=Path(__file__).resolve().parent
 context=Path(tempfile.mkdtemp(prefix='factory-native-build-')).resolve()
@@ -18,7 +18,9 @@ sources=[here/'syscall-observer.c',here/'syscall-guard.c',here/'syscall-observer
 for source in sources:shutil.copyfile(source,context/source.name)
 shutil.copyfile(here/'native-observer.Dockerfile',context/'Dockerfile')
 argv=['build','--network=none','--pull=false','--iidfile',str(context/'image.id'),'--build-arg','QUALIFICATION_BASE='+tag]
+if args.omit_record and args.terminal_fixture:raise ValueError('Separate fixture images required')
+if args.terminal_fixture:argv+=['--build-arg','FAULT_FLAGS=-DSCT_FIXTURE_TERMINAL']
 if args.omit_record:argv+=['--build-arg','FAULT_FLAGS=-DSCT_FAULT_SKIP_RECORD']
 with (context/'build.log').open('w') as log:subprocess.run([args.docker,*argv,str(context)],stdout=log,stderr=subprocess.STDOUT,check=True)
-result={'scope':'native component only','image':(context/'image.id').read_text().strip(),'base':args.base,'baseConfigId':inspected['Id'],'fault':'omit-record' if args.omit_record else None,'context':str(context),'sourceHashes':{s.name:hashlib.sha256(s.read_bytes()).hexdigest() for s in sources+[here/'native-observer.Dockerfile']}}
+result={'scope':'native component only','image':(context/'image.id').read_text().strip(),'base':args.base,'baseConfigId':inspected['Id'],'fault':'omit-record' if args.omit_record else ('controlling-terminal' if args.terminal_fixture else None),'context':str(context),'sourceHashes':{s.name:hashlib.sha256(s.read_bytes()).hexdigest() for s in sources+[here/'native-observer.Dockerfile']}}
 (context/'provenance.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))

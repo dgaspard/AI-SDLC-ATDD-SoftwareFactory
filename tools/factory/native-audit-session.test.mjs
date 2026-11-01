@@ -53,3 +53,20 @@ test('read-only process-group queries preserve kernel results and closed coverag
  const calls=lines(path.join(root,'process-group-query/audit/native-trace.jsonl')).filter(x=>x.event==='exit-syscall'&&x.nr===155);
  assert.equal(calls.length,3);assert.ok(calls[0].result>0);assert.equal(calls[1].result,calls[0].result);assert.equal(calls[2].result,-3);
 });
+
+test('SCT-009 suppressed terminal probes preserve native no-terminal results',async()=>{
+ const r=await run('terminal-probe',['/opt/factory/syscall-observer-cases','terminal-probe']);assert.equal(r.exitCode,0);assert.equal(r.receipt.denials,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
+ const id=lines(path.join(root,'terminal-probe/audit/native-identities.jsonl')).filter(x=>x.kind==='terminal-probe');assert.equal(id.length,2);assert.ok(id.every(x=>x.disposition===4&&x.controllingTerminal===0));
+ const trace=lines(path.join(root,'terminal-probe/audit/native-trace.jsonl')).filter(x=>x.event==='bound-exit'&&x.disposition===4);assert.equal(trace.length,2);assert.ok(trace.every(x=>x.result===-6&&x.kernelResult===-38));
+});
+for(const [name,code] of [['terminal-race',6],['terminal-flags',6],['terminal-targets',6],['terminal-mutation',5],['terminal-unknown',5]])test('SCT-010 '+name+' cannot receive a terminal exception',async()=>{
+ const r=await run(name,['/opt/factory/syscall-observer-cases',name]);assert.equal(r.exitCode,code);assert.equal(r.cleanupConfirmed,true);assert.notEqual(r.phase,'AUDIT_COLLECTED');
+ const bindings=lines(path.join(root,name,'audit/native-identities.jsonl'));if(name!=='terminal-race')assert.ok(bindings.every(x=>x.disposition!==4));else assert.ok(bindings.some(x=>x.disposition===0));
+ if(code===6){assert.equal(r.receipt.workloadExitCode,0);protectedUnchanged(name);}else{const trace=lines(path.join(root,name,'audit/native-trace.jsonl'));const request=name==='terminal-mutation'?'5410':'54ff';const entry=trace.find(x=>x.event==='entry'&&x.nr===29&&x.args[1]===request);assert.ok(entry,'intended ioctl reached observer');assert.ok(trace.some(x=>x.event==='bound-start'&&x.entry===entry.seq));}
+});
+test('SCT-010 real controlling terminal blocks the no-terminal exception',async()=>{
+ const terminal=process.env.FACTORY_NATIVE_TERMINAL_IMAGE;assert.match(terminal??'',/^sha256:[a-f0-9]{64}$/,'real private-PTY fixture image required');
+ const r=await run('terminal-present',['/opt/factory/syscall-observer-cases','terminal-present'],terminal);assert.equal(r.exitCode,6);assert.equal(r.receipt.workloadExitCode,0);assert.equal(r.cleanupConfirmed,true);
+ const id=lines(path.join(root,'terminal-present/audit/native-identities.jsonl')).filter(x=>x.kind==='terminal-probe');assert.equal(id.length,1);assert.notEqual(id[0].controllingTerminal,0);assert.equal(id[0].disposition,0);
+ const trace=lines(path.join(root,'terminal-present/audit/native-trace.jsonl'));assert.ok(trace.some(x=>x.event==='bound-exit'&&x.nr===29&&x.result===0&&x.kernelResult===0));
+});

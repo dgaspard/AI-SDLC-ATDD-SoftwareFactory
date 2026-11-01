@@ -34,7 +34,7 @@
 #define MAX_TASKS 128
 #define MAX_EVENTS 500000
 struct task {pid_t tid;int stopped,status,entry,born,interrupt_sent;unsigned long nr,entry_seq;pid_t vfork_child;unsigned long long started;};
-static struct task tasks[MAX_TASKS];static int cursor,used,live,denied,failed,maincode=5,cleanup_ok=1;static pid_t leader;
+static struct task tasks[MAX_TASKS];static int terminal_probe;static int cursor,used,live,denied,failed,maincode=5,cleanup_ok=1;static pid_t leader;
 static FILE *trace,*identity;static int outfd,errfd;static struct statx output_stat[2];static unsigned long events,records;static int denial_errno=EPERM;static uint64_t scratch_mount;static int rootfd;static unsigned long identity_records,binding_entry;
 #define MAX_GRANTS 64
 static struct {struct statx identity;char path[PATH_MAX];} grants[MAX_GRANTS];static int grant_count;
@@ -131,6 +131,28 @@ static int hold_proc(const char *p){
 }
 static void identity_prefix(pid_t tid){fprintf(identity,"{\"seq\":%lu,\"entry\":%lu,\"tid\":%d,",++identity_records,binding_entry,tid);}
 static int descriptor(pid_t pid,int fd,int update){char p[80];snprintf(p,sizeof p,"/proc/%d/fd/%d",pid,fd);int held=hold_proc(p);if(held<0)return -1;int r=update?authorized_fd(held):authorized_metadata(held);int grant=granted_fd(held);if(grant)r=update?1:0;struct statx check;if(update&&!fd_identity(held,&check))for(int x=0;x<2;x++)if(check.stx_ino==output_stat[x].stx_ino&&check.stx_mnt_id==output_stat[x].stx_mnt_id)r=1;struct statx s;if(!fd_identity(held,&s)){identity_prefix(pid);fprintf(identity,"\"fd\":%d,\"mount\":%llu,\"inode\":%llu,\"disposition\":%d,\"grant\":%s}\n",fd,(unsigned long long)s.stx_mnt_id,(unsigned long long)s.stx_ino,r,grant?"true":"false");}close(held);return r;}
+// Called only under the all-writers-stopped invariant. No device is opened.
+static int terminal_identity(pid_t tid,struct statx *target){
+ char file[80],line[4096],state;int parent,group,session,tty;
+ snprintf(file,sizeof file,"/proc/%d/stat",tid);FILE*f=fopen(file,"r");
+ if(!f)return -1;
+ if(!fgets(line,sizeof line,f)){fclose(f);return -1;}fclose(f);
+ char*end=strrchr(line,')');struct task*t=find(tid);
+ if(!end||sscanf(end+2,"%c %d %d %d %d",&state,&parent,&group,&session,&tty)!=5||session<=0||!t||!t->started||start_time(tid)!=t->started)return -1;
+ int disposition=tty?0:4;
+ identity_prefix(tid);
+ fprintf(identity,"\"mount\":%llu,\"inode\":%llu,\"disposition\":%d,\"kind\":\"terminal-probe\",\"flags\":2050,\"deviceMajor\":5,\"deviceMinor\":0,\"startTime\":%llu,\"session\":%d,\"controllingTerminal\":%d}\n",(unsigned long long)target->stx_mnt_id,(unsigned long long)target->stx_ino,disposition,t->started,session,tty);
+ return disposition;
+}
+static int terminal_query(pid_t tid,int fd){
+ char file[80];snprintf(file,sizeof file,"/proc/%d/fd/%d",tid,fd);int held=hold_proc(file);struct statx s;
+ if(held<0)return -1;
+ if(fd_identity(held,&s)){close(held);return -1;}close(held);
+ // Only ordinary files, pipes, sockets and Linux tty devices with known ioctl semantics.
+ int safe=S_ISREG(s.stx_mode)||S_ISFIFO(s.stx_mode)||S_ISSOCK(s.stx_mode)||(S_ISCHR(s.stx_mode)&&((s.stx_rdev_major>=136&&s.stx_rdev_major<=143)||(s.stx_rdev_major==5&&s.stx_rdev_minor==0)));
+ if(!safe)return -1;
+ identity_prefix(tid);fprintf(identity,"\"mount\":%llu,\"inode\":%llu,\"disposition\":1,\"kind\":\"terminal-query\",\"fd\":%d,\"request\":21519,\"mode\":%u,\"deviceMajor\":%u,\"deviceMinor\":%u}\n",(unsigned long long)s.stx_mnt_id,(unsigned long long)s.stx_ino,fd,s.stx_mode,s.stx_rdev_major,s.stx_rdev_minor);return 1;
+}
 static int target_impl(pid_t pid,int dirfd,unsigned long address,int parent_only,int update,int nofollow){
  struct statx base_identity={0};char input[PATH_MAX],absolute[PATH_MAX];if(remote_string(pid,address,input)||!input[0])return -1;
  if(input[0]=='/'){if(strlen(input)>=sizeof absolute)return -1;strcpy(absolute,input);}
@@ -157,7 +179,9 @@ static int target_impl(pid_t pid,int dirfd,unsigned long address,int parent_only
  }
 restore:
  setfsuid(0);if((uid_t)setfsuid((uid_t)-1)!=0){fail("restore observer fsuid");if(fd>=0)close(fd);return -1;}
- if(fd>=0){result=update?authorized_fd(fd):authorized_metadata(fd);int grant=granted_fd(fd);if(grant)result=update&&!missing&&!parent_only?1:0;if(!result&&missing>=(parent_only?1:2))denial_errno=ENOENT;struct statx s;if(!fd_identity(fd,&s)){identity_prefix(pid);fprintf(identity,"\"mount\":%llu,\"inode\":%llu,\"disposition\":%d,\"missingComponents\":%d,\"dirfd\":%d,\"requestedHex\":",(unsigned long long)s.stx_mnt_id,(unsigned long long)s.stx_ino,result,missing,dirfd);hex_string(identity,input);fprintf(identity,",\"baseMount\":%llu,\"baseInode\":%llu,\"grant\":%s}\n",(unsigned long long)base_identity.stx_mnt_id,(unsigned long long)base_identity.stx_ino,grant?"true":"false");}close(fd);}return result;
+ if(fd>=0){struct statx terminal;
+  if(terminal_probe&&!missing&&!parent_only&&!fd_identity(fd,&terminal)&&S_ISCHR(terminal.stx_mode)&&terminal.stx_rdev_major==5&&terminal.stx_rdev_minor==0){result=terminal_identity(pid,&terminal);close(fd);return result;}
+  result=update?authorized_fd(fd):authorized_metadata(fd);int grant=granted_fd(fd);if(grant)result=update&&!missing&&!parent_only?1:0;if(!result&&missing>=(parent_only?1:2))denial_errno=ENOENT;struct statx s;if(!fd_identity(fd,&s)){identity_prefix(pid);fprintf(identity,"\"mount\":%llu,\"inode\":%llu,\"disposition\":%d,\"missingComponents\":%d,\"dirfd\":%d,\"requestedHex\":",(unsigned long long)s.stx_mnt_id,(unsigned long long)s.stx_ino,result,missing,dirfd);hex_string(identity,input);fprintf(identity,",\"baseMount\":%llu,\"baseInode\":%llu,\"grant\":%s}\n",(unsigned long long)base_identity.stx_mnt_id,(unsigned long long)base_identity.stx_ino,grant?"true":"false");}close(fd);}return result;
 }
 static int target(pid_t pid,int dirfd,unsigned long address,int parent_only,int update){return target_impl(pid,dirfd,address,parent_only,update,0);}
 // A return of 2 means no persistent mutation; -1 is unsupported, never success.
@@ -172,7 +196,7 @@ static int group_signal(pid_t group){
 }
 static int policy(pid_t tid,struct ptrace_syscall_info*i){__u64*n=i->entry.args;unsigned long nr=i->entry.nr;
  switch(nr){
- case SYS_openat:if(!(n[2]&(O_WRONLY|O_RDWR|O_CREAT|O_TRUNC))&&(n[2]&O_TMPFILE)!=O_TMPFILE)return 2;return target(tid,(int)n[0],n[1],0,1);
+ case SYS_openat:terminal_probe=n[2]==(O_RDWR|O_NONBLOCK);if(!(n[2]&(O_WRONLY|O_RDWR|O_CREAT|O_TRUNC))&&(n[2]&O_TMPFILE)!=O_TMPFILE)return 2;return target(tid,(int)n[0],n[1],0,1);
  case SYS_mkdirat:case SYS_unlinkat:return target(tid,(int)n[0],n[1],1,0);
  case SYS_fchmodat:return target(tid,(int)n[0],n[1],0,0);
  case SYS_fchownat:if(n[4]&~AT_SYMLINK_NOFOLLOW)return -1;return target_impl(tid,(int)n[0],n[1],0,0,(n[4]&AT_SYMLINK_NOFOLLOW)!=0);
@@ -193,7 +217,7 @@ static int policy(pid_t tid,struct ptrace_syscall_info*i){__u64*n=i->entry.args;
  // Shared-map permission upgrades need separate VMA binding; not guessed here.
  case SYS_mprotect:if(n[0]+n[1]<n[0]||(n[2]&~(PROT_READ|PROT_WRITE|PROT_EXEC)))return -1;if(n[2]&PROT_WRITE){char p[80],line[PATH_MAX+128];snprintf(p,sizeof p,"/proc/%d/maps",tid);FILE*f=fopen(p,"r");if(!f)return -1;while(fgets(line,sizeof line,f)){unsigned long lo,hi;char perms[5];if(sscanf(line,"%lx-%lx %4s",&lo,&hi,perms)!=3){fclose(f);return -1;}if(n[0]<hi&&n[0]+n[1]>lo&&perms[3]=='s'){fclose(f);return -1;}}fclose(f);}return 2;
  case SYS_madvise:return n[2]==MADV_DONTNEED||n[2]==MADV_DONTFORK||n[2]==MADV_FREE?2:-1;
- case SYS_ioctl:return n[1]==0x5401||n[1]==0x5413||n[1]==0x5421?2:-1;
+ case SYS_ioctl:if(n[1]==0x540f)return terminal_query(tid,(int)n[0]);return n[1]==0x5401||n[1]==0x5413||n[1]==0x5421?2:-1;
  case SYS_fcntl:return n[1]==F_GETFL||n[1]==F_SETFL||n[1]==F_GETFD||n[1]==F_SETFD||n[1]==F_DUPFD||n[1]==F_DUPFD_CLOEXEC||n[1]==F_SETLK||n[1]==F_SETLKW||n[1]==F_GETLK?2:-1;
  case SYS_clone:if(n[0]&forbidden_clone)return 0;return 2;
  case SYS_clone3:return 3; // Preserve the mandatory guard's ENOSYS fallback; never execute clone3.
@@ -201,7 +225,7 @@ static int policy(pid_t tid,struct ptrace_syscall_info*i){__u64*n=i->entry.args;
  case SYS_tkill:return (int)n[0]>0&&find((pid_t)n[0])?2:0;
  case SYS_tgkill:return find((pid_t)n[0])&&find((pid_t)n[1])?2:0;
  case SYS_ptrace:case SYS_process_vm_readv:case SYS_process_vm_writev:case SYS_pidfd_getfd:case SYS_io_uring_setup:case SYS_io_uring_enter:case SYS_io_uring_register:case SYS_io_setup:case SYS_io_destroy:case SYS_io_cancel:case SYS_io_getevents:case SYS_io_pgetevents:case SYS_io_submit:case SYS_userfaultfd:case SYS_unshare:case SYS_setns:return 0;
- case SYS_accept4:case SYS_brk:case SYS_capget:case SYS_fchdir:case SYS_chdir:case SYS_clock_nanosleep:case SYS_close:case SYS_close_range:case SYS_connect:case SYS_dup:case SYS_dup3:case SYS_epoll_create1:case SYS_epoll_ctl:case SYS_epoll_pwait:case SYS_eventfd2:case SYS_execve:case SYS_exit:case SYS_exit_group:case SYS_fadvise64:case SYS_faccessat:case SYS_faccessat2:case SYS_flock:case SYS_fstat:case SYS_futex:case SYS_getcwd:case SYS_getdents64:case SYS_getegid:case SYS_geteuid:case SYS_getgid:case SYS_getpeername:case SYS_getpgid:case SYS_getpid:case SYS_getppid:case SYS_getrandom:case SYS_getsockname:case SYS_getsockopt:case SYS_gettid:case SYS_getuid:case SYS_inotify_add_watch:case SYS_inotify_init1:case SYS_inotify_rm_watch:case SYS_listen:case SYS_lseek:case SYS_munmap:case SYS_newfstatat:case SYS_pidfd_open:case SYS_pipe2:case SYS_ppoll:case SYS_prctl:case SYS_pread64:case SYS_prlimit64:case SYS_pselect6:case SYS_read:case SYS_readlinkat:case SYS_recvfrom:case SYS_restart_syscall:case SYS_rseq:case SYS_rt_sigaction:case SYS_rt_sigprocmask:case SYS_rt_sigreturn:case SYS_sched_getaffinity:case SYS_sched_yield:case SYS_sendto:case SYS_set_robust_list:case SYS_set_tid_address:case SYS_setpgid:case SYS_setsid:case SYS_setsockopt:case SYS_shutdown:case SYS_sigaltstack:case SYS_socket:case SYS_socketpair:case SYS_statx:case SYS_sysinfo:case SYS_uname:case SYS_wait4:return 2;
+ case SYS_accept4:case SYS_brk:case SYS_capget:case SYS_fchdir:case SYS_chdir:case SYS_clock_nanosleep:case SYS_close:case SYS_close_range:case SYS_connect:case SYS_dup:case SYS_dup3:case SYS_epoll_create1:case SYS_epoll_ctl:case SYS_epoll_pwait:case SYS_eventfd2:case SYS_execve:case SYS_exit:case SYS_exit_group:case SYS_fadvise64:case SYS_faccessat:case SYS_faccessat2:case SYS_flock:case SYS_fstat:case SYS_futex:case SYS_getcwd:case SYS_getdents64:case SYS_getegid:case SYS_geteuid:case SYS_getgid:case SYS_getpeername:case SYS_getpgid:case SYS_getpid:case SYS_getppid:case SYS_getrandom:case SYS_getsockname:case SYS_getsockopt:case SYS_gettid:case SYS_getuid:case SYS_inotify_add_watch:case SYS_inotify_init1:case SYS_inotify_rm_watch:case SYS_listen:case SYS_lseek:case SYS_munmap:case SYS_newfstatat:case SYS_pidfd_open:case SYS_pipe2:case SYS_ppoll:case SYS_prctl:case SYS_pread64:case SYS_prlimit64:case SYS_pselect6:case SYS_read:case SYS_readlinkat:case SYS_recvfrom:case SYS_restart_syscall:case SYS_rseq:case SYS_rt_sigaction:case SYS_rt_sigprocmask:case SYS_rt_sigreturn:case SYS_sched_getaffinity:case SYS_sched_yield:case SYS_sendto:case SYS_set_robust_list:case SYS_set_tid_address:case SYS_setpgid:case SYS_setsid:case SYS_setsockopt:case SYS_shutdown:case SYS_sigaltstack:case SYS_socket:case SYS_socketpair:case SYS_statfs:case SYS_fstatfs:case SYS_statx:case SYS_sysinfo:case SYS_uname:case SYS_wait4:return 2;
  default:return -1;
  }
 }
@@ -214,7 +238,7 @@ static int scalar_only(struct ptrace_syscall_info*i){__u64*n=i->entry.args;switc
  case SYS_clone:return !(n[0]&forbidden_clone);
  case SYS_openat:return !(n[2]&(O_WRONLY|O_RDWR|O_CREAT|O_TRUNC))&&(n[2]&O_TMPFILE)!=O_TMPFILE;
  case SYS_mmap:return !((n[3]&MAP_SHARED)&&(n[2]&PROT_WRITE)&&!(n[3]&MAP_ANONYMOUS));
- case SYS_accept4:case SYS_brk:case SYS_capget:case SYS_fchdir:case SYS_chdir:case SYS_clock_nanosleep:case SYS_close:case SYS_close_range:case SYS_connect:case SYS_dup:case SYS_dup3:case SYS_epoll_create1:case SYS_epoll_ctl:case SYS_epoll_pwait:case SYS_eventfd2:case SYS_execve:case SYS_exit:case SYS_exit_group:case SYS_fadvise64:case SYS_faccessat:case SYS_faccessat2:case SYS_flock:case SYS_fstat:case SYS_futex:case SYS_getcwd:case SYS_getdents64:case SYS_getegid:case SYS_geteuid:case SYS_getgid:case SYS_getpeername:case SYS_getpgid:case SYS_getpid:case SYS_getppid:case SYS_getrandom:case SYS_getsockname:case SYS_getsockopt:case SYS_gettid:case SYS_getuid:case SYS_inotify_add_watch:case SYS_inotify_init1:case SYS_inotify_rm_watch:case SYS_listen:case SYS_lseek:case SYS_munmap:case SYS_newfstatat:case SYS_pidfd_open:case SYS_pipe2:case SYS_ppoll:case SYS_prctl:case SYS_pread64:case SYS_prlimit64:case SYS_pselect6:case SYS_read:case SYS_readlinkat:case SYS_recvfrom:case SYS_restart_syscall:case SYS_rseq:case SYS_rt_sigaction:case SYS_rt_sigprocmask:case SYS_rt_sigreturn:case SYS_sched_getaffinity:case SYS_sched_yield:case SYS_sendto:case SYS_set_robust_list:case SYS_set_tid_address:case SYS_setpgid:case SYS_setsid:case SYS_setsockopt:case SYS_shutdown:case SYS_sigaltstack:case SYS_socket:case SYS_socketpair:case SYS_statx:case SYS_sysinfo:case SYS_uname:case SYS_wait4:return 1;
+ case SYS_accept4:case SYS_brk:case SYS_capget:case SYS_fchdir:case SYS_chdir:case SYS_clock_nanosleep:case SYS_close:case SYS_close_range:case SYS_connect:case SYS_dup:case SYS_dup3:case SYS_epoll_create1:case SYS_epoll_ctl:case SYS_epoll_pwait:case SYS_eventfd2:case SYS_execve:case SYS_exit:case SYS_exit_group:case SYS_fadvise64:case SYS_faccessat:case SYS_faccessat2:case SYS_flock:case SYS_fstat:case SYS_futex:case SYS_getcwd:case SYS_getdents64:case SYS_getegid:case SYS_geteuid:case SYS_getgid:case SYS_getpeername:case SYS_getpgid:case SYS_getpid:case SYS_getppid:case SYS_getrandom:case SYS_getsockname:case SYS_getsockopt:case SYS_gettid:case SYS_getuid:case SYS_inotify_add_watch:case SYS_inotify_init1:case SYS_inotify_rm_watch:case SYS_listen:case SYS_lseek:case SYS_munmap:case SYS_newfstatat:case SYS_pidfd_open:case SYS_pipe2:case SYS_ppoll:case SYS_prctl:case SYS_pread64:case SYS_prlimit64:case SYS_pselect6:case SYS_read:case SYS_readlinkat:case SYS_recvfrom:case SYS_restart_syscall:case SYS_rseq:case SYS_rt_sigaction:case SYS_rt_sigprocmask:case SYS_rt_sigreturn:case SYS_sched_getaffinity:case SYS_sched_yield:case SYS_sendto:case SYS_set_robust_list:case SYS_set_tid_address:case SYS_setpgid:case SYS_setsid:case SYS_setsockopt:case SYS_shutdown:case SYS_sigaltstack:case SYS_socket:case SYS_socketpair:case SYS_statfs:case SYS_fstatfs:case SYS_statx:case SYS_sysinfo:case SYS_uname:case SYS_wait4:return 1;
  default:return 0;
  }}
 static int syscall_info(pid_t tid,struct ptrace_syscall_info*i){memset(i,0,sizeof *i);if(ptrace(PTRACE_GET_SYSCALL_INFO,tid,sizeof *i,i)<0||i->arch!=AUDIT_ARCH_AARCH64){fail("syscall identity");return -1;}return 0;}
@@ -229,14 +253,15 @@ static int mutation(struct task*t,struct ptrace_syscall_info*i){
  if(rh<0||ch<0||fd_identity(rh,&rs)||fd_identity(ch,&cs)){if(rh>=0)close(rh);if(ch>=0)close(ch);fail("context identity");return -1;}close(rh);close(ch);
  tracef("{\"event\":\"bound-start\",\"tid\":%d,\"entry\":%lu,\"rootMount\":%llu,\"rootInode\":%llu,\"cwdMount\":%llu,\"cwdInode\":%llu,\"stopped\":[",t->tid,binding_entry,(unsigned long long)rs.stx_mnt_id,(unsigned long long)rs.stx_ino,(unsigned long long)cs.stx_mnt_id,(unsigned long long)cs.stx_ino);
  int comma=0;for(int k=0;k<used;k++)if(tasks[k].tid){fprintf(trace,"%s{\"tid\":%d,\"startTime\":%llu}",comma?",":"",tasks[k].tid,tasks[k].started);comma=1;}fputs("]}\n",trace);
- denial_errno=EPERM;int disposition=policy(t->tid,i);if(disposition<0){fprintf(stderr,"Unsupported syscall/target nr=%llu tid=%d\n",(unsigned long long)i->entry.nr,t->tid);fail("unresolved target");return -1;}
- if(!disposition||disposition==3){if(!disposition)denied++;if(skip_call(t->tid))return -1;}
+ terminal_probe=0;denial_errno=EPERM;int disposition=policy(t->tid,i);if(disposition<0){fprintf(stderr,"Unsupported syscall/target nr=%llu tid=%d\n",(unsigned long long)i->entry.nr,t->tid);fail("unresolved target");return -1;}
+ if(disposition==4)denial_errno=ENXIO;
+ if(!disposition||disposition==3||disposition==4){if(!disposition)denied++;if(skip_call(t->tid))return -1;}
  pid_t selected=t->tid;if(resume(t,0))return -1;long end=millis()+2000;
  while(!t->stopped&&!failed){if(millis()>end){fail("selected syscall deadline");break;}int c=collect(0);if(c<0)break;if(c==1){struct timespec ts={0,1000000};nanosleep(&ts,NULL);}}
  if(failed||t->tid!=selected||!t->stopped){fail("selected syscall lost");return -1;}
  struct ptrace_syscall_info out;if(syscall_info(selected,&out)||out.op!=PTRACE_SYSCALL_INFO_EXIT){fail("intervening syscall state");return -1;}
- if(!disposition&&denied_result(selected)){fail("denial result");return -1;}
- tracef("{\"event\":\"bound-exit\",\"tid\":%d,\"entry\":%lu,\"nr\":%llu,\"kernelResult\":%lld,\"result\":%lld,\"denied\":%s,\"disposition\":%d,\"bindings\":%lu}\n",selected,binding_entry,(unsigned long long)i->entry.nr,(long long)out.exit.rval,disposition?(long long)out.exit.rval:(long long)-denial_errno,disposition?"false":"true",disposition,identity_records-before);
+ if((!disposition||disposition==4)&&denied_result(selected)){fail("denial result");return -1;}
+ tracef("{\"event\":\"bound-exit\",\"tid\":%d,\"entry\":%lu,\"nr\":%llu,\"kernelResult\":%lld,\"result\":%lld,\"denied\":%s,\"disposition\":%d,\"bindings\":%lu}\n",selected,binding_entry,(unsigned long long)i->entry.nr,(long long)out.exit.rval,(disposition&&disposition!=4)?(long long)out.exit.rval:(long long)-denial_errno,disposition?"false":"true",disposition,identity_records-before);
  t->entry=0;if(resume(t,0))return -1;return 1;
 }
 int main(int argc,char**argv){
@@ -264,6 +289,12 @@ int main(int argc,char**argv){
  if(command_start<argc&&!strcmp(argv[command_start],"--"))command_start++;
  if(command_start>=argc)return 5;
 
+
+#ifdef SCT_FIXTURE_TERMINAL
+ // Credential-free platform fixture only: a real private PTY, no extra capability/mount.
+ int master=posix_openpt(O_RDWR|O_NOCTTY|O_CLOEXEC);if(master<0||grantpt(master)||unlockpt(master)||setsid()<0)return 5;
+ char*slave_name=ptsname(master);if(!slave_name)return 5;int slave=open(slave_name,O_RDWR|O_CLOEXEC);if(slave<0)return 5;
+#endif
  int ready[2],go[2];if(pipe2(ready,O_CLOEXEC)||pipe2(go,O_CLOEXEC))return 5;
  leader=fork();if(leader<0)return 5;
  if(!leader){if(dup2(outfd,1)<0||dup2(errfd,2)<0)_exit(5);close(ready[0]);close(go[1]);if(setgroups(0,NULL)||setgid(65534)||setuid(65534))_exit(5);char c='r';if(write(ready[1],&c,1)!=1||read(go[0],&c,1)!=1)_exit(5);close(ready[1]);close(go[0]);char**command=calloc((size_t)argc+3,sizeof *command);if(!command)_exit(5);command[0]="/opt/factory/syscall-guard";command[1]="--container-owned";for(int i=command_start;i<argc;i++)command[i-command_start+2]=argv[i];execv(command[0],command);_exit(5);}

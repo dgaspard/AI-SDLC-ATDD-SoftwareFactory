@@ -7,7 +7,7 @@ export function validateNativeProof(receipt, traceBytes, identityBytes, exitCode
  const records=lines(traceBytes),identities=lines(identityBytes),live=new Set(),entries=new Map(),bound=new Map(),bindings=new Map(),finished=new Set();let denials=0,started=false;
  if(records.length!==receipt.traceRecords||identities.length!==receipt.identityRecords)throw Error('Missing native records');
  for(const [index,r] of identities.entries()){
-  if(r.seq!==index+1||!positive(r.entry)||!positive(r.tid)||![-1,0,1].includes(r.disposition)||(r.disposition===-1&&exitCode!==5)||!positive(r.mount)||!positive(r.inode))throw Error('Invalid target binding');
+  if(r.seq!==index+1||!positive(r.entry)||!positive(r.tid)||![-1,0,1,4].includes(r.disposition)||(r.disposition===-1&&exitCode!==5)||!positive(r.mount)||!positive(r.inode))throw Error('Invalid target binding');
   const list=bindings.get(r.entry)??[];list.push(r);bindings.set(r.entry,list);
  }
  for(const [index,r] of records.entries()){
@@ -24,7 +24,20 @@ export function validateNativeProof(receipt, traceBytes, identityBytes, exitCode
    bound.set(r.entry,r);
   }else if(r.event==='bound-exit'){
    const e=entries.get(r.entry),list=bindings.get(r.entry)??[];
-   if(!e||e.tid!==r.tid||e.nr!==r.nr||!bound.has(r.entry)||finished.has(r.entry)||!integer(r.bindings)||list.length!==r.bindings||list.some(b=>b.tid!==r.tid)||![0,1,2,3].includes(r.disposition)||r.denied!==(r.disposition===0)||!Number.isSafeInteger(r.result)||!Number.isSafeInteger(r.kernelResult))throw Error('Incomplete syscall binding');
+   if(!e||e.tid!==r.tid||e.nr!==r.nr||!bound.has(r.entry)||finished.has(r.entry)||!integer(r.bindings)||list.length!==r.bindings||list.some(b=>b.tid!==r.tid)||![0,1,2,3,4].includes(r.disposition)||r.denied!==(r.disposition===0)||!Number.isSafeInteger(r.result)||!Number.isSafeInteger(r.kernelResult))throw Error('Incomplete syscall binding');
+   if(e.nr===56&&e.args?.[2]==='802'&&(![0,1,4].includes(r.disposition)||!list.length))throw Error('Invalid writable probe disposition');
+   const probes=list.filter(b=>b.kind==='terminal-probe');
+   if(r.disposition===4||probes.length){
+    const b=probes[0],context=bound.get(r.entry),task=context.stopped.find(t=>t.tid===r.tid);
+    if(list.length!==1||probes.length!==1||e.nr!==56||!Array.isArray(e.args)||e.args[2]!=='802'||b.flags!==2050||b.deviceMajor!==5||b.deviceMinor!==0||!positive(b.startTime)||b.startTime!==task?.startTime||!positive(b.session)||!Number.isSafeInteger(b.controllingTerminal)||r.kernelResult!==-38)throw Error('Invalid terminal probe evidence');
+    if(r.disposition===4){if(b.disposition!==4||b.controllingTerminal!==0||r.result!==-6||r.denied)throw Error('Invalid no-terminal emulation');}
+    else if(r.disposition!==0||b.disposition!==0||b.controllingTerminal===0)throw Error('Invalid controlling-terminal denial');
+   }
+   if(e.nr===29&&e.args?.[1]==='540f'&&(list.length!==1||list[0].kind!=='terminal-query'))throw Error('Missing terminal query identity');
+   for(const b of list.filter(b=>b.kind==='terminal-query')){
+    const mode=b.mode&0xf000,safe=[0x8000,0x1000,0xc000].includes(mode)||(mode===0x2000&&((b.deviceMajor>=136&&b.deviceMajor<=143)||(b.deviceMajor===5&&b.deviceMinor===0)));
+    if(!safe||!integer(b.mode)||!integer(b.deviceMajor)||!integer(b.deviceMinor)||!integer(b.fd)||e.nr!==29||e.args?.[1]!=='540f'||parseInt(e.args?.[0],16)!==b.fd||b.request!==21519||r.disposition!==1||r.result!==r.kernelResult)throw Error('Invalid terminal query binding');
+   }
    if(r.disposition===1&&(!list.length||list.some(b=>b.disposition!==1)))throw Error('Missing authorized target');
    if(r.disposition===2&&list.length)throw Error('Unexpected nonmutation binding');
    if(r.denied){if(![-1,-2].includes(r.result))throw Error('Invalid injected denial');denials++;}
@@ -32,6 +45,7 @@ export function validateNativeProof(receipt, traceBytes, identityBytes, exitCode
   }else if(r.event!=='exit-syscall')throw Error('Unknown native event');
  }
  for(const [entry,list] of bindings)if(!bound.has(entry)||list.some(b=>entries.get(entry)?.tid!==b.tid)||(exitCode!==5&&!finished.has(entry)))throw Error('Orphaned target binding');
+ if(exitCode!==5)for(const [seq,e] of entries)if((e.nr===56&&e.args?.[2]==='802')||(e.nr===29&&e.args?.[1]==='540f')){if(!bound.has(seq)||!finished.has(seq))throw Error('Missing mandatory terminal syscall binding');}
  if(denials!==receipt.denials)throw Error('Denial count mismatch');
  if(exitCode!==5&&(!started||live.size||bound.size!==finished.size))throw Error('Incomplete task coverage');
  if(exitCode===0&&(denials||receipt.workloadExitCode||!receipt.events))throw Error('False native success');

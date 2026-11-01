@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -18,7 +19,25 @@ static void *replace(void*unused){(void)unused;barrier(&start);if(rename("/tmp/s
 int main(int argc,char**argv){
  if(argc!=2)return 70;
  if(mkdir("/tmp/sct",0700)&&errno!=EEXIST)return 70;
- if(!strcmp(argv[1],"process-group-query")){
+ if(!strcmp(argv[1],"terminal-probe")){
+  rejected(AT_FDCWD,"/dev/tty",O_RDWR|O_NONBLOCK,ENXIO);
+  if(symlink("/dev/tty","/tmp/sct/terminal"))return 70;
+  rejected(AT_FDCWD,"/tmp/sct/terminal",O_RDWR|O_NONBLOCK,ENXIO);
+  int group;errno=0;if(ioctl(2,TIOCGPGRP,&group)!=-1||errno!=ENOTTY)return 70;
+ }else if(!strcmp(argv[1],"terminal-present")){
+  int tty=open("/dev/tty",O_RDONLY|O_NOCTTY);int group=0;if(tty<0||ioctl(tty,TIOCGPGRP,&group)||group!=getpgid(0))return 70;close(tty);
+  rejected(AT_FDCWD,"/dev/tty",O_RDWR|O_NONBLOCK,EPERM);
+ }else if(!strcmp(argv[1],"terminal-flags")){
+  rejected(AT_FDCWD,"/dev/tty",O_RDWR,EPERM);
+  rejected(AT_FDCWD,"/dev/tty",O_RDWR|O_NONBLOCK|O_TRUNC,EPERM);
+ }else if(!strcmp(argv[1],"terminal-targets")){
+  rejected(AT_FDCWD,"/inputs/protected.txt",O_RDWR|O_NONBLOCK,EPERM);
+  rejected(AT_FDCWD,"/dev/full",O_RDWR|O_NONBLOCK,EPERM);
+ }else if(!strcmp(argv[1],"terminal-mutation")){
+  int group=1;ioctl(2,TIOCSPGRP,&group);return 70;
+ }else if(!strcmp(argv[1],"terminal-unknown")){
+  ioctl(2,0x54ff,0);return 70;
+ }else if(!strcmp(argv[1],"process-group-query")){
   pid_t group=getpgid(0);if(group<0||getpgid(getpid())!=group)return 70;
   errno=0;if(getpgid(2147483647)!=-1||errno!=ESRCH)return 70;
  }else if(!strcmp(argv[1],"alias")){
@@ -37,14 +56,15 @@ int main(int argc,char**argv){
   rejected(AT_FDCWD,"../../inputs/protected.txt",O_WRONLY|O_TRUNC,EPERM);
  }else if(!strcmp(argv[1],"missing")){
   rejected(AT_FDCWD,"/inputs/missing-parent/child",O_WRONLY|O_CREAT,ENOENT);
- }else if(!strcmp(argv[1],"race")){
+ }else if((!strcmp(argv[1],"race")||!strcmp(argv[1],"terminal-race"))){
   int fd=open("/tmp/sct/safe",O_CREAT|O_WRONLY,0600);if(fd<0||write(fd,"safe",4)!=4)return 70;close(fd);
-  if(symlink("safe","/tmp/sct/alias")||symlink("/inputs/protected.txt","/tmp/sct/replacement"))return 70;
+  int terminal_race=!strcmp(argv[1],"terminal-race");
+  if(symlink(terminal_race?"/dev/tty":"safe","/tmp/sct/alias")||symlink("/inputs/protected.txt","/tmp/sct/replacement"))return 70;
   if(pthread_barrier_init(&start,NULL,2)||pthread_barrier_init(&changed,NULL,2)||pthread_barrier_init(&finished,NULL,2))return 70;
   pthread_t thread;if(pthread_create(&thread,NULL,replace,NULL))return 70;
-  barrier(&start);errno=0;fd=open("/tmp/sct/alias",O_WRONLY|O_TRUNC);
-  if(fd>=0){if(write(fd,"allowed",7)!=7)return 70;close(fd);}else if(errno!=EPERM)return 70;
-  barrier(&changed);rejected(AT_FDCWD,"/tmp/sct/alias",O_WRONLY|O_TRUNC,EPERM);barrier(&finished);
+  barrier(&start);errno=0;fd=open("/tmp/sct/alias",terminal_race?(O_RDWR|O_NONBLOCK):(O_WRONLY|O_TRUNC));
+  if(fd>=0){if(terminal_race||write(fd,"allowed",7)!=7)return 70;close(fd);}else if(errno!=EPERM&&!(terminal_race&&errno==ENXIO))return 70;
+  barrier(&changed);rejected(AT_FDCWD,"/tmp/sct/alias",terminal_race?(O_RDWR|O_NONBLOCK):(O_WRONLY|O_TRUNC),EPERM);barrier(&finished);
   if(pthread_join(thread,NULL))return 70;
  }else if(!strcmp(argv[1],"interrupt")){
   int go[2];if(pipe(go))return 70;pid_t child=fork();if(child<0)return 70;

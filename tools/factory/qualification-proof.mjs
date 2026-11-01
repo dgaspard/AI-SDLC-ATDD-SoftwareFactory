@@ -3,14 +3,15 @@ import fs from 'node:fs';
 import {digest,need,object,regular} from './change-support.mjs';
 export const requiredReports=Object.freeze({
  'task-session.test.mjs':38,
- 'model-channel.test.mjs':4,
- 'native-audit-session.test.mjs':10,
+ 'model-channel.test.mjs':5,
+ 'native-audit-session.test.mjs':17,
  'container-session.test.mjs':12,
  'verifier-session.test.mjs':13,
  'real-coordinator.test.mjs':4,
 });
 export const assertionRosters=Object.freeze({
   "model-channel.test.mjs": [
+    "actual pinned CLI default shell startup preserves bounded task writes",
     "actual pinned CLI updates only granted bytes through external Converse relay",
     "relay loss after readiness prevents a successful task",
     "aborted HTTP upload cannot crash relay or bypass broker validation",
@@ -86,6 +87,14 @@ export const assertionRosters=Object.freeze({
     "consumer envelope invalid rejects after zero exit"
   ],
   "native-audit-session.test.mjs": [
+    "SCT-009 suppressed terminal probes preserve native no-terminal results",
+    "SCT-010 terminal-race cannot receive a terminal exception",
+    "SCT-010 terminal-flags cannot receive a terminal exception",
+    "SCT-010 terminal-targets cannot receive a terminal exception",
+    "SCT-010 terminal-mutation cannot receive a terminal exception",
+    "SCT-010 terminal-unknown cannot receive a terminal exception",
+    "SCT-010 real controlling terminal blocks the no-terminal exception",
+
     "read-only process-group queries preserve kernel results and closed coverage",
     "SCT-001 actual immutable CLI neutral roundtrip",
     "SCT-007 omitted observer record blocks successful workload",

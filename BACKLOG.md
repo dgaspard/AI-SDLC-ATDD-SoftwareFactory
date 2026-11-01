@@ -20,6 +20,30 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
+**Frozen terminal-probe implementation.** The human approved and froze the exact
+no-terminal policy and SCT-009/SCT-010 catalogue (38 manifest entries). Implementation
+now includes suppressed-probe evidence, descriptor-bound terminal queries, a real
+private-PTY negative fixture, and default-shell CLI coverage. Independent review found
+and prompted a whole-binding-removal proof regression. Renewed full qualification,
+final-tree gate, profile/pin review and live PetClinic proof are separate pending steps;
+the earlier failed live attempts remain retained and are not successful proof.
+
+
+**Historical default-shell proof blocker (superseded by the frozen policy above).** The reviewed `907a7bd2` factory and frozen consumer
+`2d28a3d3` live run failed closed on terminal query `TIOCGPGRP`; cleanup completed
+and no candidate edits were transferred. Retained live evidence:
+`/private/tmp/start02-live-petclinic-2d28a3d-p9x67rwg/run-1/governed-change-evidence.v1.json`.
+A deterministic real-CLI test with omitted
+shell/login reproduces the failure and independently records `openat` flags `0x802`
+against `/dev/tty`. Read-only query support alone failed; the then-frozen contract
+explicitly forbade treating those writable probes as nonblocking. The exact
+contract and SCT-009/SCT-010 patch was prepared at
+`test-results/start02-terminal-probe-review/protected-terminal-probe.patch`. Human
+review and freeze subsequently authorized implementation of that exact disposition.
+No terminal access is granted, no live success is claimed, and subsequent qualification,
+profile/pin review, live proof and candidate review remain outstanding.
+
+
 **Live-run compatibility follow-up.** The approved `3b8d5475` factory run against
 consumer `51d1fe03` completed one Bedrock request, then failed closed on ARM64
 `getpgid` (155); cleanup completed and no candidate edits were transferred. Retained

@@ -557,3 +557,25 @@ and a clean factory checkout. Its optional FACTORY_QUALIFICATION_PROFILE selects
 trusted offline profile inputs; this variable is read only by the test harness, never
 by the production CLI. Keep failed records alongside passing reruns. These commands
 never replace the full factory gate or the reviewed immutable consumer pin.
+
+
+### Suppressed no-terminal probe
+
+The frozen terminal policy handles the pinned CLI's default shell startup without
+opening a writable terminal. Under the stopped-writer invariant, the observer binds
+an exact `openat` 0x802 request to character device 5:0 and to the selected task's
+start time, session and zero controlling-terminal field. It suppresses the kernel
+open and records synthetic `-ENXIO` with a distinct disposition. Other flags or
+identities follow ordinary authorization; uncertain evidence blocks the run.
+`TIOCGPGRP` is bound to a descriptor with known nonmutating semantics. Unknown or
+mutating terminal requests remain unsupported. Read-only filesystem metadata
+queries used by shell startup do not add write authority.
+
+Qualification includes omitted shell/login arguments through the actual CLI,
+direct and aliased probes, a synchronized alias race, and a real private-PTY fixture
+built with `build-native-observer.py --terminal-fixture`. That separate fixture image
+is for controlling-terminal negative coverage only; it is never the production
+runner image. It uses existing container capabilities and closes the PTY descriptors
+before workload execution. Proof checks reject missing or substituted process,
+target, disposition and whole binding groups; artifact checks still reject stale
+records. Runtime activation requires the reviewed image/profile and consumer pin.

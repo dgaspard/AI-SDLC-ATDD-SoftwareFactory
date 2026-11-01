@@ -17,3 +17,20 @@ for(const [name,alter] of [
  ['unconfirmed cleanup',f=>{f.receipt.observerCleanupConfirmed=false;}],
 ])test('native proof rejects '+name,()=>{const f=fixture();alter(f);assert.throws(()=>verify(f));});
 test('native proof rejects truncated JSONL',()=>{const f=fixture();assert.throws(()=>validateNativeProof(f.receipt,jsonl(f.trace).subarray(0,-1),jsonl(f.identities),0),/Truncated/);});
+
+function terminalFixture(){const f=fixture();Object.assign(f.trace[1],{nr:56,args:['ffffffffffffff9c','1000','802','0','0','0']});Object.assign(f.trace[3],{nr:56,disposition:4,kernelResult:-38,result:-6});Object.assign(f.identities[0],{disposition:4,kind:'terminal-probe',flags:2050,deviceMajor:5,deviceMinor:0,startTime:42,session:2,controllingTerminal:0});return f;}
+test('terminal emulation requires a closed suppressed syscall with no descriptor',()=>assert.equal(verify(terminalFixture()).coverageClosed,true));
+for(const [name,alter] of [
+ ['flags',f=>f.trace[1].args[2]='2'],['device',f=>f.identities[0].deviceMinor=1],
+ ['session',f=>delete f.identities[0].session],['process',f=>f.identities[0].startTime=99],
+ ['controlling terminal',f=>f.identities[0].controllingTerminal=123],['missing disposition',f=>delete f.identities[0].kind],
+ ['kernel executed',f=>f.trace[3].kernelResult=3],['returned descriptor',f=>f.trace[3].result=3],
+ ['missing target',f=>{f.identities=[];f.receipt.identityRecords=0;f.trace[3].bindings=0;}],
+ ['substituted operation',f=>f.trace[1].nr=64],['stale terminal evidence',f=>f.identities[0].entry=1]
+])test('terminal proof rejects '+name,()=>{const f=terminalFixture();alter(f);assert.throws(()=>verify(f));});
+
+for(const [name,nr,args] of [['probe',56,['ffffffffffffff9c','1000','802','0','0','0']],['query',29,['2','540f','1000','0','0','0']]])test('terminal proof rejects whole '+name+' binding removal',()=>{
+ const f=terminalFixture();f.identities=[];f.receipt.identityRecords=0;f.trace=[f.trace[0],{seq:2,event:'entry',tid:2,nr,args},{seq:3,event:'exit-syscall',tid:2,nr,result:-6},{seq:4,event:'exit',tid:2}];f.receipt.traceRecords=4;assert.throws(()=>verify(f),/Missing mandatory/);
+});
+
+for(const disposition of [2,3])test('terminal proof rejects substituted disposition '+disposition,()=>{const f=terminalFixture();f.identities=[];f.receipt.identityRecords=0;Object.assign(f.trace[3],{disposition,bindings:0});assert.throws(()=>verify(f),/Invalid writable probe disposition/);});

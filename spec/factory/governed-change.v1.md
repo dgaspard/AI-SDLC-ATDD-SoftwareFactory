@@ -226,8 +226,39 @@ nonblocking only when the independent observer proves its authorization and
 coverage. ENOENT/EEXIST do not themselves prove authorization. An unresolved target,
 unsupported syscall form, missing descendant coverage or incomplete observer stream
 prevents successful qualification. Out-of-scope create/update/delete attempts remain
-PERMISSION_DENIED even if no bytes changed. Writable /dev/tty opens have no implicit
-exception. No generic /tmp prefix or startup-error allowance is permitted.
+PERMISSION_DENIED even if no bytes changed. Writable terminal opens remain forbidden
+except the following explicit, suppressed no-terminal probe. No generic /tmp prefix
+or startup-error allowance is permitted.
+
+A Linux arm64 `openat` with flags exactly `O_RDWR | O_NONBLOCK` (0x802) may
+receive the nonblocking disposition `emulated-no-terminal` only when the independent
+observer proves all of the following at syscall entry: the existing resolved target
+is a character device with device number 5:0; its inode and mount identity are bound;
+the selected tracee's stable process identity, session identity and controlling-terminal
+field are bound; the controlling-terminal field is zero; and all relevant threads and
+descendants remain stopped through disposition under the existing exclusion rule.
+Path text, a prior failed open, or errno alone is never sufficient. A symlink is
+classified by its resolved target, never by its spelling. Any missing/ambiguous
+identity or incomplete coverage remains TOOLING_UNAVAILABLE. A controlling terminal,
+other target identity, or other writable-open flag combination receives no exception
+and remains subject to the existing denied/unresolved rules.
+
+The observer must suppress that open before the kernel executes it and synthesize
+`-ENXIO`. It must never return a descriptor or open the device on behalf of the
+tracee. Record the original attempt, exact flags, target and process/session evidence,
+suppression and synthetic result in an explicit syscall-entry-linked disposition.
+The proof validator must require all these fields and matching entry/exit coverage;
+missing, substituted or stale evidence is blocking. This narrowly proven suppressed
+probe is not counted as an out-of-scope mutation denial; every other denial retains
+its existing run-failure meaning. No terminal writes, terminal state changes, host
+terminal access, additional mounts or additional capabilities are authorized.
+
+Read-only `TIOCGPGRP` (0x540f) may be supported only with independently established
+descriptor identity proving the request cannot invoke a mutating device operation;
+retain native kernel results. Unknown device semantics remain unresolved. Mutating
+terminal ioctls receive no new authorization. Mandatory conformance includes the
+actual pinned CLI with omitted shell/login fields, not only an explicit /bin/sh
+fixture, and the positive and negative terminal cases in the frozen case catalogue.
 
 Retain the original trace and independent identity/disposition records in protected
 observer storage, bound to the run and immutable observer/runner inputs. Confirm
