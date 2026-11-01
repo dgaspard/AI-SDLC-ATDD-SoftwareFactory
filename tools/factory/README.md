@@ -600,3 +600,9 @@ addition to network escape checks, wrong protocols/addresses, fd reuse and evide
 substitution. Bind address context and socket identity must agree; missing binding
 groups cannot produce successful proof. Main-thread Node interface discovery is the
 verified positive platform case; arbitrary-thread support is not implied.
+
+
+Read-only `fcntl(F_GETPIPE_SZ)` is supported for pipe-capacity inspection. Native
+success and error results are preserved; query support does not authorize pipe
+resizing. Qualification checks that buffered bytes and capacity remain unchanged,
+closed descriptors preserve EBADF, and `F_SETPIPE_SZ` still blocks qualification.

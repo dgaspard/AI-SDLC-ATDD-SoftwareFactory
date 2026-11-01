@@ -235,7 +235,7 @@ static int policy(pid_t tid,struct ptrace_syscall_info*i){__u64*n=i->entry.args;
  case SYS_mprotect:if(n[0]+n[1]<n[0]||(n[2]&~(PROT_READ|PROT_WRITE|PROT_EXEC)))return -1;if(n[2]&PROT_WRITE){char p[80],line[PATH_MAX+128];snprintf(p,sizeof p,"/proc/%d/maps",tid);FILE*f=fopen(p,"r");if(!f)return -1;while(fgets(line,sizeof line,f)){unsigned long lo,hi;char perms[5];if(sscanf(line,"%lx-%lx %4s",&lo,&hi,perms)!=3){fclose(f);return -1;}if(n[0]<hi&&n[0]+n[1]>lo&&perms[3]=='s'){fclose(f);return -1;}}fclose(f);}return 2;
  case SYS_madvise:return n[2]==MADV_DONTNEED||n[2]==MADV_DONTFORK||n[2]==MADV_FREE?2:-1;
  case SYS_ioctl:if(n[1]==0x540f)return terminal_query(tid,(int)n[0]);return n[1]==0x5401||n[1]==0x5413||n[1]==0x5421?2:-1;
- case SYS_fcntl:return n[1]==F_GETFL||n[1]==F_SETFL||n[1]==F_GETFD||n[1]==F_SETFD||n[1]==F_DUPFD||n[1]==F_DUPFD_CLOEXEC||n[1]==F_SETLK||n[1]==F_SETLKW||n[1]==F_GETLK?2:-1;
+ case SYS_fcntl:return n[1]==F_GETPIPE_SZ||n[1]==F_GETFL||n[1]==F_SETFL||n[1]==F_GETFD||n[1]==F_SETFD||n[1]==F_DUPFD||n[1]==F_DUPFD_CLOEXEC||n[1]==F_SETLK||n[1]==F_SETLKW||n[1]==F_GETLK?2:-1;
  case SYS_clone:if(n[0]&forbidden_clone)return 0;return 2;
  case SYS_clone3:return 3; // Preserve the mandatory guard's ENOSYS fallback; never execute clone3.
  case SYS_kill:if(!n[1])return 2;if((int)n[0]<-1)return group_signal(-(int)n[0]);return (int)n[0]>0&&find((pid_t)n[0])?2:0;
@@ -249,7 +249,7 @@ static int policy(pid_t tid,struct ptrace_syscall_info*i){__u64*n=i->entry.args;
 static int scalar_only(struct ptrace_syscall_info*i){__u64*n=i->entry.args;switch(i->entry.nr){
  case SYS_kill:if(!n[1])return 1;return 0;
  case SYS_ioctl:return n[1]==0x5401||n[1]==0x5413||n[1]==0x5421;
- case SYS_fcntl:return n[1]==F_GETFL||n[1]==F_SETFL||n[1]==F_GETFD||n[1]==F_SETFD||n[1]==F_DUPFD||n[1]==F_DUPFD_CLOEXEC||n[1]==F_SETLK||n[1]==F_SETLKW||n[1]==F_GETLK;
+ case SYS_fcntl:return n[1]==F_GETPIPE_SZ||n[1]==F_GETFL||n[1]==F_SETFL||n[1]==F_GETFD||n[1]==F_SETFD||n[1]==F_DUPFD||n[1]==F_DUPFD_CLOEXEC||n[1]==F_SETLK||n[1]==F_SETLKW||n[1]==F_GETLK;
  case SYS_madvise:return n[2]==MADV_DONTNEED||n[2]==MADV_DONTFORK||n[2]==MADV_FREE;
  case SYS_mprotect:return !(n[2]&~(PROT_READ|PROT_WRITE|PROT_EXEC))&&!(n[2]&PROT_WRITE)&&n[0]+n[1]>=n[0];
  case SYS_clone:return !(n[0]&forbidden_clone);

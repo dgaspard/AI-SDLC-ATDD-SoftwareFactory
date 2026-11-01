@@ -20,7 +20,19 @@ for every item. Finished items keep their full history in
 
 ## START-02 early separation — before remaining CI-02
 
-**Current local-proof follow-up: routing socket compatibility.** The human-frozen
+**Current local-proof follow-up: read-only pipe query.** Consumer
+`fa849bd8b673a6dbbbbfbf072a39d8467d758bc1` pins reviewed factory
+`40095301fdac57d8b4d223e6ab9a633e90f3f4e7`. Its live run completed five model
+requests and failed closed on `fcntl(F_GETPIPE_SZ)`; cleanup completed and no changes
+were transferred. Evidence: `/private/tmp/start02-live-petclinic-fa849bd-dvagzkfk/run-1/`.
+The narrow compatibility change preserves kernel pipe-capacity results and buffered
+bytes; its positive test and explicit `F_SETPIPE_SZ` rejection test pass. Full gate
+and qualification evidence for the next review candidate belong under
+`test-results/start02-pipe-implementation-review/`. Owner profile/pin review and a
+successful live candidate remain required for local-proof completion.
+
+
+**Historical routing-socket qualification (reviewed and consumed by fa849bd).** The human-frozen
 consumer `5e87e2b699a6f8036aa8a75109f4a2a445c79b62` pins reviewed factory
 `748ec02458d96a0a2dd29778342596d590b5448b`. Its second live attempt completed ten
 model requests, then failed closed on a namespace-local routing-socket bind; retained

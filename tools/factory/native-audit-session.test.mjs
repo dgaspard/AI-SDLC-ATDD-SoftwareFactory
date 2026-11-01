@@ -83,3 +83,14 @@ for(const name of ['receive-empty','mutation'])test('route socket preserves kern
  const r=await run('route-'+name,['/opt/factory/syscall-observer-cases','route-'+name]);assert.equal(r.exitCode,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
  const trace=lines(path.join(root,'route-'+name+'/audit/native-trace.jsonl'));if(name==='receive-empty')assert.ok(trace.some(x=>x.event==='bound-exit'&&x.nr===212&&x.result===-11&&x.kernelResult===-11));else assert.match(fs.readFileSync(path.join(root,'route-'+name+'/audit/stdout'),'utf8'),/ROUTE_MUTATION_DENIED_LOOPBACK_UNCHANGED/);
 });
+
+test('pipe capacity query preserves native results and buffered bytes',async()=>{
+ const r=await run('pipe-query',['/opt/factory/syscall-observer-cases','pipe-query']);assert.equal(r.exitCode,0);assert.equal(r.receipt.denials,0);assert.equal(r.proof.coverageClosed,true);assert.equal(r.cleanupConfirmed,true);
+ const trace=lines(path.join(root,'pipe-query/audit/native-trace.jsonl')),results=[];let query=false;for(const e of trace){if(e.event==='entry')query=e.nr===25&&e.args[1]==='408';if(e.event==='exit-syscall'&&query){results.push(e.result);query=false;}}
+ assert.equal(results.length,3);assert.ok(results[0]>0);assert.equal(results[1],results[0]);assert.equal(results[2],-9);
+ assert.match(fs.readFileSync(path.join(root,'pipe-query/audit/stdout'),'utf8'),/SCT_WORKLOAD_ASSERTIONS_PASSED/);
+});
+test('pipe resizing remains unsupported and cannot qualify',async()=>{
+ const r=await run('pipe-resize',['/opt/factory/syscall-observer-cases','pipe-resize']);assert.equal(r.exitCode,5);assert.equal(r.cleanupConfirmed,true);assert.notEqual(r.phase,'AUDIT_COLLECTED');
+ const trace=lines(path.join(root,'pipe-resize/audit/native-trace.jsonl'));const e=trace.find(x=>x.event==='entry'&&x.nr===25&&x.args[1]==='407');assert.ok(e);assert.ok(trace.some(x=>x.event==='bound-start'&&x.entry===e.seq));
+});

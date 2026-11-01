@@ -24,7 +24,14 @@ static void *replace(void*unused){(void)unused;barrier(&start);if(rename("/tmp/s
 int main(int argc,char**argv){
  if(argc!=2)return 70;
  if(mkdir("/tmp/sct",0700)&&errno!=EEXIST)return 70;
- if(!strncmp(argv[1],"route-",6)){
+ if(!strcmp(argv[1],"pipe-query")){
+  int pipes[2];if(pipe(pipes))return 70;int size=fcntl(pipes[0],F_GETPIPE_SZ);if(size<=0)return 70;
+  if(write(pipes[1],"safe",4)!=4||fcntl(pipes[0],F_GETPIPE_SZ)!=size)return 70;
+  char bytes[4];if(read(pipes[0],bytes,4)!=4||memcmp(bytes,"safe",4))return 70;
+  close(pipes[0]);errno=0;if(fcntl(pipes[0],F_GETPIPE_SZ)!=-1||errno!=EBADF)return 70;close(pipes[1]);
+ }else if(!strcmp(argv[1],"pipe-resize")){
+  int pipes[2];if(pipe(pipes))return 70;fcntl(pipes[0],F_SETPIPE_SZ,4096);return 70;
+ }else if(!strncmp(argv[1],"route-",6)){
   const char*name=argv[1]+6;int fd=socket(AF_NETLINK,SOCK_RAW|SOCK_CLOEXEC|SOCK_NONBLOCK,!strcmp(name,"protocol")?NETLINK_USERSOCK:NETLINK_ROUTE);if(fd<0)return 70;
   struct sockaddr_nl address={.nl_family=AF_NETLINK};socklen_t length=sizeof address;
   if(!strcmp(name,"groups"))address.nl_groups=1;
