@@ -29,13 +29,14 @@ test('SCT-007 omitted observer record blocks successful workload',async()=>{
 });
 test('SCT-008 observer death with active descendant writers',async()=>{
  const result=run('interrupted',['/opt/factory/syscall-observer-cases','interrupt']).then(value=>({value}),error=>({error}));
- const deadline=Date.now()+20000;let ready=false,j;
- while(Date.now()<deadline){
-  try{j=journal('interrupted');execFileSync(docker,['exec',j.containerId,'/bin/sh','-c','grep -q READY /audit/stdout && grep -q child-writer /audit/stdout'],{stdio:'pipe',timeout:1000});ready=true;break;}catch{}
-  await new Promise(r=>setTimeout(r,25));
- }
- assert.equal(ready,true,'deterministic workload readiness');
- execFileSync(docker,['exec',j.containerId,'/bin/sh','-c','kill -KILL "$(cat /audit/observer.pid)"'],{stdio:'pipe',timeout:1000});
+ const deadline=Date.now()+20000;let j;
+ while(Date.now()<deadline){try{j=journal('interrupted');if(j.phase==='RUNNING')break;}catch{}await new Promise(r=>setTimeout(r,25));}
+ assert.equal(j?.phase,'RUNNING','owned container reached running phase');
+ // Keep one trusted root helper alive until shutdown; transient probes can race
+ // the independent /proc census and must not satisfy interruption qualification.
+ const helper="const fs=require('fs');const end=Date.now()+15000;const poll=setInterval(()=>{let text='';try{text=fs.readFileSync('/audit/stdout','utf8')}catch{}if(text.includes('READY')&&text.includes('child-writer')){clearInterval(poll);process.kill(Number(fs.readFileSync('/audit/observer.pid','utf8')),'SIGKILL');fs.writeSync(1,'OBSERVER_SIGNAL_SENT\\n');setInterval(()=>{},100);}else if(Date.now()>end){fs.writeSync(1,'READINESS_TIMEOUT\\n');clearInterval(poll);setInterval(()=>{},100);}},25);";
+ let output='';try{output=execFileSync(docker,['exec','--user','0:0',j.containerId,'node','-e',helper],{encoding:'utf8',timeout:20000,stdio:['ignore','pipe','pipe']});}catch(error){output=String(error.stdout??'');}
+ assert.match(output,/OBSERVER_SIGNAL_SENT/,'readiness and intended signal independently confirmed');
  const outcome=await result;assert.ok(outcome.error||outcome.value.phase!=='AUDIT_COLLECTED');j=journal('interrupted');assert.equal(j.cleanupConfirmed,true);assert.notEqual(j.phase,'AUDIT_COLLECTED');
  const state=JSON.parse(execFileSync(docker,['inspect',j.containerId],{encoding:'utf8'}))[0].State;assert.equal(state.Running,false);assert.equal(state.Pid,0);
  const before=execFileSync(docker,['cp',j.containerId+':/audit/stdout','-']);
